@@ -12,6 +12,7 @@ import { scoreDrink } from '../systems/scoring.js';
 import { createDayState, applyServe, applyTimeout, formatMoney } from '../systems/economy.js';
 import { ensureCupTexture } from '../systems/drinkSprite.js';
 import { weightedPick, randBetween } from '../systems/random.js';
+import { startDay, logEvent, finishDay, summarize } from '../systems/playlog.js';
 
 const DAY_MS = 180_000; // ~3 real minutes per day
 const OPEN_MIN = 7 * 60; // 7:00am
@@ -60,6 +61,7 @@ export default class DayScene extends Phaser.Scene {
     this.brewing = false;
     this.paused = false;
     this.ended = false;
+    this.log = startDay({ day: this.day, owner: this.owner.name });
 
     this.drawBackdrop();
     this.drawHud();
@@ -376,6 +378,7 @@ export default class DayScene extends Phaser.Scene {
     const res = applyServe(this.econ, tier, c.spec);
     c.served += 1;
     c.state = 'reacting';
+    logEvent(this.log, 'serve', { who: c.def.id, wanted: c.orderText, made: formatOrder(made), tier, waitMs: Math.round(c.patienceMax - c.patienceMs) }, this.clockMs);
 
     this.showBubble(c, pickLine(c.def.lines, tier, this.lineVars()), 'reaction');
     this.floatText(`+${formatMoney(res.paid + res.tip)}`, c.slot === 'table' ? TABLE_X : FRONT_X, this.headTop(c) - 8);
@@ -403,6 +406,7 @@ export default class DayScene extends Phaser.Scene {
   timeout(c) {
     c.state = 'reacting';
     applyTimeout(this.econ);
+    logEvent(this.log, 'timeout', { who: c.def.id }, this.clockMs);
     this.showBubble(c, pickLine(c.def.lines, 'timeout', this.lineVars()), 'reaction');
     this.setFeedback('They wandered off... ♥-1');
     this.refreshHud();
@@ -432,6 +436,7 @@ export default class DayScene extends Phaser.Scene {
   openGlossary(key) {
     if (this.paused) return;
     this.paused = true;
+    logEvent(this.log, 'glossary', { key }, this.clockMs);
     this.tweens.pauseAll();
     this.time.paused = true;
     showGlossary(this, key, () => {
@@ -492,6 +497,7 @@ export default class DayScene extends Phaser.Scene {
 
   endDay() {
     this.ended = true;
+    finishDay(this.log, this.econ);
     this.throwAway();
     for (const c of [...this.queue, this.tableGuest].filter(Boolean)) {
       c.state = 'gone';
@@ -508,7 +514,7 @@ export default class DayScene extends Phaser.Scene {
     const cx = GAME_W / 2;
     const cardW = 300;
     const top = 140;
-    this.add.rectangle(cx - cardW / 2, top, cardW, 300, COLORS.paper).setOrigin(0).setStrokeStyle(2, COLORS.inkHex).setDepth(depth + 1);
+    this.add.rectangle(cx - cardW / 2, top, cardW, 340, COLORS.paper).setOrigin(0).setStrokeStyle(2, COLORS.inkHex).setDepth(depth + 1);
     const t = (y, str, o = {}) => addText(this, cx, top + y, str, { size: 16, align: 'center', origin: [0.5, 0], ...o }).setDepth(depth + 2);
     t(20, UI.dayDone.replace('{day}', this.day), { size: 24, bold: true });
     t(56, UI.dayDoneZh, { size: 16 });
@@ -521,5 +527,25 @@ export default class DayScene extends Phaser.Scene {
     const btn = makeButton(this, cx - 90, top + 224, 180, 52, UI.closeStall, () => this.scene.start('Title'), { size: 18, bold: true, fill: 0xbfe3c0 });
     btn.bg.setDepth(depth + 2);
     btn.txt.setDepth(depth + 3);
+
+    // Playtesters: copy a short summary of the day and paste it back for tuning.
+    const copy = makeButton(this, cx - 90, top + 286, 180, 36, 'Copy playtest notes', () => this.copyNotes(copy), { size: 13 });
+    copy.bg.setDepth(depth + 2);
+    copy.txt.setDepth(depth + 3);
+  }
+
+  copyNotes(btn) {
+    const text = summarize(this.log);
+    const done = (label) => btn.txt.setText(label);
+    try {
+      navigator.clipboard.writeText(text).then(() => done('Copied!'), () => this.showNotes(text));
+    } catch {
+      this.showNotes(text);
+    }
+  }
+
+  // Fallback when the clipboard is blocked: show the notes so they can be long-pressed and copied.
+  showNotes(text) {
+    window.prompt('Copy these playtest notes:', text);
   }
 }
