@@ -42,7 +42,7 @@ export const CUSTOMERS = [
     id: 'schoolKids',
     name: 'Sec school kids',
     sprite: 'darren',
-    sprites: ['darren', 'weiLing', 'hafiz', 'jiaHui'], // placeholder cutouts until regenerated art
+    sprites: ['darren', 'weiLing', 'hafiz', 'jiaHui'],
     enabled: true,
     weight: 1,
     patience: 50,
