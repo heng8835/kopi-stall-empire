@@ -45,14 +45,29 @@ Modifiers available in v0.1: kosong, siew dai, peng.
 ## v0.1 cast (6)
 | Character | Signature order | Language mix | Hook |
 |---|---|---|---|
-| Ah Gong with newspaper | Kopi O, "same as usual" | Mandarin + Hokkien | Reads paper for hours on one drink, argues with the radio |
+| Ah Gong with newspaper | Kopi O, "same as usual" | Mandarin + Hokkien | Reads paper for hours on one drink, argues with the radio. Sits at the side table |
 | Aunty Lim | Teh C siew dai | Singlish + Mandarin | Star of the fire event; unbothered by everything |
-| Office guy with lanyard | Kopi C kosong, "fast fast" | Singlish + English | On a work call while ordering; speed pressure |
-| Tourist | "Coffee, no milk, no sugar?" | English | Player learns/translates lingo naturally |
-| Sec school kids (group) | 4x Milo Dinosaur | Singlish + Mandarin | Short by 20 cents, counting coins together |
+| Marcus (office guy, lanyard) | Kopi C kosong, "fast fast" | Singlish + English | On a work call while ordering; speed pressure |
+| Sophie (tourist) | "Coffee, no milk, no sugar?" | English | Player learns/translates lingo naturally |
+| Sec school kids: Darren, Wei Ling, Hafiz, Jia Hui | 4x Milo Dinosaur | Singlish + Mandarin | Short by 20 cents, counting coins together |
 | Oyen (orange cat) | none | meows | Steals kaya toast, sleeps in the cashier drawer |
 
-Owner / player character: Uncle Tan (white singlet, towel on shoulder).
+Owner / player character: a young owner in their early 20s, **Jun (boy) or Mei (girl)**,
+picked at the start. Kopitiam apron, Uncle Tan's old towel on the shoulder, slippers.
+Regulars call them "Ah Boy" / "Ah Girl".
+
+Uncle Tan: the retired former owner (38 years at the stall). Mentioned in v0.1
+("Last time Uncle Tan make got soul one"); appears later as an occasional mentor (art to come).
+
+### Backstories (short)
+- **Jun / Mei:** grew up doing homework at the stall's back table; quit a corporate internship
+  ("the office kopi tasted like sadness") to take over when Uncle Tan retired. Big dreams, zero idea how to pull teh.
+- **Ah Gong:** retired bus captain, same seat since 1987, one Kopi O lasts four hours. Secretly does the sudoku.
+- **Aunty Lim:** retired school canteen auntie; knows everyone's business and birthdays; rates your teh out of 10, out loud.
+- **Marcus:** junior analyst "on a call since 2023"; kosong on doctor's orders, sneaks kaya toast.
+- **Sophie:** first trip to Singapore with a 50-hawker-food spreadsheet; you're #12. Says "shiok" in the wrong places.
+- **The kids:** Darren (loud), Wei Ling (counts the coins), Hafiz (teacher impressions), Jia Hui (quiet, draws).
+- **Oyen:** "came with the stall". Knocks one cup off the counter per day, as tax.
 
 Sample lines:
 - Ah Gong: "老板, kopi o 一杯, 不要太甜 ah."
@@ -90,6 +105,10 @@ Rare: uncle with Toto ticket, Ah Beng with modified scooter, hygiene inspector,
 rival kopi chain manager, Ah Ma's grandson (helps stall go viral), mysterious
 uncle in white singlet who only appears when it rains.
 Animals: Oyen, pigeons, mynah birds.
+
+Art notes for the backlog cast (source images in `art/source/`): make the Grab rider a generic
+delivery rider (no logo), no flag/Merlion items on the expat, no monogram briefcase for the rival
+manager, and call the Toto uncle a "lottery uncle" (Toto is a trademark).
 
 ## Language plan
 v0.1: Singlish, English, Mandarin mixed per character. Glossary pop-up for every

@@ -1,12 +1,12 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-21
 phase: development
-next: "Discuss sprite style (user ref: outlined 16x24-ish chibi) + mechanics/game style, then plan M2"
+next: "Import Sophie + Uncle Tan art (user to save image into art/source/), then regenerated kids; then M3 night phase"
 tier_hint: 1
-blockers: []
-touched: [src/scenes/DayScene.js, src/systems/, src/data/, src/i18n/lines.js, tests/]
+blockers: ["Sophie art (needs flag/Merlion removed)", "Kids art regenerated without floor props"]
+touched: [src/scenes/DayScene.js, src/scenes/TitleScene.js, src/systems/view.js, src/data/spriteSizes.json, tools/build_sprites.py, public/sprites/]
 validation: passing
-open_decisions: ["Sprite style/grid change (outlines, 16x24?) — conflicts with current CLAUDE.md art rules", "Ah Gong + Tourist designs"]
+open_decisions: []
 spec: ""
 board_task: ""
-notes: "Pane testing: Phaser pauses when page hidden; step via game.step + fake Date.now."
+notes: "360x640 HD art; new sprite = art/source -> tools/prep_still.py -> spriteSizes.json -> tools/build_sprites.py. Pane testing: step game.step + fake Date.now."

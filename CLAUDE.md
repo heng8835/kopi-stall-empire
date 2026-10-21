@@ -16,7 +16,8 @@ Full design: see `GAME_DESIGN.md`. Read it before building any feature.
 
 ## Tech stack
 - Phaser 3 + Vite, plain JavaScript (no TypeScript for now)
-- Pixel-perfect rendering: `pixelArt: true`, integer scaling
+- Logical resolution 360x640 (portrait). Backbuffer = 360x640 x (fit x devicePixelRatio, max 3), so HD art and text stay sharp.
+- HD sprites use linear filtering; small procedural pixel props use NEAREST.
 - No backend. Save progress in localStorage (wrap in try/catch).
 - Host on itch.io as an HTML5 build (`npm run build` -> `dist/`)
 
@@ -27,9 +28,11 @@ src/
   scenes/            Boot, Day, Night, Title
   data/
     drinks.js        drink recipes + order text
-    customers.js     cast definitions (sprite, orders, dialogue lines)
+    customers.js     customer definitions (sprite key, slot, orders, lines key)
+    owners.js        playable owners (Jun / Mei)
+    spriteSizes.json HD sprite keys -> display height (single source of truth)
     events.js        drama events (trigger, dialogue, effect)
-    sprites.js       pixel maps + palette (see below)
+    sprites.js       pixel maps for small procedural props (the drink cup)
   systems/           order parsing, money, upgrades, event scheduler
   i18n/              dialogue strings by language mix
 ```
@@ -37,13 +40,15 @@ Content (drinks, customers, events, dialogue) lives in `src/data/` as plain
 data so new content can be added without touching game logic.
 
 ## Art rules
-- Chunky pixel art, chibi proportions: BIG head, small body
-- Base character grid 12x16 (v0.1). May grow to 16x24 for animations later.
-- Dot eyes, pink blush, tiny mouth, flat colours, no outlines-heavy style
-- Pastel sky-blue backgrounds, warm kopitiam tones
-- Sprites are drawn from character maps in `src/data/sprites.js`
-  (one character per pixel, palette lookup). Keep that format.
-- Original characters only. No copyrighted characters or real brand logos.
+- Pixel-styled HD chibi art: big round head, small body, thick dark outline, soft
+  2-3 tone shading, pink blush, expressive faces. Pastel sky-blue backgrounds, warm kopitiam tones.
+- Character art is made outside the repo (ChatGPT image gen) and kept in `art/source/`.
+  Pipeline: `tools/prep_still.py` (cutout -> `art/prepped/`, gitignored) ->
+  add key + display height to `src/data/spriteSizes.json` -> `tools/build_sprites.py`
+  (HD finish, 3x) -> `public/sprites/<key>.png` (committed). Run tools with `.venv/Scripts/python`.
+- Do not force AI art onto a low-res pixel grid (it damages it; see `docs/art/finish-comparison.png`).
+- Original characters only. No copyrighted characters, real brand logos or monograms,
+  national flags or landmark/mascot trademarks (e.g. the Merlion).
 
 ## Language rules
 Dialogue should feel like real Singapore: mixed and natural.
@@ -66,7 +71,8 @@ keeps eating her char kway teow.
 
 ## Commands + docs
 - `npm run dev` (http://localhost:5173), `npm test` (Vitest), `npm run build` -> `dist/`
-- Every scene's `create()` starts with `fitCamera(this)` (integer zoom, see `src/systems/view.js`).
-- Sprite preview (dev only): http://localhost:5173/sprites.html
+- Every scene's `create()` starts with `fitCamera(this)` (render-scale zoom, see `src/systems/view.js`).
+- Place characters with `addSprite(scene, key, x, yFeet)` from `src/systems/sprites.js`.
+- Pixel-prop preview (dev only): http://localhost:5173/sprites.html
 - Use `addText()` from `src/systems/text.js` for all text (crisp at any zoom).
 - Session handoff: `docs/STATE.yml`. Decisions: `docs/DECISION_LOG.md`. Scope/acceptance: `docs/PROJECT_BRIEF.md`.
