@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cast Samples</title>
+    <!-- Dev-only page (npm run dev -> /cast-samples.html). Not part of the itch.io build. -->
+    <style>
+      body { margin: 0; padding: 16px; background: #eaf6fb; font: 13px system-ui, sans-serif; color: #3a2e2a; }
+      h1 { font-size: 18px; margin: 0 0 4px; }
+      .sub { color: #7a6a60; margin: 0 0 16px; }
+      section { background: #fffaf0; border: 1px solid #e3d6bf; border-radius: 10px; padding: 12px; margin-bottom: 16px; }
+      h2 { font-size: 15px; margin: 0; }
+      .trait { color: #7a6a60; margin: 2px 0 10px; font-size: 12px; }
+      .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+      figure { margin: 0; width: 112px; }
+      figcaption { font-size: 12px; margin-top: 4px; }
+      figcaption b { color: #c8562e; }
+      figcaption span { display: block; color: #7a6a60; font-size: 11px; }
+      canvas { image-rendering: pixelated; display: block; border-radius: 6px; }
+      .big { background: #bfe6f5; }
+      .label { font-size: 11px; color: #7a6a60; margin: 10px 0 4px; }
+      .warn { color: #c0392b; font-size: 11px; }
+    </style>
+  </head>
+  <body>
+    <h1>Cast samples: 16×24, outline + shading</h1>
+    <p class="sub">Pick one letter per character (e.g. "Uncle A, Aunty C, …"). Big = 6× zoom. Strip = real in-game size on a phone.</p>
+    <div id="cast"></div>
+    <script type="module" src="/src/dev/castSamplesPage.js"></script>
+  </body>
+</html>
