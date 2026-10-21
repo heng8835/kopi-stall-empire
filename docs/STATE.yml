@@ -1,9 +1,9 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-21
 phase: development
-next: "Import Sophie + Uncle Tan art (user to save image into art/source/), then regenerated kids; then M3 night phase"
+next: "User: install gh + gh auth login, choose public/private -> create repo, push, enable Pages; then playtest (Phase 2)"
 tier_hint: 1
-blockers: ["Sophie art (needs flag/Merlion removed)", "Kids art regenerated without floor props"]
+blockers: ["gh CLI login (user)", "Sophie + Uncle Tan file (user)", "kids regenerated (user)"]
 touched: [src/scenes/DayScene.js, src/scenes/TitleScene.js, src/systems/view.js, src/data/spriteSizes.json, tools/build_sprites.py, public/sprites/]
 validation: passing
 open_decisions: []
