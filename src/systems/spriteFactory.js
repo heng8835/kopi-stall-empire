@@ -1,3 +1,4 @@
+import Phaser from 'phaser';
 import { PALETTE, SPRITES } from '../data/sprites.js';
 
 const W = 12;
@@ -44,6 +45,8 @@ export function makeTexture(scene, key, map, palette = PALETTE) {
     });
   });
   tex.refresh();
+  // Procedural pixel props stay chunky-crisp even though the game uses linear filtering.
+  tex.setFilter(Phaser.Textures.FilterMode.NEAREST);
   return key;
 }
 
@@ -51,6 +54,7 @@ export function makeTexture(scene, key, map, palette = PALETTE) {
 export function buildTextures(scene) {
   for (const [name, map] of Object.entries(SPRITES)) {
     if (import.meta.env?.DEV) validateMap(name, map).forEach((p) => console.warn('[sprites]', p));
+    if (scene.textures.exists(name)) continue; // an HD sprite with this key wins over the old pixel map
     makeTexture(scene, name, map);
   }
 }

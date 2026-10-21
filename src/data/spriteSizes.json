@@ -1,0 +1,13 @@
+{
+  "_comment": "HD sprites: key -> display height in logical px (360x640 game). tools/build_sprites.py exports art/prepped/<key>.png to public/sprites/<key>.png at 3x this height.",
+  "jun": 136,
+  "mei": 136,
+  "auntyLim": 140,
+  "marcus": 142,
+  "ahGong": 134,
+  "oyen": 56,
+  "darren": 118,
+  "weiLing": 112,
+  "hafiz": 116,
+  "jiaHui": 104
+}

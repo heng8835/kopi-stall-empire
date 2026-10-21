@@ -3,7 +3,9 @@
 //   patience    seconds they wait at the counter before wandering off (gently)
 //   groupSize   cups in one order (the sec school kids order 4 at once)
 //   lines       key into src/i18n/lines.js
-//   enabled     false = defined but not in the spawn pool yet (sprite comes in M2)
+//   sprite      HD sprite key (src/data/spriteSizes.json); groups may list one per member in sprites
+//   slot        'counter' (default, queues at the counter) or 'table' (sits at the side table)
+//   enabled     false = defined but not in the spawn pool yet (waiting for art)
 
 export const CUSTOMERS = [
   {
@@ -23,8 +25,8 @@ export const CUSTOMERS = [
   },
   {
     id: 'officeGuy',
-    name: 'Office guy',
-    sprite: 'officeGuy',
+    name: 'Marcus',
+    sprite: 'marcus',
     enabled: true,
     weight: 3,
     patience: 22,
@@ -39,7 +41,8 @@ export const CUSTOMERS = [
   {
     id: 'schoolKids',
     name: 'Sec school kids',
-    sprite: 'schoolKid',
+    sprite: 'darren',
+    sprites: ['darren', 'weiLing', 'hafiz', 'jiaHui'], // placeholder cutouts until regenerated art
     enabled: true,
     weight: 1,
     patience: 50,
@@ -50,8 +53,9 @@ export const CUSTOMERS = [
   {
     id: 'ahGong',
     name: 'Ah Gong',
-    sprite: null, // TODO M2: draw ahGong map
-    enabled: false,
+    sprite: 'ahGong',
+    slot: 'table',
+    enabled: true,
     weight: 2,
     patience: 60,
     groupSize: 1,
@@ -61,7 +65,7 @@ export const CUSTOMERS = [
   {
     id: 'tourist',
     name: 'Tourist',
-    sprite: null, // TODO M2: draw tourist map
+    sprite: null, // waiting for Sophie's art
     enabled: false,
     weight: 1,
     patience: 45,

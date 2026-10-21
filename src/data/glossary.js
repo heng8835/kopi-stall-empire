@@ -12,6 +12,7 @@ export const GLOSSARY = {
   'milo dinosaur': { term: 'Milo Dinosaur', en: 'Iced Milo with a mountain of Milo powder on top.', zh: '冰美禄，上面堆满美禄粉。' },
   boss: { term: 'Boss', en: 'What customers call the stall owner.', zh: '老板。' },
   uncle: { term: 'Uncle', en: 'Friendly way to call any older man. No relation needed!', zh: '对年长男士的亲切称呼。' },
+  'ah girl': { term: 'Ah Girl', en: 'Affectionate "young lady". Aunties call everyone this too.', zh: '"小妹"，阿姨们的亲切叫法。' },
   'ah boy': { term: 'Ah Boy', en: 'Affectionate "young man". Aunties call everyone this.', zh: '"小弟"，阿姨们的亲切叫法。' },
   'fast fast': { term: 'Fast fast', en: 'Quickly! Saying it twice = extra urgent.', zh: '快快！说两次更急。' },
   lah: { term: 'lah', en: 'Sentence-ending particle. Softens or stresses — very Singlish.', zh: '语气词，缓和或强调。' },

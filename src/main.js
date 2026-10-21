@@ -1,19 +1,22 @@
 import Phaser from 'phaser';
-import { GAME_W, GAME_H } from './config.js';
-import { getZoom, watchResize } from './systems/view.js';
+import { backbufferSize, watchResize } from './systems/view.js';
 import BootScene from './scenes/BootScene.js';
 import TitleScene from './scenes/TitleScene.js';
 import DayScene from './scenes/DayScene.js';
 
-// Logical world is GAME_W x GAME_H; the canvas is that times an integer zoom (see view.js).
+// Logical world is GAME_W x GAME_H (360x640); the backbuffer is that times the render scale
+// (see view.js). HD sprites use linear filtering; procedural pixel props set NEAREST themselves.
+const { width, height } = backbufferSize();
 const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
-  width: GAME_W * getZoom(),
-  height: GAME_H * getZoom(),
+  width,
+  height,
   backgroundColor: '#bfe6f5',
-  pixelArt: true,
+  pixelArt: false,
+  antialias: true,
   roundPixels: true,
+  mipmapFilter: 'LINEAR_MIPMAP_LINEAR',
   scale: { mode: Phaser.Scale.NONE },
   scene: [BootScene, TitleScene, DayScene],
 });

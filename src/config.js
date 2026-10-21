@@ -1,6 +1,6 @@
 // Shared layout + style constants.
-export const GAME_W = 180;
-export const GAME_H = 320;
+export const GAME_W = 360;
+export const GAME_H = 640;
 
 export const FONT = '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif';
 
