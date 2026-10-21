@@ -6,6 +6,7 @@ clothing inside the dark outline survives), drops floor shadows and loose decora
 per character, left to right.
 
   python tools/prep_still.py art/source/owner-jun-mei.webp --names jun mei --out art/prepped
+  python tools/prep_still.py art/source/stall-assets.webp --key auto --grid 4 6 --names kopiPot tehPot - - ... --out art/prepped
 
 Needs Pillow, numpy and scipy (the project .venv has them).
 """
@@ -43,11 +44,45 @@ def main() -> None:
     ap.add_argument("--min-alpha", type=int, default=200, help="more transparent than this = background")
     ap.add_argument("--margin", type=int, default=8)
     ap.add_argument("--regions", nargs="+", help="x0:x1 pixel column range per character (for crowded images); the largest part inside each range is kept")
+    ap.add_argument("--grid", nargs=2, type=int, metavar=("COLS", "ROWS"), help="asset sheet laid out in a grid: --names in row order, '-' skips a cell; the largest part per cell is kept (captions dropped)")
+    ap.add_argument("--key", help="flat background colour to remove: 'auto' (sample the corner) or #rrggbb")
+    ap.add_argument("--key-tol", type=float, default=30, help="colour distance still counted as background for --key")
     args = ap.parse_args()
 
     im = Image.open(args.input).convert("RGBA")
     rgba = np.array(im)
-    fg = ~background_mask(rgba, args.min_lum, args.max_sat, args.min_alpha) & (rgba[..., 3] >= args.min_alpha)
+    if args.key:
+        key = rgba[2, 2, :3].astype(np.float32) if args.key == "auto" else np.array([int(args.key[i:i + 2], 16) for i in (1, 3, 5)], np.float32)
+        dist = np.sqrt(((rgba[..., :3].astype(np.float32) - key) ** 2).sum(axis=2))
+        fg = (dist > args.key_tol) & (rgba[..., 3] >= args.min_alpha)
+    else:
+        fg = ~background_mask(rgba, args.min_lum, args.max_sat, args.min_alpha) & (rgba[..., 3] >= args.min_alpha)
+
+    if args.grid:
+        cols, rows = args.grid
+        cw, ch = rgba.shape[1] / cols, rgba.shape[0] / rows
+        out = Path(args.out)
+        out.mkdir(parents=True, exist_ok=True)
+        for idx, name in enumerate(args.names):
+            if name == "-":
+                continue
+            r, c = divmod(idx, cols)
+            y0, y1, x0, x1 = int(r * ch), int((r + 1) * ch), int(c * cw), int((c + 1) * cw)
+            cell = fg[y0:y1, x0:x1]
+            lab, k = ndimage.label(cell, structure=np.ones((3, 3)))
+            if not k:
+                print(f"{name}: empty cell")
+                continue
+            big = np.argmax(ndimage.sum(cell, lab, range(1, k + 1))) + 1
+            ys, xs = ndimage.find_objects((lab == big).astype(np.int32))[0]
+            m = args.margin
+            cy0, cy1 = max(0, ys.start - m), min(cell.shape[0], ys.stop + m)
+            cx0, cx1 = max(0, xs.start - m), min(cell.shape[1], xs.stop + m)
+            crop = rgba[y0 + cy0:y0 + cy1, x0 + cx0:x0 + cx1].copy()
+            crop[..., 3] = np.where(lab[cy0:cy1, cx0:cx1] == big, 255, 0)
+            Image.fromarray(crop).save(out / f"{name}.png")
+            print(f"{out / (name + '.png')}  {cx1 - cx0}x{cy1 - cy0}")
+        return
 
     if args.regions:
         if len(args.regions) != len(args.names):

@@ -27,22 +27,23 @@ import { load } from '../systems/save.js';
 const OPEN_MIN = 7 * 60; // 7:00am
 const CLOSE_MIN = 19 * 60; // 7:00pm
 
-// Layout (logical px, 360x640)
+// Layout (logical px, 360x640), matched to the stall background art (901x1600 = 2.5x).
 const HUD_H = 28;
-const COUNTER_Y = 300;
-const FEET_Y = 334; // counter customers stand behind the counter (legs hidden)
-const TRAY_Y = 336;
-const CUP_BOTTOM = 432;
-const CUP_W = 44;
-const CUP_H = 58;
-const TOOLS_TOP = 452;
-const TABLE = { x: 52, feetY: 114, h: 84, bubble: { x: 100, y: 34, w: 156 } };
+const COUNTER_Y = 282; // top of the wooden counter in the background
+const FEET_Y = 318; // counter customers stand behind the counter (legs hidden)
+const CUP_BOTTOM = 384; // cups sit on the tray plates
+const CUP_W = 50;
+const CUP_H = 62;
+// Inside of the glass in the cup sprite (measured from the art), relative to the cup's bottom centre.
+const GLASS = { x0: -17, x1: 9, bottom: -9, top: -52 };
+const TABLE = { x: 46, feetY: 112, h: 80, bubble: { x: 96, y: 36, w: 176 } }; // Ah Gong by the window, above the order bubbles
 const GROUP_X = [40, 130, 220, 310];
-const BUBBLE_BOTTOM = 184;
+const BUBBLE_BOTTOM = 172;
 const LIFT = 36; // dragged things float above the finger so you can see them
 const METER_H = 58;
 const METER_MAX = 1.6;
 const TABLE_LINGER_MS = 3500;
+const BG_SCALE = 901 / GAME_W; // background art pixels per logical px
 
 export default class StallScene extends Phaser.Scene {
   constructor() {
@@ -69,7 +70,8 @@ export default class StallScene extends Phaser.Scene {
     this.drawHud();
     this.drawTray();
     this.drawTools();
-    this.feedback = addText(this, GAME_W / 2, COUNTER_Y + 8, '', { size: 12, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: 340 }).setDepth(40);
+    this.feedback = addText(this, GAME_W / 2, COUNTER_Y + 10, '', { size: 12, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: 340 }).setDepth(40);
+    this.feedback.setStroke('#3a2414', 3);
 
     this.tutorial = new Tutorial(this, TUTORIAL_STEPS);
     if (this.day === 1 && !load('tutorialDone', false)) this.tutorial.start();
@@ -80,21 +82,10 @@ export default class StallScene extends Phaser.Scene {
   // ---------- drawing ----------
 
   drawBackdrop() {
-    this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.sky).setOrigin(0);
-    // kopitiam wall: mint tiles + cream upper wall
-    this.add.rectangle(0, HUD_H, GAME_W, 120, 0xf3e3c3).setOrigin(0);
-    for (let x = 0; x < GAME_W; x += 20) {
-      for (let y = 148; y < COUNTER_Y; y += 20) {
-        this.add.rectangle(x, y, 20, 20, ((x + y) / 20) % 2 ? 0xdff1e4 : 0xc9e6d2).setOrigin(0);
-      }
-    }
-    // counter (customers stand behind it)
-    this.add.rectangle(0, COUNTER_Y, GAME_W, 10, COLORS.counterTop).setOrigin(0).setDepth(10);
-    this.add.rectangle(0, COUNTER_Y + 10, GAME_W, TRAY_Y - COUNTER_Y - 10, COLORS.counter).setOrigin(0).setDepth(10);
-    // our side: work surface + tool shelf
-    this.add.rectangle(0, TRAY_Y, GAME_W, TOOLS_TOP - TRAY_Y, 0xc9a27a).setOrigin(0).setDepth(10);
-    this.add.rectangle(0, TOOLS_TOP, GAME_W, GAME_H - TOOLS_TOP, 0x8d969e).setOrigin(0).setDepth(10);
-    this.add.rectangle(0, TOOLS_TOP, GAME_W, 4, 0x6c757d).setOrigin(0).setDepth(10);
+    this.add.image(0, 0, 'stallBg').setOrigin(0).setDisplaySize(GAME_W, GAME_H).setDepth(0);
+    // The counter + our side of the stall again, as a front layer: customers stand behind it.
+    const top = Math.round(COUNTER_Y * BG_SCALE);
+    this.add.image(0, 0, 'stallBg').setOrigin(0).setDisplaySize(GAME_W, GAME_H).setCrop(0, top, 901, 1600 - top).setDepth(10);
   }
 
   drawHud() {
@@ -109,19 +100,21 @@ export default class StallScene extends Phaser.Scene {
 
   drawTray() {
     this.slots = SLOT_X.map((x, i) => {
-      this.add.rectangle(x, CUP_BOTTOM - 22, 100, 70, 0xa9b1b8).setStrokeStyle(2, 0x7d868e).setDepth(11);
-      const label = addText(this, x, TRAY_Y + 4, '', { size: 10, bold: true, align: 'center', origin: [0.5, 0], color: '#3a2e2a', wrap: 112 }).setDepth(16);
+      const label = addText(this, x, CUP_BOTTOM + 6, '', { size: 10, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: 112 }).setDepth(16);
+      label.setStroke('#3a2414', 3);
       const meter = this.add.graphics().setDepth(17);
       const container = this.add.container(x, CUP_BOTTOM).setDepth(14);
-      const g = this.add.graphics();
-      container.add(g);
+      const saucer = this.add.graphics();
+      const glass = addSprite(this, 'cupGlass', 0, 0, CUP_H).setVisible(false);
+      const g = this.add.graphics(); // liquid, ice, powder: drawn inside the glass
+      container.add([saucer, glass, g]);
       // Hit box covers the whole cup + saucer: world y from CUP_BOTTOM - CUP_H - 8 to CUP_BOTTOM + 16.
       // (A container's local hit space starts at its position minus half its size.)
       const hitH = CUP_H + 24;
       container.setSize(CUP_W + 24, hitH);
       container.setInteractive(new Phaser.Geom.Rectangle(0, hitH / 2 - CUP_H - 8, CUP_W + 24, hitH), Phaser.Geom.Rectangle.Contains);
       this.input.setDraggable(container);
-      const slot = { i, x, cup: null, container, g, label, meter, meterUntil: 0, meterKind: null };
+      const slot = { i, x, cup: null, container, g, saucer, glass, label, meter, meterUntil: 0, meterKind: null };
       container.on('dragstart', () => this.onCupDragStart(slot));
       container.on('drag', (p) => this.onCupDrag(slot, p));
       container.on('dragend', (p) => this.onCupDragEnd(slot, p));
@@ -134,10 +127,18 @@ export default class StallScene extends Phaser.Scene {
     this.tools = {};
     for (const t of TOOLS) {
       const c = this.add.container(t.x, t.y).setDepth(20);
-      const g = this.add.graphics();
-      this.drawToolShape(g, t);
-      const label = addText(this, 0, t.h / 2 - 15, t.label, { size: 10, bold: true, align: 'center', origin: [0.5, 0], color: '#20262b' });
-      c.add([g, label]);
+      const parts = [];
+      if (t.sprite) parts.push(addSprite(this, t.sprite, 0, t.h / 2 - 12, t.spriteH));
+      else {
+        const g = this.add.graphics();
+        this.drawToolShape(g, t);
+        parts.push(g);
+      }
+      // name tag so similar-looking cans are easy to tell apart
+      const label = addText(this, 0, t.h / 2 - 12, t.label, { size: 9, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc' });
+      const tag = this.add.rectangle(0, t.h / 2 - 12, label.width + 8, 12, 0x2b2420, 0.75).setOrigin(0.5, 0);
+      parts.push(tag, label);
+      c.add(parts);
       c.setSize(t.w, t.h);
       c.setInteractive(new Phaser.Geom.Rectangle(0, 0, t.w, t.h), Phaser.Geom.Rectangle.Contains);
       c.tool = t;
@@ -154,54 +155,40 @@ export default class StallScene extends Phaser.Scene {
     if (import.meta.env.DEV) TOOL_IDS.filter((id) => !this.tools[id]).forEach((id) => console.warn('[tutorial] no tool for id', id));
   }
 
-  // Simple readable shapes per tool kind (placeholder until the tool art arrives).
+  // Shape for tools without art yet (the bin).
   drawToolShape(g, t) {
-    const w = t.w - 8;
-    const h = t.h - 22;
-    g.fillStyle(0x000000, 0.12).fillRoundedRect(-w / 2 + 2, -t.h / 2 + 6, w, h, 8);
-    g.fillStyle(t.color, 1).fillRoundedRect(-w / 2, -t.h / 2 + 4, w, h, 8).lineStyle(2, 0x2b2b2b, 0.6).strokeRoundedRect(-w / 2, -t.h / 2 + 4, w, h, 8);
-    const top = -t.h / 2 + 4;
-    if (t.kind === 'pour' && (t.id === 'kopi' || t.id === 'teh')) {
-      g.lineStyle(4, 0x7d868e).lineBetween(w / 2 - 2, top + 16, w / 2 + 8, top + 4); // spout
-      g.fillStyle(t.accent, 1).fillRect(-w / 2 + 6, top + 8, w - 12, 10); // drink colour band
-    } else if (t.kind === 'pour') {
-      g.fillStyle(t.accent, 1).fillRect(-w / 2 + 4, top + h / 2 - 5, w - 8, 10); // can band
-    } else if (t.id === 'ice') {
-      g.fillStyle(0xffffff, 1).fillRect(-12, top + 10, 10, 10).fillRect(2, top + 14, 10, 10).fillRect(-6, top + 24, 10, 10);
-    } else if (t.id === 'powder') {
-      g.fillStyle(t.accent, 1).fillEllipse(0, top + h / 2, w - 16, 18);
-    } else if (t.kind === 'stir') {
-      g.lineStyle(4, 0x6c757d).lineBetween(-8, top + h - 6, 10, top + 6);
-    } else if (t.kind === 'rack') {
-      for (let i = 0; i < 3; i++) g.fillStyle(0xffffff, 1).fillRoundedRect(-w / 2 + 8 + i * 28, top + 12, 22, 26, 3).lineStyle(1, 0x9aa3ab).strokeRoundedRect(-w / 2 + 8 + i * 28, top + 12, 22, 26, 3);
-    } else if (t.kind === 'bin') {
-      g.lineStyle(2, 0x3a3a3a).lineBetween(-10, top + 12, -10, top + h - 8).lineBetween(0, top + 12, 0, top + h - 8).lineBetween(10, top + 12, 10, top + h - 8);
-    }
+    const w = t.w - 10;
+    const h = t.h - 18;
+    const top = -t.h / 2 + 2;
+    g.fillStyle(t.color ?? 0x6c757d, 1).fillRoundedRect(-w / 2, top + 6, w, h - 6, 6).lineStyle(2, 0x2b2b2b, 0.8).strokeRoundedRect(-w / 2, top + 6, w, h - 6, 6);
+    g.fillStyle(0x4a4f55, 1).fillRoundedRect(-w / 2 - 3, top, w + 6, 8, 3);
+    g.lineStyle(2, 0x3a3a3a).lineBetween(-7, top + 14, -7, top + h - 6).lineBetween(0, top + 14, 0, top + h - 6).lineBetween(7, top + 14, 7, top + h - 6);
   }
 
-  // Draw a cup (or an empty tray spot) into its slot graphics.
+  // Draw a cup into its slot: saucer under the glass sprite, the drink drawn inside the glass.
   redrawSlot(slot) {
-    const { g, cup } = slot;
+    const { g, saucer, glass, cup } = slot;
     g.clear();
+    saucer.clear();
+    glass.setVisible(!!cup);
     if (!cup) {
-      g.lineStyle(2, 0xffffff, 0.35).strokeEllipse(0, 2, 56, 12);
       slot.label.setText('');
       return;
     }
-    // saucer
-    g.fillStyle(0xffffff, 1).fillEllipse(0, 2, 64, 12).lineStyle(1, 0x9aa3ab).strokeEllipse(0, 2, 64, 12);
-    // liquid
+    saucer.fillStyle(0xffffff, 1).fillEllipse(-4, 0, 66, 12).lineStyle(1, 0x9aa3ab).strokeEllipse(-4, 0, 66, 12);
+    const full = GLASS.bottom - GLASS.top;
     const fillFrac = Math.min(cup.fill, ZONES.fill.spill) / ZONES.fill.spill;
-    const lh = Math.round((CUP_H - 4) * fillFrac);
-    if (cup.base && lh > 0) g.fillStyle(liquidColor(cup), 1).fillRect(-CUP_W / 2 + 2, -2 - lh, CUP_W - 4, lh);
-    if (cup.fill > ZONES.fill.spill) g.fillStyle(liquidColor(cup), 0.8).fillEllipse(24, 2, 22, 6); // spill on the saucer
-    if (needsStir(cup) && lh > 6) g.fillStyle(0xffffff, 0.45).fillRect(-CUP_W / 2 + 6, -2 - lh + 3, CUP_W - 12, 4); // unmixed streak
-    if (cup.ice) g.fillStyle(0xe6f6ff, 0.95).fillRect(-14, -2 - lh, 10, 10).fillRect(2, -2 - lh + 4, 10, 10);
-    if (cup.powder) g.fillStyle(0x5a3a28, 1).fillEllipse(0, -CUP_H, 34, 16);
-    // glass
-    g.lineStyle(2, 0x6f8792, 1).strokeRect(-CUP_W / 2, -CUP_H, CUP_W, CUP_H);
-    g.fillStyle(0xffffff, 0.18).fillRect(-CUP_W / 2 + 3, -CUP_H + 3, 6, CUP_H - 6);
-    g.lineStyle(3, 0x6f8792, 1).strokeRoundedRect(CUP_W / 2, -CUP_H + 14, 10, 24, 4); // handle
+    const lh = Math.round(full * fillFrac);
+    const w = GLASS.x1 - GLASS.x0;
+    const surface = GLASS.bottom - lh;
+    if (cup.base && lh > 0) {
+      g.fillStyle(liquidColor(cup), 0.93).fillRect(GLASS.x0, surface, w, lh);
+      g.fillStyle(0xffffff, 0.22).fillRect(GLASS.x0 + 2, surface + 2, 3, Math.max(0, lh - 4)); // glass shine
+    }
+    if (cup.fill > ZONES.fill.spill) g.fillStyle(liquidColor(cup), 0.8).fillEllipse(18, 0, 22, 6); // spill on the saucer
+    if (needsStir(cup) && lh > 6) g.fillStyle(0xffffff, 0.45).fillRect(GLASS.x0 + 4, surface + 3, w - 8, 3); // unmixed streak
+    if (cup.ice) g.fillStyle(0xe6f6ff, 0.95).fillRect(GLASS.x0 + 3, surface - 2, 9, 9).fillRect(GLASS.x0 + 13, surface + 2, 9, 9);
+    if (cup.powder) g.fillStyle(0x5a3a28, 1).fillEllipse((GLASS.x0 + GLASS.x1) / 2, GLASS.top - 2, w + 8, 16);
     slot.label.setText(formatCup(cup));
   }
 

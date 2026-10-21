@@ -6,6 +6,7 @@ export const displayHeight = (key) => SIZES[key];
 
 export function preloadSprites(scene) {
   for (const key of SPRITE_KEYS) scene.load.image(key, `sprites/${key}.png`);
+  scene.load.image('stallBg', 'bg/stall.webp'); // full-screen stall background (901x1600)
 }
 
 // Image anchored at its feet (bottom centre), scaled to its manifest display height.

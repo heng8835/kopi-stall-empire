@@ -1,29 +1,30 @@
-// Stall tools (greybox shapes for now; art comes later). Positions are tool centres in
-// logical px (360x640). kind:
+// Stall tools. Positions are tool centres in logical px (360x640), laid out on the shelf of
+// the stall background (public/bg/stall.webp). sprite = HD sprite key (spriteSizes.json);
+// tools without a sprite are drawn as simple shapes. kind:
 //   pour  - hold over a cup to pour `ingredient` (meter shows how much)
 //   drop  - release over a cup to add once (ice / Milo powder)
 //   stir  - wiggle left/right over a cup
 //   rack  - drag (or tap) to put a new empty cup on the tray
 //   bin   - drop a cup here to throw it away (not draggable)
 
-const ROW1 = 498;
-const ROW2 = 590;
+const SHELF = 534; // feet line of the tools standing on the metal shelf
+const RAIL = 626; // feet line of the tools on the bottom rail
 
 export const TOOLS = [
-  { id: 'kopi', label: 'Kopi pot', kind: 'pour', ingredient: 'kopi', x: 35, y: ROW1, w: 54, h: 76, color: 0xa8b0b8, accent: 0x3b2416 },
-  { id: 'teh', label: 'Teh pot', kind: 'pour', ingredient: 'teh', x: 93, y: ROW1, w: 54, h: 76, color: 0xa8b0b8, accent: 0x9a4a1e },
-  { id: 'sugar', label: 'Sugar', kind: 'pour', ingredient: 'sugar', x: 151, y: ROW1, w: 54, h: 76, color: 0xeef2f4, accent: 0xffffff },
-  { id: 'condensed', label: 'Condensed', kind: 'pour', ingredient: 'condensed', x: 209, y: ROW1, w: 54, h: 76, color: 0xf3e2c0, accent: 0xc0392b },
-  { id: 'evap', label: 'Evap (C)', kind: 'pour', ingredient: 'evap', x: 267, y: ROW1, w: 54, h: 76, color: 0xeaf0f8, accent: 0x2e5fa8 },
-  { id: 'milo', label: 'Milo tin', kind: 'pour', ingredient: 'milo', x: 325, y: ROW1, w: 54, h: 76, color: 0x3f8a4a, accent: 0x5a3a28 },
-  { id: 'ice', label: 'Ice', kind: 'drop', apply: 'ice', x: 38, y: ROW2, w: 60, h: 76, color: 0xd9eef5, accent: 0xffffff },
-  { id: 'powder', label: 'Milo powder', kind: 'drop', apply: 'powder', x: 104, y: ROW2, w: 60, h: 76, color: 0x3f8a4a, accent: 0x5a3a28 },
-  { id: 'stir', label: 'Spoon', kind: 'stir', x: 168, y: ROW2, w: 56, h: 76, color: 0xc9d1d8, accent: 0x8a949e },
-  { id: 'rack', label: 'Cups', kind: 'rack', x: 252, y: ROW2, w: 96, h: 76, color: 0xe7ddc9, accent: 0xffffff },
-  { id: 'bin', label: 'Bin', kind: 'bin', x: 326, y: ROW2, w: 56, h: 76, color: 0x8c8c8c, accent: 0x5a5a5a },
-];
+  { id: 'kopi', label: 'Kopi', kind: 'pour', ingredient: 'kopi', sprite: 'toolKopiPot', x: 38, feet: SHELF, w: 64, h: 86 },
+  { id: 'teh', label: 'Teh', kind: 'pour', ingredient: 'teh', sprite: 'toolTehPot', x: 104, feet: SHELF, w: 70, h: 76 },
+  { id: 'sugar', label: 'Sugar', kind: 'pour', ingredient: 'sugar', sprite: 'toolSugar', x: 162, feet: SHELF, w: 48, h: 78 },
+  { id: 'condensed', label: 'Condensed', kind: 'pour', ingredient: 'condensed', sprite: 'toolCondensed', x: 212, feet: SHELF, w: 48, h: 66 },
+  { id: 'evap', label: 'Evap (C)', kind: 'pour', ingredient: 'evap', sprite: 'toolEvap', x: 264, feet: SHELF, w: 48, h: 66 },
+  { id: 'milo', label: 'Milo', kind: 'pour', ingredient: 'milo', sprite: 'toolMilo', x: 318, feet: SHELF, w: 52, h: 70 },
+  { id: 'ice', label: 'Ice', kind: 'drop', apply: 'ice', sprite: 'toolIce', x: 110, feet: RAIL, w: 64, h: 66 },
+  { id: 'stir', label: 'Spoon', kind: 'stir', sprite: 'toolStir', x: 172, feet: RAIL, w: 50, h: 72 },
+  { id: 'rack', label: 'Cups', kind: 'rack', sprite: 'toolRack', x: 238, feet: RAIL, w: 76, h: 76 },
+  { id: 'powder', label: 'Powder', kind: 'drop', apply: 'powder', sprite: 'toolMilo', spriteH: 48, x: 296, feet: RAIL, w: 46, h: 58 },
+  { id: 'bin', label: 'Bin', kind: 'bin', x: 336, feet: RAIL, w: 42, h: 56, color: 0x6c757d },
+].map((t) => ({ ...t, y: t.feet - t.h / 2 })); // y = centre (drag/hit maths use the centre)
 
-// Cup spots on the tray (x of each cup's centre).
-export const SLOT_X = [62, 180, 298];
+// Cup spots on the tray plates of the background (x of each cup's centre).
+export const SLOT_X = [70, 182, 290];
 // Counter spots where customers stand (x of each customer).
-export const SPOT_X = [62, 180, 298];
+export const SPOT_X = [64, 180, 296];
