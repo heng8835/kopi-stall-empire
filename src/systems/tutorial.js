@@ -1,14 +1,14 @@
-import { COLORS, GAME_H } from '../config.js';
+import { COLORS } from '../config.js';
 import { TUTORIAL_TEXT } from '../data/tutorial.js';
 import { addText } from './text.js';
 import { makeButton } from './ui.js';
 import { save } from './save.js';
 
-const CARD = { x: 6, w: 348, bottom: GAME_H - 4 }; // full width, sized to its text, pinned to the bottom
+const CARD = { x: 6, w: 348, top: 32 }; // full width, under the HUD, sized to its text
 const DEPTH = 40;
 
-// Drives the Day-1 tutorial inside DayScene: spawns scripted customers one by one, shows
-// Uncle Tan's note card, pulses the relevant buttons. While active, DayScene pauses the
+// Drives the Day-1 tutorial inside StallScene: spawns scripted customers one by one, shows
+// Uncle Tan's note card, pulses the relevant tools. While active, StallScene pauses the
 // day clock, random spawns and the tutorial customers' patience.
 export class Tutorial {
   constructor(scene, steps) {
@@ -41,7 +41,7 @@ export class Tutorial {
     else this.scene.time.delayedCall(500, () => this.trySpawn(step)); // slot still busy
   }
 
-  // Called by DayScene.serve() for every serve.
+  // Called by StallScene.serveCup() for every serve.
   onServed(c, tier) {
     if (!this.active || !c.tutorial || c.served < c.n) return;
     if (tier !== 'perfect') this.status.setText(TUTORIAL_TEXT.almost);
@@ -62,7 +62,7 @@ export class Tutorial {
     save('tutorialDone', true);
     this.clearGlows();
     this.clearNote();
-    for (const c of [...this.scene.queue, this.scene.tableGuest]) if (c) c.tutorial = false;
+    for (const c of this.scene.allCustomers()) c.tutorial = false;
     this.scene.spawnInMs = 1500;
   }
 
@@ -77,7 +77,7 @@ export class Tutorial {
     this.status = addText(s, x + 120, 0, '', { size: 11, bold: true, color: '#c8562e' }).setDepth(DEPTH + 1);
     // Notes are written to fit 2 English lines + 1 Chinese line, so the card stays below SERVE.
     const h = 6 + 16 + en.height + 3 + zh.height + 6;
-    const y = CARD.bottom - h;
+    const y = CARD.top;
     title.setY(y + 6);
     this.status.setY(y + 6);
     en.setY(y + 22);
@@ -103,10 +103,10 @@ export class Tutorial {
   highlight(ids) {
     this.clearGlows();
     for (const id of ids) {
-      const btn = this.scene.buttons?.[id];
-      if (!btn) continue;
-      const b = btn.bg.getBounds();
-      const glow = this.scene.add.rectangle(b.x - 3, b.y - 3, b.width + 6, b.height + 6).setOrigin(0).setStrokeStyle(3, COLORS.accent).setDepth(btn.txt.depth + 1);
+      const target = this.scene.tools?.[id];
+      if (!target) continue;
+      const b = target.area ? target.area() : target.getBounds();
+      const glow = this.scene.add.rectangle(b.x - 3, b.y - 3, b.width + 6, b.height + 6).setOrigin(0).setStrokeStyle(3, COLORS.accent).setDepth(target.depth + 1);
       this.scene.tweens.add({ targets: glow, alpha: { from: 1, to: 0.25 }, duration: 600, yoyo: true, repeat: -1 });
       this.glows.push(glow);
     }

@@ -1,45 +1,36 @@
 // Day-1 tutorial: "Uncle Tan's notes". Each step brings one scripted customer whose order
-// teaches one more piece of the kopi grammar. highlight = button ids (BUTTON_IDS below)
-// that pulse while the step is active.
+// teaches the next hands-on action. highlight = tool ids (TOOL_IDS below) that pulse while
+// the step is active.
 
-// Button ids the tutorial can highlight. DayScene registers its buttons under these ids.
-export const BUTTON_IDS = ['kopi', 'teh', 'milo', 'milk', 'c', 'o', 'sugar', 'siewdai', 'kosong', 'peng', 'powder', 'serve', 'throw'];
+// Tool ids the tutorial can highlight. StallScene registers its tools under these ids.
+export const TOOL_IDS = ['kopi', 'teh', 'sugar', 'condensed', 'evap', 'milo', 'ice', 'powder', 'stir', 'rack', 'bin'];
 
 export const TUTORIAL_STEPS = [
   {
     customer: 'auntyLim',
     order: 'Teh',
-    highlight: ['teh', 'serve'],
+    highlight: ['rack', 'teh', 'condensed', 'sugar', 'stir'],
     note: {
-      en: "'Teh' = tea, already with condensed milk + sugar. Tap Teh, wait for the brew, then SERVE!",
-      zh: 'Teh = 茶，默认加炼奶和糖。点 Teh，等泡好，再按 SERVE！',
-    },
-  },
-  {
-    customer: 'ahGong',
-    order: 'Kopi O',
-    highlight: ['kopi', 'o', 'serve'],
-    note: {
-      en: "Ah Gong sits at his table. 'O' = no milk (still sweet). Kopi → O → SERVE.",
-      zh: 'O = 不加奶（有糖）。Kopi → O → SERVE。',
+      en: "Drag a cup to the tray. HOLD the teh pot over it till green, then condensed + sugar. Wiggle the spoon, then drag the cup to Aunty!",
+      zh: '拖杯到托盘，按住茶壶倒到绿色，再加炼奶和糖。搅一搅，拖给阿姨！',
     },
   },
   {
     customer: 'officeGuy',
-    order: 'Kopi C kosong',
-    highlight: ['kopi', 'c', 'kosong', 'serve'],
+    order: 'Kopi O kosong',
+    highlight: ['rack', 'kopi'],
     note: {
-      en: "'C' = evaporated milk, 'kosong' = no sugar. Kopi → C → Kosong → SERVE. He's rushing!",
-      zh: 'C = 淡奶，kosong = 不加糖。',
+      en: "'O' = no milk, 'kosong' = no sugar. Just kopi — no stirring needed. Fast fast, he's rushing!",
+      zh: 'O = 不加奶，kosong = 不加糖。只倒咖啡就好，不用搅。',
     },
   },
   {
     customer: 'auntyLim',
     order: 'Teh C siew dai peng',
-    highlight: ['teh', 'c', 'siewdai', 'peng', 'serve'],
+    highlight: ['teh', 'evap', 'sugar', 'stir', 'ice'],
     note: {
-      en: "'Siew dai' = less sugar, 'peng' = iced. Teh → C → Siew dai → Peng → SERVE.",
-      zh: 'siew dai = 少甜，peng = 加冰。',
+      en: "'C' = evaporated milk. 'Siew dai' = less sugar: stop in the LIGHT green zone. 'Peng' = drop ice in.",
+      zh: 'C = 淡奶。siew dai = 少甜（停在浅绿色）。peng = 加冰。',
     },
   },
 ];
@@ -47,9 +38,9 @@ export const TUTORIAL_STEPS = [
 export const TUTORIAL_TEXT = {
   title: "Uncle Tan's note",
   skip: 'Skip',
-  almost: 'Almost! Check the orange words.',
+  almost: 'Almost! Check the gauge zones.',
   done: {
-    en: 'Not bad leh! Tap orange words anytime to learn more. Now the real crowd comes!',
-    zh: '不错哦！随时点橙色的字学更多。真正的人潮来了！',
+    en: 'Not bad leh! You can make up to 3 cups at once. Now the real crowd comes!',
+    zh: '不错哦！最多可以同时做 3 杯。真正的人潮来了！',
   },
 };

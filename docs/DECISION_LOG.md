@@ -9,3 +9,6 @@
 | 2026-10-21 | Logical 360x640; backbuffer = logical x min(3, fit x DPR); camera zoom = render scale | Sharp HD art + CJK text on retina phones; fractional fit avoids big letterbox |
 | 2026-10-21 | Player is a young owner, Jun or Mei (choice saved in localStorage); Uncle Tan = retired, mentioned only in v0.1 | User request |
 | 2026-10-21 | Ah Gong uses a side-table slot; groups take the whole counter; tap a customer to choose who SERVE targets | Seated art + readable layout at 360 wide |
+| 2026-10-22 | Day scene rebuilt as first-person stall POV with hands-on drag/pour/stir/serve, 3 cup spots, 2-minute days (StallScene) | User playtest: buttons not fun, day too long |
+| 2026-10-22 | Greybox shapes first, art second; liquids drawn in code inside an empty-cup sprite | Prove the mechanics are fun before commissioning art; any drink combo renders |
+| 2026-10-22 | Art to match the user's mockup exactly: clean background via ChatGPT edit, tools/cup cut from the mockup (2.5x of 360x640) | User wants the in-game look identical to the mockup |

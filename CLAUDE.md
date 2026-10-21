@@ -17,7 +17,7 @@ Full design: see `GAME_DESIGN.md`. Read it before building any feature.
 ## Tech stack
 - Phaser 3 + Vite, plain JavaScript (no TypeScript for now)
 - Logical resolution 360x640 (portrait). Backbuffer = 360x640 x (fit x devicePixelRatio, max 3), so HD art and text stay sharp.
-- HD sprites use linear filtering; small procedural pixel props use NEAREST.
+- HD sprites use linear filtering. Drinks/liquids are drawn in code (`src/systems/cup.js` + StallScene).
 - No backend. Save progress in localStorage (wrap in try/catch).
 - Host on itch.io as an HTML5 build (`npm run build` -> `dist/`)
 
@@ -25,14 +25,15 @@ Full design: see `GAME_DESIGN.md`. Read it before building any feature.
 ```
 src/
   main.js            Phaser config
-  scenes/            Boot, Day, Night, Title
+  scenes/            Boot, Title, StallScene (key 'Day': first-person stall), Night later
   data/
     drinks.js        drink recipes + order text
     customers.js     customer definitions (sprite key, slot, orders, lines key)
     owners.js        playable owners (Jun / Mei)
     spriteSizes.json HD sprite keys -> display height (single source of truth)
     events.js        drama events (trigger, dialogue, effect)
-    sprites.js       pixel maps for small procedural props (the drink cup)
+    tools.js         stall tools: id, kind (pour/drop/stir/rack/bin), position
+    stallTuning.js   day length, pour speeds, sugar/milk/fill zones (tune from playtests)
   systems/           order parsing, money, upgrades, event scheduler
   i18n/              dialogue strings by language mix
 ```
@@ -74,6 +75,6 @@ keeps eating her char kway teow.
 - `npm run dev` (http://localhost:5173), `npm test` (Vitest), `npm run build` -> `dist/`
 - Every scene's `create()` starts with `fitCamera(this)` (render-scale zoom, see `src/systems/view.js`).
 - Place characters with `addSprite(scene, key, x, yFeet)` from `src/systems/sprites.js`.
-- Pixel-prop preview (dev only): http://localhost:5173/sprites.html
+- Dev hooks: `window.__stall` (scene), `window.__sfx`; drinks graded by `gradeCup` in `src/systems/cup.js`.
 - Use `addText()` from `src/systems/text.js` for all text (crisp at any zoom).
 - Session handoff: `docs/STATE.yml`. Decisions: `docs/DECISION_LOG.md`. Scope/acceptance: `docs/PROJECT_BRIEF.md`.

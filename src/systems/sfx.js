@@ -110,6 +110,18 @@ const SOUNDS = {
   perfect: (t) => notes(t, [523, 659, 784, 1047], 0.08, { gain: 0.09 }),
   oops: (t) => notes(t, [330, 294], 0.14, { type: 'triangle', gain: 0.08 }),
   walkout: (t) => tone(t, 600, 0.35, { slideTo: 300, gain: 0.07 }),
+  sugar: (t) => {
+    for (let i = 0; i < 3; i++) tone(t + i * 0.04, 4200 + Math.random() * 1500, 0.03, { type: 'triangle', gain: 0.025 });
+  },
+  milk: (t) => noise(t, 0.5, { freq: 500, q: 1.2, gain: 0.05 }),
+  ice: (t) => {
+    tone(t, 1500, 0.08, { type: 'triangle', gain: 0.08 });
+    tone(t + 0.06, 1900, 0.1, { type: 'triangle', gain: 0.06 });
+  },
+  stir: (t) => noise(t, 0.12, { freq: 2400, q: 2, gain: 0.04 }),
+  cupDown: (t) => tone(t, 700, 0.07, { type: 'triangle', gain: 0.08 }),
+  bin: (t) => tone(t, 220, 0.25, { type: 'square', slideTo: 110, gain: 0.05 }),
+  pickup: (t) => tone(t, 520, 0.05, { gain: 0.05, slideTo: 660 }),
   dayEnd: (t) => notes(t, [784, 659, 523, 659, 784, 1047], 0.12, { type: 'triangle', gain: 0.08 }),
 };
 

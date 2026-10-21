@@ -3,10 +3,10 @@ import { backbufferSize, watchResize } from './systems/view.js';
 import * as sfx from './systems/sfx.js';
 import BootScene from './scenes/BootScene.js';
 import TitleScene from './scenes/TitleScene.js';
-import DayScene from './scenes/DayScene.js';
+import StallScene from './scenes/StallScene.js';
 
 // Logical world is GAME_W x GAME_H (360x640); the backbuffer is that times the render scale
-// (see view.js). HD sprites use linear filtering; procedural pixel props set NEAREST themselves.
+// (see view.js). HD sprites use linear filtering.
 const { width, height } = backbufferSize();
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -19,7 +19,7 @@ const game = new Phaser.Game({
   roundPixels: true,
   mipmapFilter: 'LINEAR_MIPMAP_LINEAR',
   scale: { mode: Phaser.Scale.NONE },
-  scene: [BootScene, TitleScene, DayScene],
+  scene: [BootScene, TitleScene, StallScene],
 });
 
 watchResize(game);

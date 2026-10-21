@@ -9,8 +9,13 @@ Target audience: Chinese-speaking and Singlish-speaking players in Singapore and
 Malaysia, plus anyone curious about kopitiam culture.
 
 ## Core loop
-1. Day phase: customers walk up, an order bubble appears, player taps ingredients
-   to build the drink, serves it, gets paid + a happiness score.
+1. Day phase (~2 minutes), seen first-person from behind our stall (mockup:
+   `docs/art/concept-stall-pov.webp`): customers come to the counter (3 spots + Ah Gong's
+   table) with an order bubble. The player makes each drink by hand on a tray of 3 cups:
+   drag a cup out, HOLD the kopi/teh pot over it to pour, add condensed/evap milk and sugar
+   watching a gauge (kosong / siew dai / normal / too much), drop ice or Milo powder, wiggle
+   the spoon to stir, then drag the cup to the customer. Several cups can be in progress at
+   once. Graded perfect / close / oops with a reason ("forgot to stir", "too sweet").
 2. Drama events pop in randomly during the day (see list below).
 3. Night phase: spend earnings on upgrades, new drinks, decor.
 4. Progression (post v0.1): one stall -> a full kopitiam -> a chain across
