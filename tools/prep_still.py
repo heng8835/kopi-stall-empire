@@ -42,16 +42,32 @@ def main() -> None:
     ap.add_argument("--max-sat", type=float, default=28, help="background/shadow max colourfulness")
     ap.add_argument("--min-alpha", type=int, default=200, help="more transparent than this = background")
     ap.add_argument("--margin", type=int, default=8)
+    ap.add_argument("--regions", nargs="+", help="x0:x1 pixel column range per character (for crowded images); the largest part inside each range is kept")
     args = ap.parse_args()
 
     im = Image.open(args.input).convert("RGBA")
     rgba = np.array(im)
     fg = ~background_mask(rgba, args.min_lum, args.max_sat, args.min_alpha) & (rgba[..., 3] >= args.min_alpha)
 
-    # Characters = the N largest connected parts; everything else (steam, sparkles) is dropped.
-    labels, n = ndimage.label(fg, structure=np.ones((3, 3)))
+    if args.regions:
+        if len(args.regions) != len(args.names):
+            ap.error("--regions needs one range per name")
+        # One label per region: the largest connected part inside that column range.
+        labels = np.zeros(fg.shape, dtype=np.int32)
+        for i, rng in enumerate(args.regions, start=1):
+            x0, x1 = (int(v) for v in rng.split(":"))
+            sub = np.zeros_like(fg)
+            sub[:, x0:x1] = fg[:, x0:x1]
+            lab, k = ndimage.label(sub, structure=np.ones((3, 3)))
+            if k:
+                big = np.argmax(ndimage.sum(sub, lab, range(1, k + 1))) + 1
+                labels[(lab == big) & (labels == 0)] = i
+        n = len(args.names)
+    else:
+        # Characters = the N largest connected parts; everything else (steam, sparkles) is dropped.
+        labels, n = ndimage.label(fg, structure=np.ones((3, 3)))
     sizes = ndimage.sum(fg, labels, range(1, n + 1))
-    keep = np.argsort(sizes)[::-1][: len(args.names)] + 1
+    keep = (np.arange(n) + 1) if args.regions else np.argsort(sizes)[::-1][: len(args.names)] + 1
     objects = ndimage.find_objects(labels)
     boxes = sorted(((objects[k - 1], k) for k in keep), key=lambda t: t[0][1].start)
 
