@@ -67,5 +67,6 @@ keeps eating her char kway teow.
 ## Commands + docs
 - `npm run dev` (http://localhost:5173), `npm test` (Vitest), `npm run build` -> `dist/`
 - Every scene's `create()` starts with `fitCamera(this)` (integer zoom, see `src/systems/view.js`).
+- Sprite preview (dev only): http://localhost:5173/sprites.html
 - Use `addText()` from `src/systems/text.js` for all text (crisp at any zoom).
 - Session handoff: `docs/STATE.yml`. Decisions: `docs/DECISION_LOG.md`. Scope/acceptance: `docs/PROJECT_BRIEF.md`.

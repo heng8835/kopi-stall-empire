@@ -24,22 +24,24 @@ export const PALETTE = {
   z: '#cfd6db', // steam
 };
 
+// Big chibi head: full 12px wide, 8 rows (uses the old empty top row).
 const HEAD = [
-  '............', '...kkkkkk...', '..kkkkkkkk..', '.kkkkkkkkkk.',
-  '.kssssssssk.', '.ssessssess.', '.sbssmmssbs.', '..ssssssss..',
+  '...kkkkkk...', '.kkkkkkkkkk.', 'kkkkkkkkkkkk', 'kssssssssssk',
+  'ssssssssssss', 'sssessssesss', 'ssbssmmssbss', '.ssssssssss.',
 ];
 
 export const SPRITES = {
   uncleTan: [
-    '............', '...ssssss...', '..kssssssk..', '.kssssssssk.',
-    '.ssssssssss.', '.ssessssess.', '.sbssmmssbs.', '..ssssssss..',
+    '...ssssss...', '.ssssssssss.', 'kssssssssssk', 'kssssssssssk',
+    'ssssssssssss', 'sssessssesss', 'ssbssmmssbss', '.ssssssssss.',
     '..wwwwwwtt..', '.swwwwwwwtts', '.swwwwwwwwws', '.swwwwwwwwws',
     '..pppppppp..', '..pppppppp..', '..ss....ss..', '..ff....ff..',
   ],
+  // Perm hair already filled the width, so her head grows one row taller (blouse one shorter).
   auntyLim: [
     '..kk.kk.kk..', '.kkkkkkkkkk.', 'kkkkkkkkkkkk', 'kksssssssskk',
-    'kssssssssssk', 'kssessssessk', 'ksbssmmssbsk', '.kssssssssk.',
-    '..rryrryrr..', '.srrrryrrrrs', '.srryrrrryrs', '..rrrrrrrr..',
+    'kssssssssssk', 'kssessssessk', 'ksbssmmssbsk', 'kssssssssssk',
+    '.kssssssssk.', '..rryrryrr..', '.srrrryrrrrs', '.srryrrrryrs',
     '..qqqqqqqq..', '..qqqqqqqq..', '..ss....ss..', '..ff....ff..',
   ],
   officeGuy: HEAD.concat([
