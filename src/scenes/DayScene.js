@@ -189,6 +189,7 @@ export default class DayScene extends Phaser.Scene {
     this.brewTween?.stop();
     this.brewing = true;
     play('pour');
+    this.startSteam();
     this.brewBar.width = 0;
     this.brewTween = this.tweens.add({
       targets: this.brewBar,
@@ -196,6 +197,7 @@ export default class DayScene extends Phaser.Scene {
       duration: BREW_MS,
       onComplete: () => {
         this.brewing = false;
+        this.stopSteam();
         this.refreshBuild();
       },
     });
@@ -204,6 +206,7 @@ export default class DayScene extends Phaser.Scene {
 
   throwAway() {
     this.brewTween?.stop();
+    this.stopSteam();
     this.brewing = false;
     this.brewBar.width = 0;
     this.build = freshBuild();
@@ -376,7 +379,10 @@ export default class DayScene extends Phaser.Scene {
   }
 
   clearBubble(c) {
-    c?.bubble?.objs.forEach((o) => o.destroy());
+    c?.bubble?.objs.forEach((o) => {
+      this.tweens.killTweensOf(o);
+      o.destroy();
+    });
     if (c) c.bubble = null;
   }
 
@@ -386,6 +392,10 @@ export default class DayScene extends Phaser.Scene {
     const f = Phaser.Math.Clamp(c.patienceMs / c.patienceMax, 0, 1);
     bar.width = Math.max(0, Math.round(64 * f));
     bar.fillColor = f > 0.35 ? COLORS.good : COLORS.accent;
+    if (f <= 0.35 && !c.bubble.shaking) {
+      c.bubble.shaking = true;
+      this.tweens.add({ targets: bar, x: '+=2', duration: 70, yoyo: true, repeat: -1 });
+    }
   }
 
   serve() {
@@ -411,6 +421,9 @@ export default class DayScene extends Phaser.Scene {
     this.setFeedback(`${label} +${formatMoney(res.paid)}${extra}  ♥${res.happy > 0 ? '+' : ''}${res.happy}`);
     this.tweens.add({ targets: this.ownerSprite, scaleY: this.ownerSprite.scaleY * 0.94, duration: 80, yoyo: true });
 
+    this.slideCup(c);
+    this.coinBurst(c);
+    if (tier === 'perfect') this.happyHop(c);
     this.throwAway();
     this.refreshHud();
 
@@ -454,6 +467,56 @@ export default class DayScene extends Phaser.Scene {
       this.walkTo(next, FRONT_X);
     }
     this.refreshServe();
+  }
+
+  // ---------- juice ----------
+
+  startSteam() {
+    this.stopSteam();
+    this.steamEvent = this.time.addEvent({
+      delay: 160,
+      loop: true,
+      callback: () => {
+        const puff = this.add.circle(54 + Phaser.Math.Between(-10, 10), STATION_Y + 58, Phaser.Math.Between(3, 5), 0xffffff, 0.8).setDepth(7);
+        this.tweens.add({ targets: puff, y: puff.y - 34, alpha: 0, scale: 1.8, duration: 700, onComplete: () => puff.destroy() });
+      },
+    });
+  }
+
+  stopSteam() {
+    this.steamEvent?.remove();
+    this.steamEvent = null;
+  }
+
+  // A copy of the cup slides from the tray to the customer and shrinks away.
+  slideCup(c) {
+    const cup = this.add.image(this.cup.x, this.cup.y, this.cup.texture.key).setOrigin(0.5, 0).setScale(this.cup.scale).setDepth(30);
+    const tx = c.slot === 'table' ? TABLE_X + 30 : FRONT_X;
+    this.tweens.add({ targets: cup, x: tx, y: COUNTER_Y - 40, scale: 2.5, alpha: 0.2, duration: 380, ease: 'Quad.in', onComplete: () => cup.destroy() });
+  }
+
+  // A few coins hop from the customer to the money counter, which pulses.
+  coinBurst(c) {
+    const from = { x: c.slot === 'table' ? TABLE_X : FRONT_X, y: this.headTop(c) + 20 };
+    for (let i = 0; i < 4; i++) {
+      const coin = this.add.circle(from.x, from.y, 5, 0xf2c14e).setStrokeStyle(1, 0xb8862b).setDepth(31);
+      this.tweens.add({
+        targets: coin,
+        x: GAME_W - 30,
+        y: 14,
+        duration: 520,
+        delay: 120 + i * 70,
+        ease: 'Cubic.in',
+        onComplete: () => {
+          coin.destroy();
+          if (i === 3) this.tweens.add({ targets: this.hudMoney, scale: 1.18, duration: 90, yoyo: true });
+        },
+      });
+    }
+  }
+
+  happyHop(c) {
+    c.sprites.forEach((s, i) => this.tweens.add({ targets: s, y: s.y - 10, duration: 110, yoyo: true, repeat: 1, delay: 300 + i * 50, ease: 'Quad.out' }));
   }
 
   // ---------- glossary / feedback ----------
