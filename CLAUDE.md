@@ -46,6 +46,7 @@ data so new content can be added without touching game logic.
   Pipeline: `tools/prep_still.py` (cutout -> `art/prepped/`, gitignored) ->
   add key + display height to `src/data/spriteSizes.json` -> `tools/build_sprites.py`
   (HD finish, 3x) -> `public/sprites/<key>.png` (committed). Run tools with `.venv/Scripts/python`.
+- Style rules + ready-to-paste ChatGPT prompts: `docs/ART_BIBLE.md`.
 - Do not force AI art onto a low-res pixel grid (it damages it; see `docs/art/finish-comparison.png`).
 - Original characters only. No copyrighted characters, real brand logos or monograms,
   national flags or landmark/mascot trademarks (e.g. the Merlion).
