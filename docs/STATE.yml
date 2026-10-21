@@ -1,0 +1,12 @@
+# docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
+updated: 2026-10-21
+phase: development
+next: "M1 serving loop (plan: ~/.claude/plans/nested-enchanting-bunny.md)"
+tier_hint: 1
+blockers: []
+touched: [package.json, vite.config.js, index.html, src/main.js, src/systems/view.js, src/systems/spriteFactory.js, src/scenes/]
+validation: partial
+open_decisions: ["Ah Gong + Tourist sprite design (M2)"]
+spec: ""
+board_task: ""
+notes: "Canvas is 180x320 * integer zoom; scenes must call fitCamera(this) first."
