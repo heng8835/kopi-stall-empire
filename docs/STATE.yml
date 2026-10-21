@@ -1,9 +1,9 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-21
 phase: development
-next: "User: install gh + gh auth login, choose public/private -> create repo, push, enable Pages; then playtest (Phase 2)"
+next: "Phase 2: user playtests https://heng8835.github.io/kopi-stall-empire/ and pastes Copy playtest notes; tune from that"
 tier_hint: 1
-blockers: ["gh CLI login (user)", "Sophie + Uncle Tan file (user)", "kids regenerated (user)"]
+blockers: ["Sophie + Uncle Tan file (user)", "kids regenerated (user)"]
 touched: [src/scenes/DayScene.js, src/scenes/TitleScene.js, src/systems/view.js, src/data/spriteSizes.json, tools/build_sprites.py, public/sprites/]
 validation: passing
 open_decisions: []
