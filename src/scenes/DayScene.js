@@ -13,6 +13,9 @@ import { createDayState, applyServe, applyTimeout, formatMoney } from '../system
 import { ensureCupTexture } from '../systems/drinkSprite.js';
 import { weightedPick, randBetween } from '../systems/random.js';
 import { startDay, logEvent, finishDay, summarize } from '../systems/playlog.js';
+import { Tutorial } from '../systems/tutorial.js';
+import { TUTORIAL_STEPS, BUTTON_IDS } from '../data/tutorial.js';
+import { load } from '../systems/save.js';
 
 const DAY_MS = 180_000; // ~3 real minutes per day
 const OPEN_MIN = 7 * 60; // 7:00am
@@ -67,6 +70,9 @@ export default class DayScene extends Phaser.Scene {
     this.drawHud();
     this.drawStation();
     this.refreshBuild();
+
+    this.tutorial = new Tutorial(this, TUTORIAL_STEPS);
+    if (this.day === 1 && !load('tutorialDone', false)) this.tutorial.start();
   }
 
   // ---------- drawing ----------
@@ -143,6 +149,15 @@ export default class DayScene extends Phaser.Scene {
     this.serveBtn = makeButton(this, col(0), sy, bw * 3 + gap * 2, h + 8, 'SERVE', () => this.serve(), { size: 18, bold: true, fill: 0xbfe3c0 });
     this.serveBtn.bg.setDepth(D);
     this.serveBtn.txt.setDepth(D + 1);
+
+    // Ids used by the tutorial to point at buttons (see BUTTON_IDS in src/data/tutorial.js).
+    this.buttons = {
+      kopi: this.baseBtns.kopi, teh: this.baseBtns.teh, milo: this.baseBtns.milo,
+      milk: this.milkBtns.condensed, c: this.milkBtns.evap, o: this.milkBtns.none,
+      sugar: this.sugarBtns.normal, siewdai: this.sugarBtns.less, kosong: this.sugarBtns.none,
+      peng: this.pengBtn, powder: this.powderBtn, serve: this.serveBtn, throw: this.throwBtn,
+    };
+    if (import.meta.env.DEV) BUTTON_IDS.filter((id) => !this.buttons[id]).forEach((id) => console.warn('[tutorial] no button for id', id));
 
     // Oyen naps by the cash drawer (decor only)
     this.oyen = addSprite(this, 'oyen', 44, GAME_H - 6).setDepth(D + 1);
@@ -237,7 +252,7 @@ export default class DayScene extends Phaser.Scene {
   }
 
   // forcedId lets drama events (and tests) bring in a specific character.
-  spawnCustomer(forcedId = null) {
+  spawnCustomer(forcedId = null, forcedOrder = null) {
     // Groups take the whole counter: they only come when it's empty, and nobody queues behind them.
     const tableFree = !this.tableGuest;
     const groupAtCounter = this.queue.some((q) => q.n > 1);
@@ -252,7 +267,7 @@ export default class DayScene extends Phaser.Scene {
     const def = forcedId ? (forced && fits(forced) ? forced : null) : pool.length ? weightedPick(pool) : null;
     if (!def) return null;
 
-    const orderText = weightedPick(def.orders).text;
+    const orderText = forcedOrder ?? weightedPick(def.orders).text;
     const n = def.groupSize;
     const slot = def.slot === 'table' ? 'table' : 'counter';
     const keys = n > 1 ? (def.sprites ?? Array(n).fill(def.sprite)).slice(0, n) : [def.sprite];
@@ -379,6 +394,7 @@ export default class DayScene extends Phaser.Scene {
     c.served += 1;
     c.state = 'reacting';
     logEvent(this.log, 'serve', { who: c.def.id, wanted: c.orderText, made: formatOrder(made), tier, waitMs: Math.round(c.patienceMax - c.patienceMs) }, this.clockMs);
+    this.tutorial?.onServed(c, tier);
 
     this.showBubble(c, pickLine(c.def.lines, tier, this.lineVars()), 'reaction');
     this.floatText(`+${formatMoney(res.paid + res.tip)}`, c.slot === 'table' ? TABLE_X : FRONT_X, this.headTop(c) - 8);
@@ -472,14 +488,16 @@ export default class DayScene extends Phaser.Scene {
   update(_time, delta) {
     if (this.ended || this.paused) return;
 
-    this.clockMs = Math.min(DAY_MS, this.clockMs + delta);
+    // The tutorial is a calm intro: the day clock and random spawns wait for it.
+    const teaching = this.tutorial?.active;
+    if (!teaching) this.clockMs = Math.min(DAY_MS, this.clockMs + delta);
     this.refreshHud();
     if (this.clockMs >= DAY_MS) {
       this.endDay();
       return;
     }
 
-    this.spawnInMs -= delta;
+    if (!teaching) this.spawnInMs -= delta;
     if (this.spawnInMs <= 0) {
       const room = this.queue.length < MAX_QUEUE || !this.tableGuest;
       if (room && this.clockMs < LAST_SPAWN_MS && this.spawnCustomer()) this.spawnInMs = randBetween(6000, 12000);
@@ -487,6 +505,7 @@ export default class DayScene extends Phaser.Scene {
     }
 
     for (const c of this.waitingCustomers()) {
+      if (c.tutorial) continue; // no time pressure while learning
       c.patienceMs -= delta;
       this.updatePatienceBar(c);
       if (c.patienceMs <= 0) this.timeout(c);

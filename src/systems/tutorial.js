@@ -1,0 +1,119 @@
+import { COLORS, GAME_H } from '../config.js';
+import { TUTORIAL_TEXT } from '../data/tutorial.js';
+import { addText } from './text.js';
+import { makeButton } from './ui.js';
+import { save } from './save.js';
+
+const CARD = { x: 6, w: 348, bottom: GAME_H - 4 }; // full width, sized to its text, pinned to the bottom
+const DEPTH = 40;
+
+// Drives the Day-1 tutorial inside DayScene: spawns scripted customers one by one, shows
+// Uncle Tan's note card, pulses the relevant buttons. While active, DayScene pauses the
+// day clock, random spawns and the tutorial customers' patience.
+export class Tutorial {
+  constructor(scene, steps) {
+    this.scene = scene;
+    this.steps = steps;
+    this.i = -1;
+    this.active = false;
+    this.objs = [];
+    this.glows = [];
+  }
+
+  start() {
+    this.active = true;
+    this.next();
+  }
+
+  next() {
+    this.i += 1;
+    if (this.i >= this.steps.length) return this.finish();
+    const step = this.steps[this.i];
+    this.showNote(step.note);
+    this.highlight(step.highlight);
+    this.trySpawn(step);
+  }
+
+  trySpawn(step) {
+    if (!this.active) return;
+    const c = this.scene.spawnCustomer(step.customer, step.order);
+    if (c) c.tutorial = true;
+    else this.scene.time.delayedCall(500, () => this.trySpawn(step)); // slot still busy
+  }
+
+  // Called by DayScene.serve() for every serve.
+  onServed(c, tier) {
+    if (!this.active || !c.tutorial || c.served < c.n) return;
+    if (tier !== 'perfect') this.status.setText(TUTORIAL_TEXT.almost);
+    this.scene.time.delayedCall(1800, () => this.active && this.next());
+  }
+
+  finish() {
+    this.active = false;
+    save('tutorialDone', true);
+    this.clearGlows();
+    this.showNote(TUTORIAL_TEXT.done, false);
+    this.scene.time.delayedCall(5000, () => this.clearNote());
+    this.scene.spawnInMs = 3000;
+  }
+
+  skip() {
+    this.active = false;
+    save('tutorialDone', true);
+    this.clearGlows();
+    this.clearNote();
+    for (const c of [...this.scene.queue, this.scene.tableGuest]) if (c) c.tutorial = false;
+    this.scene.spawnInMs = 1500;
+  }
+
+  showNote(note, withSkip = true) {
+    this.clearNote();
+    const s = this.scene;
+    const { x, w } = CARD;
+    // Lay text out first (at y=0) to measure, then pin the card to the bottom of the screen.
+    const title = addText(s, x + 8, 0, TUTORIAL_TEXT.title, { size: 11, bold: true, color: '#8a5a1e' }).setDepth(DEPTH + 1);
+    const en = addText(s, x + 8, 0, note.en, { size: 12, wrap: w - 16, lineSpacing: 1 }).setDepth(DEPTH + 1);
+    const zh = addText(s, x + 8, 0, note.zh, { size: 11, color: '#6b5a50', wrap: w - 16 }).setDepth(DEPTH + 1);
+    this.status = addText(s, x + 120, 0, '', { size: 11, bold: true, color: '#c8562e' }).setDepth(DEPTH + 1);
+    // Notes are written to fit 2 English lines + 1 Chinese line, so the card stays below SERVE.
+    const h = 6 + 16 + en.height + 3 + zh.height + 6;
+    const y = CARD.bottom - h;
+    title.setY(y + 6);
+    this.status.setY(y + 6);
+    en.setY(y + 22);
+    zh.setY(y + 25 + en.height);
+    this.top = y;
+    const card = s.add.rectangle(x, y, w, h, 0xfff1a8).setOrigin(0).setStrokeStyle(2, 0xd9b44a).setDepth(DEPTH);
+    this.objs = [card, title, en, zh, this.status];
+    if (withSkip) {
+      const btn = makeButton(s, x + w - 52, y + 4, 46, 20, TUTORIAL_TEXT.skip, () => this.skip(), { size: 11 });
+      btn.bg.setDepth(DEPTH + 1);
+      btn.txt.setDepth(DEPTH + 2);
+      this.objs.push(btn.bg, btn.txt);
+    }
+    // Pop in gently
+    s.tweens.add({ targets: this.objs, alpha: { from: 0, to: 1 }, duration: 250 });
+  }
+
+  clearNote() {
+    this.objs.forEach((o) => o.destroy());
+    this.objs = [];
+  }
+
+  highlight(ids) {
+    this.clearGlows();
+    for (const id of ids) {
+      const btn = this.scene.buttons?.[id];
+      if (!btn) continue;
+      const b = btn.bg.getBounds();
+      const glow = this.scene.add.rectangle(b.x - 3, b.y - 3, b.width + 6, b.height + 6).setOrigin(0).setStrokeStyle(3, COLORS.accent).setDepth(btn.txt.depth + 1);
+      this.scene.tweens.add({ targets: glow, alpha: { from: 1, to: 0.25 }, duration: 600, yoyo: true, repeat: -1 });
+      this.glows.push(glow);
+    }
+  }
+
+  clearGlows() {
+    this.glows.forEach((g) => g.destroy());
+    this.glows = [];
+  }
+}

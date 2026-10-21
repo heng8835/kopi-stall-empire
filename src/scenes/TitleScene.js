@@ -38,6 +38,15 @@ export default class TitleScene extends Phaser.Scene {
     this.choose(this.owner);
 
     makeButton(this, cx - 110, 512, 220, 58, 'Open stall  开档!', () => this.start(), { size: 20, bold: true, fill: 0xbfe3c0 });
+
+    // Returning players can replay Uncle Tan's Day-1 notes.
+    if (load('tutorialDone', false)) {
+      const replay = addText(this, cx, 590, "Replay tutorial (Uncle Tan's notes)", { size: 13, color: '#8a5a1e', origin: 0.5 });
+      replay.setInteractive({ useHandCursor: true }).once('pointerdown', () => {
+        save('tutorialDone', false);
+        replay.setText('Tutorial will play on Day 1 ✓');
+      });
+    }
   }
 
   choose(key) {
