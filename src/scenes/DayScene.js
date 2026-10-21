@@ -6,7 +6,8 @@ import { pickLine, UI } from '../i18n/lines.js';
 import { addText } from '../systems/text.js';
 import { fitCamera } from '../systems/view.js';
 import { addSprite } from '../systems/sprites.js';
-import { makeButton, layoutLine, showGlossary } from '../systems/ui.js';
+import { makeButton, layoutLine, showGlossary, addMuteToggle } from '../systems/ui.js';
+import { play } from '../systems/sfx.js';
 import { parseOrder, formatOrder } from '../systems/order.js';
 import { scoreDrink } from '../systems/scoring.js';
 import { createDayState, applyServe, applyTimeout, formatMoney } from '../systems/economy.js';
@@ -100,6 +101,7 @@ export default class DayScene extends Phaser.Scene {
     this.hudClock = addText(this, 8, 6, '', opts).setDepth(21);
     this.hudHappy = addText(this, GAME_W / 2 + 28, 6, '', { ...opts, origin: [0.5, 0] }).setDepth(21);
     this.hudMoney = addText(this, GAME_W - 8, 6, '', { ...opts, origin: [1, 0] }).setDepth(21);
+    addMuteToggle(this, 156, 7, { color: '#ffffff', size: 12 }).setDepth(21);
     this.refreshHud();
   }
 
@@ -186,6 +188,7 @@ export default class DayScene extends Phaser.Scene {
   startBrew() {
     this.brewTween?.stop();
     this.brewing = true;
+    play('pour');
     this.brewBar.width = 0;
     this.brewTween = this.tweens.add({
       targets: this.brewBar,
@@ -322,6 +325,8 @@ export default class DayScene extends Phaser.Scene {
     this.time.delayedCall(duration + 60, () => {
       if (c.state === 'gone') return;
       if (front) this.arrive(c);
+      // The person ahead may have left while we were still walking in: carry on to the front.
+      else if (this.queue[0] === c) this.walkTo(c, FRONT_X);
       else c.state = 'queued';
     });
   }
@@ -395,6 +400,9 @@ export default class DayScene extends Phaser.Scene {
     c.state = 'reacting';
     logEvent(this.log, 'serve', { who: c.def.id, wanted: c.orderText, made: formatOrder(made), tier, waitMs: Math.round(c.patienceMax - c.patienceMs) }, this.clockMs);
     this.tutorial?.onServed(c, tier);
+    play('clink');
+    this.time.delayedCall(140, () => play('coin'));
+    this.time.delayedCall(420, () => play(tier === 'oops' ? 'oops' : tier === 'perfect' ? 'perfect' : 'tap'));
 
     this.showBubble(c, pickLine(c.def.lines, tier, this.lineVars()), 'reaction');
     this.floatText(`+${formatMoney(res.paid + res.tip)}`, c.slot === 'table' ? TABLE_X : FRONT_X, this.headTop(c) - 8);
@@ -423,6 +431,7 @@ export default class DayScene extends Phaser.Scene {
     c.state = 'reacting';
     applyTimeout(this.econ);
     logEvent(this.log, 'timeout', { who: c.def.id }, this.clockMs);
+    play('walkout');
     this.showBubble(c, pickLine(c.def.lines, 'timeout', this.lineVars()), 'reaction');
     this.setFeedback('They wandered off... ♥-1');
     this.refreshHud();
@@ -517,6 +526,7 @@ export default class DayScene extends Phaser.Scene {
   endDay() {
     this.ended = true;
     finishDay(this.log, this.econ);
+    play('dayEnd');
     this.throwAway();
     for (const c of [...this.queue, this.tableGuest].filter(Boolean)) {
       c.state = 'gone';

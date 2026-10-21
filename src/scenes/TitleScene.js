@@ -3,7 +3,7 @@ import { GAME_W, GAME_H, COLORS } from '../config.js';
 import { addText } from '../systems/text.js';
 import { fitCamera } from '../systems/view.js';
 import { addSprite } from '../systems/sprites.js';
-import { makeButton } from '../systems/ui.js';
+import { makeButton, addMuteToggle } from '../systems/ui.js';
 import { load, save } from '../systems/save.js';
 import { OWNERS } from '../data/owners.js';
 
@@ -21,6 +21,7 @@ export default class TitleScene extends Phaser.Scene {
     this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.sky).setOrigin(0);
     this.add.rectangle(0, 420, GAME_W, GAME_H - 420, COLORS.floorA).setOrigin(0);
 
+    addMuteToggle(this, GAME_W - 12, 12, { origin: [1, 0] });
     addText(this, cx, 96, 'Kopi Stall\nEmpire', { size: 40, bold: true, align: 'center', origin: 0.5 });
     addText(this, cx, 162, '咖啡摊帝国', { size: 18, align: 'center', origin: 0.5 });
     addText(this, cx, 206, "Who's opening the stall today?", { size: 15, align: 'center', origin: 0.5 });

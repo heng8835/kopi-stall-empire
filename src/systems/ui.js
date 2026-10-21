@@ -2,6 +2,7 @@ import { COLORS, GAME_W, GAME_H } from '../config.js';
 import { GLOSSARY } from '../data/glossary.js';
 import { addText } from './text.js';
 import { tokenize } from './order.js';
+import { play, isMuted, setMuted } from './sfx.js';
 
 export const TERM_COLOR = '#c8562e';
 
@@ -34,11 +35,24 @@ export function makeButton(scene, x, y, w, h, label, onTap, opts = {}) {
   };
   bg.on('pointerdown', () => {
     if (!btn.enabled) return;
+    play('tap');
     scene.tweens.add({ targets: [bg, txt], y: '+=2', duration: 50, yoyo: true });
     onTap();
   });
   btn.refresh();
   return btn;
+}
+
+// Small ♪ toggle for sound; remembers the choice.
+export function addMuteToggle(scene, x, y, opts = {}) {
+  const label = () => (isMuted() ? '♪ off' : '♪ on');
+  const t = addText(scene, x, y, label(), { size: opts.size ?? 13, bold: true, color: opts.color ?? COLORS.ink, origin: opts.origin ?? [0.5, 0] });
+  t.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+    setMuted(!isMuted());
+    t.setText(label()).setAlpha(isMuted() ? 0.6 : 1);
+  });
+  t.setAlpha(isMuted() ? 0.6 : 1);
+  return t;
 }
 
 // Lay out a dialogue line word by word inside maxW, colouring glossary terms and making
