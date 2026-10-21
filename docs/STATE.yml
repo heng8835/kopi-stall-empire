@@ -1,12 +1,12 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-21
 phase: development
-next: "M1 serving loop (plan: ~/.claude/plans/nested-enchanting-bunny.md)"
+next: "Discuss sprite style (user ref: outlined 16x24-ish chibi) + mechanics/game style, then plan M2"
 tier_hint: 1
 blockers: []
-touched: [package.json, vite.config.js, index.html, src/main.js, src/systems/view.js, src/systems/spriteFactory.js, src/scenes/]
-validation: partial
-open_decisions: ["Ah Gong + Tourist sprite design (M2)"]
+touched: [src/scenes/DayScene.js, src/systems/, src/data/, src/i18n/lines.js, tests/]
+validation: passing
+open_decisions: ["Sprite style/grid change (outlines, 16x24?) — conflicts with current CLAUDE.md art rules", "Ah Gong + Tourist designs"]
 spec: ""
 board_task: ""
-notes: "Canvas is 180x320 * integer zoom; scenes must call fitCamera(this) first."
+notes: "Pane testing: Phaser pauses when page hidden; step via game.step + fake Date.now."

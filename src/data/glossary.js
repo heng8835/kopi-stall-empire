@@ -1,0 +1,30 @@
+// Tap-to-explain glossary. Keys are lowercase; multi-word keys are matched first.
+// Every local term that can appear in a bubble needs an entry here.
+
+export const GLOSSARY = {
+  kopi: { term: 'Kopi', en: 'Coffee. Comes with sweet condensed milk unless you say otherwise.', zh: '咖啡 — 默认加炼奶。' },
+  teh: { term: 'Teh', en: 'Tea. Also comes with condensed milk by default.', zh: '茶 — 默认加炼奶。' },
+  o: { term: 'O', en: 'No milk. Still has sugar though!', zh: '不加奶（有糖）。' },
+  c: { term: 'C', en: 'With evaporated milk and sugar, instead of condensed milk.', zh: '加淡奶和糖。' },
+  kosong: { term: 'Kosong', en: 'No sugar. Malay for "empty".', zh: '不加糖（马来语"空"）。' },
+  'siew dai': { term: 'Siew dai', en: 'Less sugar. From 少甜 — "less sweet".', zh: '少甜。' },
+  peng: { term: 'Peng', en: 'Iced. From Hokkien 冰 (ice).', zh: '加冰。' },
+  'milo dinosaur': { term: 'Milo Dinosaur', en: 'Iced Milo with a mountain of Milo powder on top.', zh: '冰美禄，上面堆满美禄粉。' },
+  boss: { term: 'Boss', en: 'What customers call the stall owner.', zh: '老板。' },
+  uncle: { term: 'Uncle', en: 'Friendly way to call any older man. No relation needed!', zh: '对年长男士的亲切称呼。' },
+  'ah boy': { term: 'Ah Boy', en: 'Affectionate "young man". Aunties call everyone this.', zh: '"小弟"，阿姨们的亲切叫法。' },
+  'fast fast': { term: 'Fast fast', en: 'Quickly! Saying it twice = extra urgent.', zh: '快快！说两次更急。' },
+  lah: { term: 'lah', en: 'Sentence-ending particle. Softens or stresses — very Singlish.', zh: '语气词，缓和或强调。' },
+  leh: { term: 'leh', en: 'Particle for mild complaint or persuasion.', zh: '语气词，带点抱怨或撒娇。' },
+  hor: { term: 'hor', en: 'Particle meaning "okay? / right?" — seeking agreement.', zh: '语气词，"好吗？对吧？"' },
+  ah: { term: 'ah', en: 'Particle for questions or to soften a sentence.', zh: '语气词，"啊"。' },
+  can: { term: 'can', en: '"Can?" = "Is that okay?" "Can!" = "Yes!"', zh: '"可以吗？" / "可以！"' },
+  shiok: { term: 'Shiok', en: 'Super satisfying, delicious, great!', zh: '爽！好满足！' },
+  aiyo: { term: 'Aiyo', en: 'Oh dear! / Oh no! Mild exasperation.', zh: '哎哟！' },
+  power: { term: 'Power', en: 'Excellent! Top-notch! (Singlish praise)', zh: '厉害！一流！' },
+  'same same': { term: 'Same same', en: 'The same as usual / as before.', zh: '一样一样。' },
+  wah: { term: 'Wah', en: 'Wow! Surprise or amazement.', zh: '哇！' },
+  makan: { term: 'Makan', en: 'Eat / food. From Malay.', zh: '吃（马来语）。' },
+  paiseh: { term: 'Paiseh', en: 'Embarrassed, sorry. From Hokkien 歹势.', zh: '不好意思（福建话）。' },
+  alamak: { term: 'Alamak', en: 'Oh no! Oh my! Malay exclamation.', zh: '糟糕！' },
+};
