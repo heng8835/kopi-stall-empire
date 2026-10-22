@@ -4,27 +4,35 @@ Game design (cast, drinks, kopi grammar, events, upgrades) lives in `GAME_DESIGN
 This brief only records scope, decisions-status and acceptance for the current milestone.
 
 ## Summary (Confirmed)
-Cozy kopitiam stall management game, Phaser 3 + Vite, mobile-browser portrait first, hosted on itch.io.
+Cozy kopitiam stall game, Phaser 3 + Vite, mobile-browser portrait first. Playtest build on
+GitHub Pages (https://heng8835.github.io/kopi-stall-empire/), final release on itch.io.
 
 ## First vertical slice (Confirmed) — v0.1
-1 stall, 3 days (~3 min each), 6 drinks, 6 customers, 8 drama events, day -> night upgrades.
-Built in milestones: M0 setup, M1 serving loop, M2 cast + art, M3 night + save, M4 events, M5 polish + ship.
+1 stall, 3 days (~2 min each), 6 drinks, 6 customers, 8 drama events, day -> night upgrades.
+Player is a young owner (Jun or Mei). Drinks are made by hand from a first-person stall view
+(drag cup, hold pot to pour, milk/sugar gauges, ice/powder, stir, drag to customer).
+
+Done so far: setup, hands-on serving loop (StallScene), HD art for owners + all v0.1 customers
+except Sophie, Day-1 tutorial, sound, juice, playtest log, CI + Pages deploy.
+Next: `docs/specs/order-tickets-day-summary.md` (order tickets, peng ¾ rule, better day summary,
+3-day flow). Then night phase + upgrades + save, then the 8 drama events, then polish + itch.io.
 
 ## Not included yet (Confirmed)
-Anything beyond v0.1 — park in `IDEAS.md`.
+Anything beyond v0.1 — park in `IDEAS.md`. Backlog cast art already exists in `art/source/`.
 
-## Technical direction
-- Logical 180x320, integer camera zoom, canvas = 180*z x 320*z (Confirmed — see DECISION_LOG)
-- No backend; localStorage save (Confirmed)
-- Vitest for pure systems (Recommended)
+## Technical direction (Confirmed — see DECISION_LOG)
+- Logical 360x640; backbuffer = logical x min(3, fit x devicePixelRatio)
+- AI-made pixel-styled HD art, HD finish (no forced pixel grid); pipeline in CLAUDE.md
+- No backend; localStorage save (try/catch)
+- Vitest for pure systems; Actions runs tests + deploys on every push to main
 
-## Acceptance — M1 serving loop
-- Done when a customer walks up with a kopitiam-lingo order bubble, player builds the drink with taps, serves it, and gets paid + happiness.
-- Done when tapping a local term in the bubble opens a glossary pop-up.
-- Done when the kids' group order needs 4 cups.
-- Done when a wrong drink or timed-out customer has only gentle consequences (no game over).
-- Done when the day clock ends and a summary card appears.
+## Acceptance — current slice
+- Done when every v0.1 order can be made "perfect" with the drag tools (tests/cup.test.js).
+- Done when wrong drinks / timeouts only have gentle consequences (no game over).
+- Done when the tutorial teaches the actions and can be skipped / replayed.
+- Done when the day lasts ~2 minutes and ends with a summary + Copy playtest notes.
 - Done when `npm test` passes and the game works at 375x812.
 
 ## Open questions
-- TODO: Ah Gong + Tourist sprite style (to draw in M2, same 12x16 format).
+- TODO: Sophie (tourist) art without the flag keychain / Merlion print (user to regenerate).
+- TODO: tune pour speeds / patience / gauge zones from real-phone playtest notes.

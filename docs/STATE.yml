@@ -1,12 +1,12 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
-updated: 2026-10-22
+updated: 2026-10-23
 phase: development
 next: "Build docs/specs/order-tickets-day-summary.md (order tickets on cups, peng 3/4 fill rule, better day summary + 3-day flow)"
 tier_hint: 1
 blockers: ["Sophie flag/Merlion fix (user)"]
-touched: [src/scenes/DayScene.js, src/scenes/TitleScene.js, src/systems/view.js, src/data/spriteSizes.json, tools/build_sprites.py, public/sprites/]
+touched: [src/scenes/StallScene.js, src/systems/cup.js, src/data/tools.js, src/data/stallTuning.js, src/data/tutorial.js, tools/prep_still.py, public/sprites/, public/bg/stall.webp, docs/specs/]
 validation: passing
 open_decisions: []
 spec: "docs/specs/order-tickets-day-summary.md"
 board_task: ""
-notes: "360x640 HD art; new sprite = art/source -> tools/prep_still.py -> spriteSizes.json -> tools/build_sprites.py. Pane testing: step game.step + fake Date.now."
+notes: "Read the spec first. Art pipeline in CLAUDE.md. Pane testing: step game.step + fake Date.now; real drags via MouseEvents on the canvas (see spec Verification)."

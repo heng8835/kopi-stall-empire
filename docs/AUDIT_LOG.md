@@ -23,3 +23,10 @@ changes since the last entry). You may also add a row by hand when something mat
 
 | Date | Sev | Type | Change | Why | Refs |
 |------|-----|------|--------|-----|------|
+| 2026-10-23 | minor | change | Spec written for order tickets, peng ¾ fill rule, better day summary + 3-day flow | User playtest feedback; to build in a new session | docs/specs/order-tickets-day-summary.md |
+| 2026-10-22 | major | change | Stall art pass: user's background, tool sheet, glass cup; clean kid/Marcus/Jun/Mei pack | User wanted the game to match the mockup | 2b8d2e4, 2f93ed6 |
+| 2026-10-22 | major | decision | Rebuilt the day as a first-person stall with hands-on drag/pour/stir/serve, 2-minute days | User: buttons not fun, day too long | 70942fb, 94eb34c |
+| 2026-10-21 | major | change | Live on GitHub Pages with CI (tests + build + deploy on push) | Pro workflow: play on real phones | 9aeb66b |
+| 2026-10-21 | minor | change | Day-1 tutorial, procedural sound, juice; fixed customer stuck in queue | Onboarding + feel | 335ba5f, 2b2dc5b, 29fb93e |
+| 2026-10-21 | major | decision | HD finish for AI art at 360x640 (not a forced pixel grid); player = young owner Jun/Mei | Forced grid damaged the art; user request | 37b0100 |
+| 2026-10-21 | archival | archival | 12x16 / 16x24 code-drawn pixel sprites dropped in favour of AI art | User preferred ChatGPT-style chibi art | 1bda3af |
