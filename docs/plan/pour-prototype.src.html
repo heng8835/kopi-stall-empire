@@ -1,0 +1,450 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Drink Pour Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;600;700&family=Noto+Sans+SC:wght@400;700&display=swap">
+<style>
+/* Layout: a single stall "stage" column: drink buttons, the docked pour bar, the glass canvas, step captions. */
+:root {
+  --bg: #eef3ef; --panel: #ffffff; --ink: #23201d; --muted: #6c675f; --line: #d6ddd7;
+  --tile: #2f6d5c; --chilli: #c8402c; --chip: #e7efe9; --on: #2f6d5c; --on-ink: #ffffff;
+  --display: "Archivo Black", "Arial Black", system-ui, sans-serif;
+  --body: "Archivo", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #121714; --panel: #1b221e; --ink: #ecefe9; --muted: #a6ada6; --line: #2e3833; --tile: #1f4a3f; --chilli: #ff7a63; --chip: #25302a; --on: #79c784; --on-ink: #10140f; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #121714; --panel: #1b221e; --ink: #ecefe9; --muted: #a6ada6; --line: #2e3833; --tile: #1f4a3f; --chilli: #ff7a63; --chip: #25302a; --on: #79c784; --on-ink: #10140f; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 560px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 18px 48px; display: grid; gap: 14px; }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(24px, 6vw, 32px); margin: 0; line-height: 1.1; text-wrap: balance; }
+p { margin: 0; }
+.muted { color: var(--muted); font-size: 14px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--chilli); }
+.picks { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.picks button { font: inherit; font-weight: 700; font-size: 14px; padding: 10px 8px; border-radius: 10px; border: 2px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.picks button[aria-pressed="true"] { background: var(--on); color: var(--on-ink); border-color: var(--on); }
+.picks button:focus-visible { outline: 3px solid var(--chilli); outline-offset: 2px; }
+.stage { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 10px; }
+/* the pour bar exactly as it will dock in the game: ingredient chip, labelled zones, marker */
+.bar { display: grid; gap: 4px; }
+.bar .lbl { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; font-weight: 700; min-height: 20px; }
+.zones { display: flex; height: 34px; border-radius: 8px; overflow: hidden; border: 2px solid #23201d; position: relative; background: #e9e9e9; }
+.zones span { display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #1f1f1f; text-align: center; line-height: 1.05; border-right: 1px solid rgba(0,0,0,.18); }
+.zones span:last-child { border-right: none; }
+.zones .target { box-shadow: inset 0 0 0 3px #ffd23f; }
+.zones i { position: absolute; top: -6px; bottom: -6px; width: 5px; margin-left: -2px; background: #111; border: 1px solid #fff; border-radius: 3px; left: 0; }
+.bar.idle .zones { opacity: .35; }
+.z-none { background: #f4f4f4; } .z-lo { background: #cfe9cf; } .z-ok { background: #66bb6a; } .z-hi { background: #f2c14e; } .z-bad { background: #e57368; } .z-gap { background: #dcdcdc; }
+canvas { width: 100%; max-width: 420px; aspect-ratio: 360 / 420; justify-self: center; border-radius: 10px; display: block; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; }
+.steps span { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--chip); color: var(--muted); }
+.steps span.now { background: var(--chilli); color: #fff; }
+.steps span.done { color: var(--ink); }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.controls button { font: inherit; font-weight: 700; font-size: 13px; padding: 8px 12px; border-radius: 999px; border: 2px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.controls button:focus-visible { outline: 3px solid var(--chilli); outline-offset: 2px; }
+.notes { display: grid; gap: 6px; font-size: 14px; }
+.notes b { font-weight: 700; }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Kopi Stall Empire · preview</div>
+  <h1>Drink Pour Prototype</h1>
+  <p class="muted">The new filling animation on the real glass from the game, with the pour bar as it will dock above the customers. Pick a drink; it plays on a loop. Nothing here is in the game yet.</p>
+
+  <div class="picks" role="group" aria-label="Pick a drink">
+    <button type="button" id="pick-kopi" data-recipe="kopi" aria-pressed="true">Kopi (hot)</button>
+    <button type="button" id="pick-kopiOPeng" data-recipe="kopiOPeng">Kopi O peng</button>
+    <button type="button" id="pick-tehC" data-recipe="tehC">Teh C siew dai</button>
+    <button type="button" id="pick-milo" data-recipe="miloDino">Milo Dinosaur</button>
+    <button type="button" id="pick-horlicks" data-recipe="horlicks">Horlicks (hot)</button>
+  </div>
+
+  <div class="stage">
+    <div class="bar idle" id="bar">
+      <div class="lbl"><span id="bar-name">Pour bar</span><span id="bar-zone" class="muted"></span></div>
+      <div class="zones" id="zones"></div>
+    </div>
+    <canvas id="c" width="720" height="840" aria-label="Glass filling animation"></canvas>
+    <div class="steps" id="steps"></div>
+    <div class="controls"><button type="button" id="replay">Replay</button><button type="button" id="slow" aria-pressed="false">Slow motion</button></div>
+  </div>
+
+  <div class="notes">
+    <p><b>What's new:</b> the liquid sits inside the glass with 2-tone shading, a wobbling surface and the glass's shine over it. Streams, milk clouds, sugar, ice splashes and steam replace the flat coloured box.</p>
+    <p><b>Ice:</b> the code-drawn pixel cubes from the plan, dropped with a splash and bobbing at the surface.</p>
+    <p><b>Pour bar:</b> each ingredient shows its own labelled zones; the yellow outline is the order's target.</p>
+  </div>
+</div>
+
+<script>
+const GLASS_SRC = "{{GLASS}}";
+const ICE_SRC = "{{ICE}}";
+
+// ---------- art + geometry (sprite space = the game's 3x glass, 150 x 186 px) ----------
+const glass = new Image(); glass.src = GLASS_SRC;
+// Only the glass's bright reflections, laid back over the drink so it looks like it's behind glass.
+let shine = null;
+glass.onload = () => {
+  const c = document.createElement('canvas'); c.width = glass.width; c.height = glass.height;
+  const x = c.getContext('2d'); x.drawImage(glass, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height);
+  for (let i = 0; i < d.data.length; i += 4) {
+    const l = (d.data[i] * 0.3 + d.data[i + 1] * 0.59 + d.data[i + 2] * 0.11);
+    const a = Math.max(0, (l - 175) / 80) * (d.data[i + 3] / 255);
+    d.data[i] = d.data[i + 1] = d.data[i + 2] = 255; d.data[i + 3] = Math.round(255 * Math.min(1, a));
+  }
+  x.putImageData(d, 0, 0); shine = c;
+};
+const ice = new Image(); ice.src = ICE_SRC;
+const W = 360, H = 420;                 // stage in logical px
+const GS = 1.3;                        // glass sprite px -> stage px
+const GX = (W - 150 * GS) / 2 + 14, GY = 150;   // glass top-left on stage (handle on the right)
+// inside of the glass in sprite px: top / bottom y and the walls at those heights
+const IN = { top: 30, bottom: 159, l0: 15, r0: 107, l1: 26, r1: 97 };
+const sx = (x) => GX + x * GS, sy = (y) => GY + y * GS;
+const wallAt = (y) => { const t = (y - IN.top) / (IN.bottom - IN.top); return [IN.l0 + (IN.l1 - IN.l0) * t, IN.r0 + (IN.r1 - IN.r0) * t]; };
+const levelY = (fill) => IN.bottom - (IN.bottom - IN.top) * Math.min(fill, 1.12) / 1.0;
+
+const COL = { kopi: [59, 36, 22], teh: [154, 74, 30], milo: [90, 58, 40], horlicks: [196, 160, 112], condensed: [243, 226, 192], evap: [247, 239, 226] };
+const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const shade = (c, k) => c.map((v) => Math.max(0, Math.min(255, Math.round(v * k))));
+
+// ---------- recipes: a list of steps, each with a pour-bar definition ----------
+const BARS = {
+  fill: { name: 'Kopi / Teh pot · fill', zones: [['filling…', 'z-gap', 2.2], ['¾ PENG', 'z-lo', 1], ['', 'z-gap', .3], ['FULL', 'z-ok', 1], ['spill', 'z-bad', .8]], max: 1.12 },
+  condensed: { name: 'Condensed milk · sweetness', zones: [['none', 'z-none', 1], ['', 'z-gap', .5], ['SIEW DAI', 'z-lo', 1.4], ['', 'z-gap', .4], ['NORMAL', 'z-ok', 1.4], ['GA DAI', 'z-hi', 1.2], ['too sweet', 'z-bad', 1]], max: 1.6 },
+  sugar: { name: 'Sugar · sweetness', zones: [['KOSONG', 'z-none', 1.1], ['', 'z-gap', .4], ['SIEW DAI', 'z-lo', 1.4], ['', 'z-gap', .4], ['NORMAL', 'z-ok', 1.4], ['GA DAI', 'z-hi', 1.2], ['too sweet', 'z-bad', 1]], max: 1.6 },
+  evap: { name: 'Evaporated milk · C', zones: [['none (O)', 'z-none', 1.2], ['', 'z-gap', .8], ['C · NORMAL', 'z-ok', 1.8], ['a lot', 'z-hi', 1], ['too milky', 'z-bad', 1]], max: 1.6 },
+};
+// target = index of the zone the order wants; `to` = where the marker ends (0..max)
+const RECIPES = {
+  kopi: { base: 'kopi', hot: true, steps: [
+    { k: 'pour', what: 'kopi', to: 0.98, bar: 'fill', target: 3, label: 'Hold the kopi pot · FULL' },
+    { k: 'milk', what: 'condensed', to: 0.92, bar: 'condensed', target: 4, label: 'Condensed milk · NORMAL' },
+    { k: 'stir', label: 'Wiggle the spoon' },
+    { k: 'rest', label: 'Hot! Steam rises' },
+  ]},
+  kopiOPeng: { base: 'kopi', hot: false, steps: [
+    { k: 'pour', what: 'kopi', to: 0.72, bar: 'fill', target: 1, label: 'Kopi pot · ¾ line (peng)' },
+    { k: 'sugar', to: 0.92, bar: 'sugar', target: 4, label: 'Sugar · NORMAL' },
+    { k: 'stir', label: 'Stir' },
+    { k: 'ice', label: 'Drop the ice · level rises to FULL' },
+    { k: 'rest', label: 'Cold glass, condensation' },
+  ]},
+  tehC: { base: 'teh', hot: true, steps: [
+    { k: 'pour', what: 'teh', to: 0.98, bar: 'fill', target: 3, label: 'Hold the teh pot · FULL' },
+    { k: 'milk', what: 'evap', to: 0.92, bar: 'evap', target: 2, label: 'Evaporated milk · C' },
+    { k: 'sugar', to: 0.45, bar: 'sugar', target: 2, label: 'Sugar · SIEW DAI' },
+    { k: 'stir', label: 'Stir' },
+    { k: 'rest', label: 'Hot! Steam rises' },
+  ]},
+  miloDino: { base: 'milo', hot: false, steps: [
+    { k: 'pour', what: 'milo', to: 0.72, bar: 'fill', target: 1, label: 'Milo · ¾ line' },
+    { k: 'ice', label: 'Ice' },
+    { k: 'powder', label: 'Mountain of Milo powder!' },
+    { k: 'rest', label: 'Rawr' },
+  ]},
+  horlicks: { base: 'horlicks', hot: true, steps: [
+    { k: 'pour', what: 'horlicks', to: 0.98, bar: 'fill', target: 3, label: 'Horlicks · FULL' },
+    { k: 'stir', label: 'Stir' },
+    { k: 'rest', label: 'Hot! Steam rises' },
+  ]},
+};
+const DUR = { pour: 2600, milk: 1900, sugar: 1500, stir: 1800, ice: 1500, powder: 1500, rest: 2200 };
+
+// ---------- state ----------
+let recipe, stepIdx, stepT, S, parts, speed = 1, last = performance.now();
+
+
+function reset(name) {
+  recipe = RECIPES[name];
+  stepIdx = 0; stepT = 0; parts = [];
+  // fill 0..1.12, milkLayer = unstirred milk amount, mixed = how blended the milk is, wob = surface wobble
+  S = { base: recipe.base, fill: 0, milk: 0, milkKind: null, mixed: 0, sugar: 0, iceIn: false, iceY: 0, iceV: 0, powder: 0, wob: 0, wobT: 0, steam: 0, cold: 0, swirl: 0, stream: null, barVal: 0 };
+  renderSteps(); setBar(recipe.steps[0]);
+}
+
+// ---------- pour bar DOM ----------
+const zonesEl = document.getElementById('zones'), barEl = document.getElementById('bar');
+let marker, barDef;
+function setBar(step) {
+  if (!step.bar) { barEl.classList.add('idle'); document.getElementById('bar-name').textContent = 'Pour bar (shows while pouring)'; document.getElementById('bar-zone').textContent = ''; return; }
+  barDef = BARS[step.bar];
+  barEl.classList.remove('idle');
+  document.getElementById('bar-name').textContent = barDef.name;
+  const total = barDef.zones.reduce((a, z) => a + z[2], 0);
+  zonesEl.innerHTML = barDef.zones.map(([t, c, f], i) => `<span class="${c}${i === step.target ? ' target' : ''}" style="flex:${f}">${t}</span>`).join('') + '<i></i>';
+  marker = zonesEl.querySelector('i');
+  barDef.total = total;
+}
+function updateBar(v) {
+  if (!marker || !barDef) return;
+  marker.style.left = `${Math.min(100, (v / barDef.max) * 100)}%`;
+  // which zone is the marker in
+  let acc = 0, pct = v / barDef.max * barDef.total, name = '';
+  for (const [t, , f] of barDef.zones) { if (pct >= acc && pct < acc + f) { name = t; break; } acc += f; }
+  document.getElementById('bar-zone').textContent = name ? `now: ${name}` : '';
+}
+function renderSteps() {
+  document.getElementById('steps').innerHTML = recipe.steps.map((s, i) => `<span class="${i === stepIdx ? 'now' : i < stepIdx ? 'done' : ''}">${s.label}</span>`).join('');
+}
+
+// ---------- simulation ----------
+const ease = (t) => t * t * (3 - 2 * t);
+function step(dt) {
+  const st = recipe.steps[stepIdx];
+  const d = DUR[st.k];
+  const t0 = stepT / d;
+  stepT += dt;
+  const t = Math.min(1, stepT / d);
+  S.stream = null;
+  if (st.k === 'pour') {
+    const from = 0;
+    const p = Math.min(1, t / 0.88);
+    S.fill = from + (st.to - from) * ease(p);
+    S.wob = Math.max(S.wob, 0.6);
+    if (p < 1) S.stream = { color: COL[st.what], w: 6.5, x: 0.42 };
+    S.barVal = S.fill;
+    if (p < 1 && Math.random() < 0.5) bubble();
+  } else if (st.k === 'milk') {
+    const p = Math.min(1, t / 0.85);
+    S.milkKind = st.what;
+    S.milk = st.to * ease(p);
+    if (p < 1) S.stream = { color: COL[st.what], w: st.what === 'condensed' ? 4.5 : 3.5, x: 0.55, thick: st.what === 'condensed' };
+    S.barVal = S.milk;
+    if (p < 1 && st.what === 'evap' && Math.random() < 0.5) cloud();
+  } else if (st.k === 'sugar') {
+    const p = Math.min(1, t / 0.85);
+    S.sugar = st.to * ease(p);
+    S.barVal = S.sugar;
+    if (p < 1) for (let i = 0; i < 2; i++) grain();
+  } else if (st.k === 'stir') {
+    S.mixed = Math.min(1, S.mixed + dt / (d * 0.8));
+    S.swirl += dt * 0.012;
+    S.wob = Math.max(S.wob, 0.5);
+  } else if (st.k === 'ice') {
+    if (!S.iceIn) { S.iceIn = true; S.iceY = -60; S.iceV = 0; S.iceLanded = false; }
+  } else if (st.k === 'powder') {
+    S.powder = ease(Math.min(1, t / 0.8));
+    if (t < 0.8 && Math.random() < 0.8) dust();
+  } else if (st.k === 'rest') {
+    if (recipe.hot) S.steam = Math.min(1, S.steam + dt / 600);
+    else S.cold = Math.min(1, S.cold + dt / 1500);
+  }
+  if (recipe.hot && stepIdx > 0) S.steam = Math.min(1, S.steam + dt / 2500);
+
+  // ice physics: fall, splash, raise the level, bob
+  if (S.iceIn) {
+    const surf = sy(levelY(S.fill)) - GY;
+    if (!S.iceLanded) {
+      S.iceV += dt * 0.0022; S.iceY += S.iceV * dt;
+      if (S.iceY >= surf - 10) { S.iceLanded = true; S.iceY = surf - 10; splash(); S.wob = 1.4; S.fillTo = Math.min(1, S.fill + 0.26); }
+    } else {
+      if (S.fill < S.fillTo) { S.fill = Math.min(S.fillTo, S.fill + dt * 0.0006); }
+      S.iceY = (sy(levelY(S.fill)) - GY) - 12 + Math.sin(performance.now() / 260) * 1.6 * Math.min(1, S.wob + 0.3);
+    }
+  }
+
+  S.wob *= Math.pow(0.9985, dt);
+  S.wobT += dt;
+  if (st.bar) updateBar(S.barVal);
+
+  if (stepT >= d) {
+    stepIdx++;
+    stepT = 0;
+    if (stepIdx >= recipe.steps.length) { setTimeout(() => reset(current), 900 / speed); stepIdx = recipe.steps.length - 1; stepT = -1e9; return; }
+    renderSteps(); setBar(recipe.steps[stepIdx]);
+  }
+}
+
+// ---------- particles ----------
+function surfaceX(r) { const y = levelY(S.fill); const [l, rr] = wallAt(y); return sx(l + (rr - l) * r); }
+function bubble() { const y = sy(levelY(S.fill)); parts.push({ kind: 'bub', x: surfaceX(0.3 + Math.random() * 0.4), y: y + 2, vx: (Math.random() - 0.5) * 0.03, vy: -0.02 - Math.random() * 0.03, life: 600, r: 1.5 + Math.random() * 2 }); }
+function cloud() { parts.push({ kind: 'cloud', x: surfaceX(0.55) + (Math.random() - 0.5) * 8, y: sy(levelY(S.fill)) + 6, vx: (Math.random() - 0.5) * 0.02, vy: 0.012 + Math.random() * 0.01, life: 1600, r: 5 + Math.random() * 6 }); }
+function grain() { parts.push({ kind: 'grain', x: surfaceX(0.35 + Math.random() * 0.3), y: GY - 40 - Math.random() * 20, vx: 0, vy: 0.12 + Math.random() * 0.05, life: 900, r: 1.6 }); }
+function dust() { parts.push({ kind: 'dust', x: surfaceX(0.3 + Math.random() * 0.4), y: GY - 30, vx: (Math.random() - 0.5) * 0.02, vy: 0.1, life: 700, r: 2 + Math.random() * 2 }); }
+function splash() {
+  const y = sy(levelY(S.fill));
+  for (let i = 0; i < 14; i++) { const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2; const v = 0.1 + Math.random() * 0.12; parts.push({ kind: 'drop', x: surfaceX(0.5) + (Math.random() - 0.5) * 30, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 700, r: 1.5 + Math.random() * 1.8 }); }
+}
+function updateParts(dt) {
+  for (const p of parts) {
+    p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt;
+    if (p.kind === 'drop') p.vy += 0.0005 * dt;
+    if (p.kind === 'grain' || p.kind === 'dust') { const surf = sy(levelY(S.fill)) - (S.powder ? 6 : 0); if (p.y > surf) p.life = 0; }
+  }
+  parts = parts.filter((p) => p.life > 0);
+}
+
+// ---------- drawing ----------
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+function fitCanvas() {
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
+  const w = cv.clientWidth || 360;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(w * (H / W) * dpr);
+}
+function liquidColor() {
+  let c = COL[S.base];
+  if (S.milkKind) {
+    const m = Math.min(1, S.milk / 1.6) * 0.95;
+    c = mix(c, COL[S.milkKind], m * S.mixed + m * 0.25 * (1 - S.mixed));
+  }
+  return c;
+}
+function insidePath(yTop) {
+  const [l0, r0] = wallAt(yTop), [l1, r1] = wallAt(IN.bottom);
+  g.beginPath();
+  g.moveTo(sx(l0), sy(yTop)); g.lineTo(sx(r0), sy(yTop)); g.lineTo(sx(r1), sy(IN.bottom));
+  g.quadraticCurveTo(sx((l1 + r1) / 2), sy(IN.bottom + 3), sx(l1), sy(IN.bottom)); g.closePath();
+}
+function draw() {
+  const k = cv.width / W;
+  g.setTransform(k, 0, 0, k, 0, 0);
+  // counter backdrop
+  const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#cfe3d8'); bg.addColorStop(0.62, '#e8dcc4'); bg.addColorStop(0.63, '#b5713f'); bg.addColorStop(1, '#8d5530');
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  // saucer shadow
+  g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(sx(62), sy(184), 62, 8, 0, 0, Math.PI * 2); g.fill();
+  if (glass.complete) { g.imageSmoothingEnabled = true; g.drawImage(glass, GX, GY, 150 * GS, 186 * GS); }
+
+  const lc = liquidColor();
+  const ly = levelY(S.fill);
+  if (S.fill > 0.01) {
+    // liquid body, clipped to the glass inside; 2-tone shading + side shine
+    g.save(); insidePath(ly - 4); g.clip();
+    const surfPx = sy(ly);
+    const wob = (x) => Math.sin(S.wobT / 140 + x / 9) * 2.2 * S.wob;
+    g.beginPath();
+    const [l, r] = wallAt(ly);
+    g.moveTo(sx(l) - 4, surfPx + wob(0));
+    for (let x = sx(l) - 4; x <= sx(r) + 4; x += 4) g.lineTo(x, surfPx + wob(x));
+    g.lineTo(sx(r) + 6, sy(IN.bottom) + 10); g.lineTo(sx(l) - 6, sy(IN.bottom) + 10); g.closePath();
+    const body = g.createLinearGradient(0, surfPx, 0, sy(IN.bottom));
+    body.addColorStop(0, rgb(shade(lc, 1.08), 0.96)); body.addColorStop(0.55, rgb(lc, 0.97)); body.addColorStop(1, rgb(shade(lc, 0.72), 0.98));
+    g.fillStyle = body; g.fill();
+    // unstirred milk: a pale layer sinking to the bottom (condensed) or cloudy streaks (evap)
+    if (S.milkKind && S.mixed < 1) {
+      const mAmt = Math.min(1, S.milk / 1.2) * (1 - S.mixed);
+      if (S.milkKind === 'condensed') {
+        const h = 26 * mAmt;
+        g.fillStyle = rgb(mix(COL.condensed, lc, 0.18), 0.92 * Math.min(1, mAmt * 1.4));
+        g.beginPath(); g.moveTo(sx(l) - 6, sy(IN.bottom) - h);
+        for (let x = sx(l) - 6; x <= sx(r) + 6; x += 6) g.lineTo(x, sy(IN.bottom) - h + Math.sin(x / 7 + S.wobT / 300) * 2);
+        g.lineTo(sx(r) + 6, sy(IN.bottom) + 10); g.lineTo(sx(l) - 6, sy(IN.bottom) + 10); g.fill();
+      }
+      // swirl lines while stirring
+      if (S.mixed > 0) {
+        g.strokeStyle = rgb(COL[S.milkKind], 0.55 * (1 - S.mixed)); g.lineWidth = 3;
+        for (let i = 0; i < 3; i++) {
+          g.beginPath();
+          const cy = surfPx + 20 + i * 24, cx = sx((l + r) / 2);
+          g.ellipse(cx, cy, 30 - i * 4, 6, 0, S.swirl + i, S.swirl + i + 3.4); g.stroke();
+        }
+      }
+    }
+    // side shine on the liquid
+    g.fillStyle = 'rgba(255,255,255,.16)'; g.fillRect(sx(l) + 7, surfPx + 6, 6, sy(IN.bottom) - surfPx - 14);
+    // surface: crema / foam ellipse
+    const [sl, sr] = wallAt(ly);
+    g.fillStyle = rgb(mix(shade(lc, 1.25), [255, 245, 225], S.base === 'kopi' && !S.milkKind ? 0.15 : 0.25), 0.95);
+    g.beginPath(); g.ellipse(sx((sl + sr) / 2), surfPx + wob(sx((sl + sr) / 2)), (sx(sr) - sx(sl)) / 2, 5, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.ellipse(sx(sl + 22), surfPx - 1, 12, 1.6, 0, 0, Math.PI * 2); g.fill();
+    g.restore();
+  }
+
+  // particles inside / at the surface
+  for (const p of parts) {
+    const a = Math.max(0, Math.min(1, p.life / 400));
+    if (p.kind === 'bub') g.fillStyle = `rgba(255,240,220,${0.6 * a})`;
+    else if (p.kind === 'cloud') g.fillStyle = rgb(COL.evap, 0.35 * a);
+    else if (p.kind === 'grain') g.fillStyle = `rgba(255,255,255,${a})`;
+    else if (p.kind === 'dust') g.fillStyle = rgb(COL.milo, a);
+    else if (p.kind === 'drop') g.fillStyle = rgb(shade(liquidColor(), 1.1), a);
+    g.beginPath();
+    if (p.kind === 'grain') g.rect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2); else g.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    g.fill();
+    if (p.kind === 'grain') { g.strokeStyle = `rgba(120,120,120,${a})`; g.lineWidth = 0.6; g.stroke(); }
+  }
+
+  // ice cubes: crisp pixel art, slightly see-through so the drink shows
+  if (S.iceIn && ice.complete) {
+    const [l, r] = wallAt(levelY(S.fill));
+    const iw = (sx(r) - sx(l)) * 0.86, ih = iw * (19 / 29);
+    g.imageSmoothingEnabled = false; g.globalAlpha = 0.92;
+    g.drawImage(ice, sx((l + r) / 2) - iw / 2, GY + S.iceY - ih * 0.45, iw, ih);
+    g.globalAlpha = 1; g.imageSmoothingEnabled = true;
+  }
+  // Milo powder mountain on top
+  if (S.powder > 0) {
+    const [l, r] = wallAt(IN.top);
+    const cx = sx((l + r) / 2), w = (sx(r) - sx(l)) * 0.62 * (0.6 + 0.4 * S.powder), top = sy(IN.top) - 2;
+    const h = 62 * S.powder;
+    g.fillStyle = '#5a3a28'; g.beginPath(); g.moveTo(cx - w, top + 6); g.quadraticCurveTo(cx - w * 0.5, top - h * 0.6, cx, top - h); g.quadraticCurveTo(cx + w * 0.5, top - h * 0.6, cx + w, top + 6); g.closePath(); g.fill();
+    g.fillStyle = '#7a5038'; g.beginPath(); g.moveTo(cx - w * 0.55, top); g.quadraticCurveTo(cx - w * 0.3, top - h * 0.65, cx - w * 0.05, top - h * 0.9); g.lineTo(cx - w * 0.2, top); g.fill();
+    g.fillStyle = 'rgba(40,24,14,.55)';
+    for (let i = 0; i < 18; i++) { const px = cx + Math.sin(i * 12.9) * w * 0.7, py = top - Math.abs(Math.cos(i * 7.3)) * h * 0.7; g.fillRect(px, py, 2, 2); }
+  }
+
+  // glass shine back over the drink: this is what puts the liquid "inside" the glass
+  if (shine && S.fill > 0.01) {
+    g.save(); insidePath(IN.top - 6); g.clip();
+    g.globalAlpha = 0.55;
+    g.drawImage(shine, GX, GY, 150 * GS, 186 * GS);
+    g.restore(); g.globalAlpha = 1;
+  }
+
+  // pour stream from above
+  if (S.stream) {
+    const x = surfaceX(S.stream.x), y0 = 0, y1 = sy(levelY(S.fill));
+    const sw = S.stream.w + Math.sin(performance.now() / 70) * 0.6;
+    const grad = g.createLinearGradient(x - sw, 0, x + sw, 0);
+    grad.addColorStop(0, rgb(shade(S.stream.color, 0.85))); grad.addColorStop(0.5, rgb(shade(S.stream.color, 1.2))); grad.addColorStop(1, rgb(shade(S.stream.color, 0.85)));
+    g.fillStyle = grad;
+    g.beginPath(); g.moveTo(x - sw / 2 - 2, y0); g.quadraticCurveTo(x - sw / 2 + Math.sin(performance.now() / 120), (y0 + y1) / 2, x - sw / 2 + 1, y1);
+    g.lineTo(x + sw / 2 - 1, y1); g.quadraticCurveTo(x + sw / 2 + Math.sin(performance.now() / 120), (y0 + y1) / 2, x + sw / 2 + 2, y0); g.fill();
+    g.fillStyle = rgb(shade(S.stream.color, 1.15), 0.8); g.beginPath(); g.ellipse(x, y1, sw + 4, 3, 0, 0, Math.PI * 2); g.fill();
+  }
+
+  // steam (hot) and condensation (cold)
+  if (S.steam > 0) {
+    const t = performance.now() / 1000;
+    for (let i = 0; i < 3; i++) {
+      const bx = sx(40 + i * 22), by = sy(IN.top) - 6;
+      g.strokeStyle = `rgba(255,255,255,${0.5 * S.steam})`; g.lineWidth = 4; g.lineCap = 'round';
+      g.beginPath();
+      for (let j = 0; j <= 12; j++) { const yy = by - j * 6 - ((t * 22 + i * 13) % 18); const xx = bx + Math.sin(j / 2 + t * 2 + i) * 5; j ? g.lineTo(xx, yy) : g.moveTo(xx, yy); }
+      g.stroke();
+    }
+  }
+  if (S.cold > 0) {
+    for (let i = 0; i < 26; i++) {
+      const yy = IN.top + 12 + ((i * 37) % (IN.bottom - IN.top - 20)); const [l, r] = wallAt(yy);
+      const xx = l + 4 + ((i * 53) % Math.max(1, (r - l - 8)));
+      g.fillStyle = `rgba(255,255,255,${0.55 * S.cold})`; g.beginPath(); g.ellipse(sx(xx), sy(yy), 1.6, 2.2, 0, 0, Math.PI * 2); g.fill();
+    }
+  }
+}
+
+// ---------- loop + UI ----------
+let current = 'kopi';
+function frame(now) {
+  const dt = Math.min(50, now - last) * speed; last = now;
+  step(dt); updateParts(dt);
+  draw();
+  requestAnimationFrame(frame);
+}
+document.querySelectorAll('.picks button').forEach((b) => b.addEventListener('click', () => {
+  current = b.dataset.recipe;
+  document.querySelectorAll('.picks button').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+  reset(current);
+}));
+document.getElementById('replay').addEventListener('click', () => reset(current));
+const slowBtn = document.getElementById('slow');
+slowBtn.addEventListener('click', () => { speed = speed === 1 ? 0.35 : 1; slowBtn.setAttribute('aria-pressed', String(speed !== 1)); slowBtn.textContent = speed === 1 ? 'Slow motion' : 'Normal speed'; });
+window.addEventListener('resize', fitCanvas);
+fitCanvas(); reset(current); requestAnimationFrame(frame);
+</script>
