@@ -4,10 +4,10 @@ export const TUNING = {
   // Day pacing
   // Chill pacing (playtest 2026-10-23): ~3 real minutes, then closing time waits for the
   // customers already at the counter (closingGraceMs at most).
-  dayMs: 180_000, // 3 real minutes, 7am -> 7pm
+  dayMs: 120_000, // 2 real minutes, 7am -> 7pm
   closingGraceMs: 60_000,
   firstSpawnMs: 3000,
-  lastSpawnBeforeEndMs: 25_000,
+  lastSpawnBeforeEndMs: 18_000,
   spawnJitter: 0.35, // each arrival lands within +-35% of its even share of the day
   queueRetryMs: 3000, // queue full: try that arrival again this much later
 
@@ -15,9 +15,9 @@ export const TUNING = {
   fameStart: 10,
   fameDelta: { perfect: 0.25, close: 0.1, oops: 0, timeout: -1 },
   // Few customers at first; upgrades make you faster before the crowd grows.
-  customersMin: 6,
-  customersMax: 13,
-  famePerExtraCustomer: 15, // 6 + floor(fame/15): fame 10 -> 6, 30 -> 8, 60 -> 10, 100 -> 12
+  customersMin: 8,
+  customersMax: 15,
+  famePerExtraCustomer: 15, // 8 + floor(fame/15): fame 10 -> 8, 30 -> 10, 60 -> 12, 100 -> 14
 
   // Walking in from the street opening on the left, and the queue by the rope posts.
   queueMax: 3,

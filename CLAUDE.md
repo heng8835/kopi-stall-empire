@@ -8,7 +8,7 @@ stall into a kopi stall empire.
 Full design: see `GAME_DESIGN.md`. Read it before building any feature.
 
 ## Current milestone: v0.1 vertical slice
-- 1 stall, a 30-day month (~3-minute days; closing waits for the last customers), saved between sessions
+- 1 stall, a 30-day month (2-minute days; closing waits for the last customers), saved between sessions
 - 6 drinks, 6 counter customers, month-1 story: 15 short-drama episodes on a calendar
   (`src/data/events.js`, script in `docs/story/month-1.md`); Fame (名气) sets customers per day
 - Day phase (serve customers) -> night phase (spend earnings on upgrades)
