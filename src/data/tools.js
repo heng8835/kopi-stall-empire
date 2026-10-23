@@ -3,7 +3,7 @@
 // tools without a sprite are drawn as simple shapes. kind:
 //   pour  - hold over a cup to pour `ingredient` (meter shows how much)
 //   drop  - release over a cup to add once (ice / Milo powder)
-//   stir  - wiggle left/right over a cup
+//   stir  - drop it on a cup and it stirs by itself (wiggling over the cup works too)
 //   rack  - drag (or tap) to put a new empty cup on the tray
 //   bin   - drop a cup here to throw it away (not draggable)
 

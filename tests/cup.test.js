@@ -50,7 +50,8 @@ describe('cup model', () => {
   });
 
   it('buckets sugar into zones', () => {
-    expect([0, 0.2, 0.45, 0.7, 0.9, 1.1, 1.25, 1.45, 1.6].map(sugarBucket)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+    // the same zones the pour bar shows: kosong / siew dai / normal / ga dai / too sweet
+    expect([0, 0.18, 0.2, 0.45, 0.7, 1.09, 1.1, 1.3, 1.45, 1.6].map(sugarBucket)).toEqual([0, 0, 2, 2, 4, 4, 6, 6, 8, 8]);
   });
 });
 
@@ -90,6 +91,26 @@ describe('gradeCup', () => {
     const full = addIce(stirAll(pour(pour(newCup(), 'kopi', holdFor('kopi', 0.95)), 'condensed', holdFor('condensed', 0.9))));
     expect(gradeCup(full, parseOrder('Kopi peng')).reasons).toContain('spilled over');
     expect(gradeCup(makePerfect('Kopi peng').cup, parseOrder('Kopi peng')).tier).toBe('perfect');
+  });
+
+  it('what the pour bar says is what counts: anywhere in FULL is full', () => {
+    // playtest: "Kopi O kosong, I only added kopi, still not satisfied"
+    for (const fill of [0.81, 0.9, 1.07]) {
+      const cup = pour(newCup(), 'kopi', holdFor('kopi', fill));
+      expect(gradeCup(cup, parseOrder('Kopi O kosong')), `fill ${fill}`).toEqual({ tier: 'perfect', reasons: [] });
+    }
+    // anywhere in the ¾ PENG zone + ice is a perfect peng
+    for (const fill of [0.56, 0.68, 0.79]) {
+      const cup = addIce(pour(newCup(), 'kopi', holdFor('kopi', fill)));
+      expect(gradeCup(cup, parseOrder('Kopi O kosong peng')).tier, `peng ${fill}`).toBe('perfect');
+    }
+  });
+
+  it('anywhere inside a sweetness zone counts as that zone', () => {
+    for (const amt of [0.2, 0.45, 0.67]) {
+      const cup = stirAll(pour(pour(newCup(), 'teh', holdFor('teh', 0.95)), 'condensed', holdFor('condensed', amt)));
+      expect(gradeCup(cup, parseOrder('Teh siew dai')).tier, `condensed ${amt}`).toBe('perfect');
+    }
   });
 
   it('wrong milk or wrong base is oops', () => {

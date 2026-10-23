@@ -7,26 +7,25 @@ import { addText } from './text.js';
 import { sweetness } from './cup.js';
 
 const Z = ZONES;
-const mid = (a, b) => (a + b) / 2;
-// [label, from, to, kind]; kind: none | lo | ok | hi (careful) | bad (gone too far)
+// [label, from, to, kind] straight from ZONES (the same boundaries gradeCup uses);
+// kind: none | lo | ok | hi (careful) | bad (gone too far)
 const SWEET = [
-  ['KOSONG', 0, mid(Z.sugar.none[1], Z.sugar.less[0]), 'none'],
-  ['SIEW DAI', mid(Z.sugar.none[1], Z.sugar.less[0]), mid(Z.sugar.less[1], Z.sugar.normal[0]), 'lo'],
-  ['NORMAL', mid(Z.sugar.less[1], Z.sugar.normal[0]), mid(Z.sugar.normal[1], Z.sugar.more[0]), 'ok'],
-  ['GA DAI', mid(Z.sugar.normal[1], Z.sugar.more[0]), mid(Z.sugar.more[1], Z.sugar.tooMuch), 'hi'],
-  ['TOO SWEET', mid(Z.sugar.more[1], Z.sugar.tooMuch), 1.9, 'bad'],
+  ['KOSONG', ...Z.sugar.none, 'none'],
+  ['SIEW DAI', ...Z.sugar.less, 'lo'],
+  ['NORMAL', ...Z.sugar.normal, 'ok'],
+  ['GA DAI', ...Z.sugar.more, 'hi'],
+  ['TOO SWEET', Z.sugar.tooMuch, 1.9, 'bad'],
 ];
 const EVAP = [
-  ['NONE (O)', 0, mid(Z.milk.none[1], Z.milk.normal[0]), 'none'],
-  ['C · NORMAL', mid(Z.milk.none[1], Z.milk.normal[0]), mid(Z.milk.normal[1], Z.milk.tooMuch), 'ok'],
-  ['TOO MILKY', mid(Z.milk.normal[1], Z.milk.tooMuch), 1.9, 'bad'],
+  ['NONE (O)', ...Z.milk.none, 'none'],
+  ['C · NORMAL', ...Z.milk.normal, 'ok'],
+  ['TOO MILKY', Z.milk.tooMuch, 1.9, 'bad'],
 ];
-const PENG = Z.fill.good[0] - 0.25; // the ¾ line: pour to here, the ice tops it up
 const FILL = [
-  ['FILLING…', 0, PENG - 0.02, 'none'],
-  ['¾ PENG', PENG - 0.02, mid(PENG + 0.2, Z.fill.good[0]), 'lo'],
-  ['FULL', mid(PENG + 0.2, Z.fill.good[0]), mid(Z.fill.good[1], Z.fill.spill), 'ok'],
-  ['SPILL', mid(Z.fill.good[1], Z.fill.spill), 1.3, 'bad'],
+  ['FILLING…', 0, Z.fill.peng[0], 'none'],
+  ['¾ PENG', ...Z.fill.peng, 'lo'],
+  ['FULL', ...Z.fill.good, 'ok'],
+  ['SPILL', Z.fill.good[1], 1.3, 'bad'],
 ];
 const FILL_COLORS = { none: 0xf2f2f2, lo: 0xcfe9cf, ok: 0x66bb6a, hi: 0xf2c14e, bad: 0xe57368 };
 

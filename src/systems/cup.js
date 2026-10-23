@@ -40,7 +40,7 @@ export function stirStep(cup) {
 }
 
 export const isEmpty = (cup) => !cup.base && cup.sugar < 0.02 && cup.condensed < 0.02 && cup.evap < 0.02;
-const hasMix = (cup) => cup.sugar > ZONES.sugar.none[1] || milkAmount(cup) > ZONES.milk.none[1];
+const hasMix = (cup) => cup.sugar > ZONES.trace || milkAmount(cup) > ZONES.trace;
 export const needsStir = (cup) => hasMix(cup) && cup.stir < 1;
 
 export function milkAmount(cup) {
@@ -54,24 +54,20 @@ export function sweetness(cup) {
 
 // Which milk is in the cup: null, 'condensed', 'evap' or 'mixed'.
 export function milkType(cup) {
-  const n = ZONES.milk.none[1];
+  const n = ZONES.trace;
   const c = cup.condensed > n;
   const e = cup.evap > n;
   return c && e ? 'mixed' : c ? 'condensed' : e ? 'evap' : null;
 }
 
-// Bucket a sweetness on a 0..8 scale: 0 none, 2 less (siew dai), 4 normal, 6 more (ga dai), 8 too much;
-// odd numbers are the gaps between zones.
+// Bucket a sweetness: 0 none (kosong), 2 less (siew dai), 4 normal, 6 more (ga dai), 8 too much.
+// Same zones the pour bar shows, so one zone off = 2 steps.
 export function sugarBucket(x) {
   const z = ZONES.sugar;
-  if (x <= z.none[1]) return 0;
-  if (x < z.less[0]) return 1;
-  if (x <= z.less[1]) return 2;
-  if (x < z.normal[0]) return 3;
-  if (x <= z.normal[1]) return 4;
-  if (x < z.more[0]) return 5;
-  if (x <= z.more[1]) return 6;
-  if (x < z.tooMuch) return 7;
+  if (x < z.none[1]) return 0;
+  if (x < z.less[1]) return 2;
+  if (x < z.normal[1]) return 4;
+  if (x < z.more[1]) return 6;
   return 8;
 }
 
@@ -111,8 +107,8 @@ export function gradeCup(cup, spec) {
     const diff = Math.abs(sweet - SUGAR_IDX[spec.sugar]);
     if (diff > 0) {
       const sweeter = sweet > SUGAR_IDX[spec.sugar];
-      const msg = diff <= 1 ? (sweeter ? 'a bit too sweet' : 'a bit not sweet enough') : sweeter ? `too sweet for ${SUGAR_WORD[spec.sugar]}` : `not sweet enough for ${SUGAR_WORD[spec.sugar]}`;
-      (diff <= 2 ? close : oops).push(msg);
+      const msg = sweeter ? `too sweet for ${SUGAR_WORD[spec.sugar]}` : `not sweet enough for ${SUGAR_WORD[spec.sugar]}`;
+      (diff <= 2 ? close : oops).push(msg); // one zone off is close, two or more is oops
     }
   }
 

@@ -27,15 +27,20 @@ export const TUNING = {
   pourPerSec: { kopi: 0.8, teh: 0.8, milo: 0.8, sugar: 1.0, condensed: 1.0, evap: 1.0 },
 
   stirWigglesNeeded: 6,
+  autoStirMs: 1000, // dropping the spoon on a cup stirs it in this long
   iceVolume: 0.25, // ice raises the level: peng = pour to the ¾ line, then ice
 };
 
 // Amount zones (shared by the meters and the grading).
+// The pour bar draws exactly these zones and gradeCup judges exactly these, with no gaps,
+// so "the marker is in NORMAL" always means NORMAL. Each zone is [from, to).
 export const ZONES = {
   // Sweetness: sugar for O and C drinks; for Kopi / Teh the condensed milk IS the sweetener.
-  sugar: { none: [0, 0.08], less: [0.3, 0.6], normal: [0.75, 1.05], more: [1.15, 1.4], tooMuch: 1.5 },
-  milk: { none: [0, 0.08], normal: [0.75, 1.1], tooMuch: 1.25 },
-  fill: { good: [0.85, 1.05], spill: 1.12 },
+  sugar: { none: [0, 0.19], less: [0.19, 0.675], normal: [0.675, 1.1], more: [1.1, 1.45], tooMuch: 1.45 },
+  milk: { none: [0, 0.415], normal: [0.415, 1.175], tooMuch: 1.175 },
+  // FULL for hot drinks; peng = pour into the ¾ zone, the ice adds iceVolume (0.25) into FULL
+  fill: { peng: [0.55, 0.8], good: [0.8, 1.08], spill: 1.12 },
+  trace: 0.08, // less than this of milk / sugar counts as "none added"
 };
 
 // Liquid colours (for drawing cups): base colours, lightened by milk.

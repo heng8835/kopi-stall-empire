@@ -1,7 +1,7 @@
 // Uncle Tan's advice on the day-end card, keyed by the most common slip (reasons from gradeCup).
 // First match wins; `match` is a substring of the reason text.
 export const TIPS = [
-  { match: 'forgot to stir', en: 'Wiggle the spoon after milk or sugar! Unstirred kopi is just kopi with a milk cloud.', zh: '加了奶或糖要搅一搅！' },
+  { match: 'forgot to stir', en: 'Drop the spoon on the cup after milk or sugar! Unstirred kopi is just kopi with a milk cloud.', zh: '加了奶或糖要搅一搅！' },
   { match: 'too sweet', en: 'Watch the bar: stop in your ★ zone. Condensed milk IS the sweetness for Kopi and Teh.', zh: '看着条子，停在 ★ 区。炼奶就是甜度。' },
   { match: 'not sweet enough', en: 'A bit more sugar or condensed milk: hold it till the ★ zone.', zh: '再多一点糖或炼奶，按到 ★ 区。' },
   { match: 'spilled', en: 'Peng: pour only to the ¾ line, the ice tops it up to full.', zh: '加冰的：倒到 ¾ 线就好，冰块会补满。' },

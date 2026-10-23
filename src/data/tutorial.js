@@ -11,8 +11,8 @@ export const TUTORIAL_STEPS = [
     order: 'Teh',
     highlight: ['teh', 'condensed', 'stir'],
     note: {
-      en: 'TAP Aunty to take her order: a cup with her ticket appears. HOLD the teh pot to the ★, condensed milk to the ★ (it IS the sweetness), wiggle the spoon, drag to Aunty!',
-      zh: '点阿姨接单，会出现带单子的杯子。按住茶壶到 ★，炼奶到 ★（炼奶就是甜度），搅一搅，拖给阿姨！',
+      en: 'TAP Aunty to take her order: a cup with her ticket appears. HOLD the teh pot to the ★, condensed milk to the ★ (it IS the sweetness), drop the spoon on the cup, drag to Aunty!',
+      zh: '点阿姨接单，会出现带单子的杯子。按住茶壶到 ★，炼奶到 ★（炼奶就是甜度），把汤匙放到杯上搅一搅，拖给阿姨！',
     },
   },
   {
@@ -29,7 +29,7 @@ export const TUTORIAL_STEPS = [
     order: 'Kopi O',
     highlight: ['kopi', 'sugar', 'stir'],
     note: {
-      en: "'O' = no milk. Use the sugar can instead, to NORMAL, then stir.",
+      en: "'O' = no milk. Use the sugar can instead, to NORMAL, then drop the spoon on it.",
       zh: 'O = 不加奶。改用糖罐，加到 NORMAL，再搅一搅。',
     },
   },

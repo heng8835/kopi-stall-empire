@@ -47,6 +47,7 @@ export const CUSTOMERS = [
   {
     id: 'schoolKids',
     name: 'Sec school kids',
+    short: 'Kids', // on tickets
     sprite: 'darren',
     sprites: ['darren', 'weiLing', 'hafiz', 'jiaHui'],
     enabled: true,

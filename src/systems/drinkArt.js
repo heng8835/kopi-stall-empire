@@ -102,7 +102,14 @@ export class DrinkArt {
     this.cold = 0;
     this.lastFill = 0;
     this.puffIn = 0;
+    this.stirT = 0;
+    this.stirMs = 0;
     this.dirty = true;
+  }
+
+  startStir(ms) {
+    this.stirT = 0;
+    this.stirMs = ms;
   }
 
   // pour: { ingredient } while a tool pours into this cup, else null.
@@ -112,7 +119,11 @@ export class DrinkArt {
     const dt = Math.min(50, dtMs);
     this.t += dt;
     if (!cup) {
-      if (this.lastFill || this.parts.length || this.puffs.length) this.reset();
+      // served or binned: clear the drawing once (the old drink must not linger on the tray)
+      if (this.cup) {
+        this.reset();
+        this.cup = null;
+      }
       return;
     }
     this.cup = cup;
@@ -174,6 +185,11 @@ export class DrinkArt {
       if ((p.kind === 'grain' || p.kind === 'dust') && p.y > Y(levelY(fill)) - (cup.powder ? 10 : 0)) p.life = 0;
     }
     this.parts = this.parts.filter((p) => p.life > 0);
+    if (this.stirMs) {
+      this.stirT += dt;
+      this.wob = Math.max(this.wob, 0.5);
+      if (this.stirT > this.stirMs + 150) this.stirMs = 0;
+    }
     this.wob *= Math.pow(0.9985, dt);
     this.dirty = true;
   }
@@ -331,6 +347,35 @@ export class DrinkArt {
       g.beginPath(); g.moveTo(o.cx - w * 0.55, top); g.quadraticCurveTo(o.cx - w * 0.3, top - h * 0.65, o.cx - w * 0.05, top - h * 0.9); g.lineTo(o.cx - w * 0.2, top); g.fill();
       g.fillStyle = 'rgba(40,24,14,.55)';
       for (let i = 0; i < 18; i++) g.fillRect(o.cx + Math.sin(i * 12.9) * w * 0.7, top - Math.abs(Math.cos(i * 7.3)) * h * 0.7, 3, 3);
+    }
+
+    // the spoon going round while it stirs (two turns), handle resting on the rim
+    if (this.stirMs && cup.base) {
+      const k = Math.min(1, this.stirT / this.stirMs);
+      const th = k * Math.PI * 4;
+      const o = oval(Math.min(IN.bottom - 20, ly + 26));
+      const tip = { x: o.cx + Math.cos(th) * o.rx * 0.45, y: o.cy + Math.sin(th) * o.ry * 0.45 };
+      const top = { x: tip.x + 30 + Math.cos(th) * 12, y: Y(-46) };
+      const surfY = oval(ly).cy;
+      const tAtSurf = (surfY - top.y) / (tip.y - top.y);
+      const sx = top.x + (tip.x - top.x) * tAtSurf;
+      g.lineCap = 'round';
+      // under the surface: dimmed by the drink
+      g.strokeStyle = 'rgba(200,205,212,0.45)';
+      g.lineWidth = 7;
+      g.beginPath(); g.moveTo(sx, surfY); g.lineTo(tip.x, tip.y); g.stroke();
+      g.fillStyle = 'rgba(200,205,212,0.45)';
+      g.beginPath(); g.ellipse(tip.x, tip.y, 9, 5, th, 0, Math.PI * 2); g.fill();
+      // above the surface: shiny steel
+      g.strokeStyle = '#6d7680'; g.lineWidth = 9;
+      g.beginPath(); g.moveTo(top.x, top.y); g.lineTo(sx, surfY); g.stroke();
+      g.strokeStyle = '#d9dee4'; g.lineWidth = 5;
+      g.beginPath(); g.moveTo(top.x, top.y); g.lineTo(sx, surfY); g.stroke();
+      g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(top.x - 1.5, top.y); g.lineTo(sx - 1.5, surfY); g.stroke();
+      // a ripple ring where the spoon enters the drink
+      g.strokeStyle = 'rgba(255,255,255,0.35)'; g.lineWidth = 2;
+      g.beginPath(); g.ellipse(sx, surfY, 12, 4, 0, 0, Math.PI * 2); g.stroke();
     }
 
     // the glass's reflections over the drink

@@ -17,6 +17,7 @@ import { PourBar } from '../systems/pourBar.js';
 import { showRecipeCard, showRecipeBook } from '../systems/cards.js';
 import { ordersFor, lessonFor } from '../systems/menu.js';
 import { summarizeDay } from '../systems/daySummary.js';
+import { recipeHint } from '../systems/hints.js';
 import { createDayState, applyServe, applyTimeout, formatMoney, customersForFame, clampFame } from '../systems/economy.js';
 import { weightedPick } from '../systems/random.js';
 import { placeArrival, frontCanTake, arrivalSchedule } from '../systems/queue.js';
@@ -170,16 +171,17 @@ export default class StallScene extends Phaser.Scene {
       const img = this.add.image(0, 0, `cupArt${i}`).setOrigin(ART_ORIGIN.x, ART_ORIGIN.y).setScale(CUP_H / 186);
       container.add(img);
       // the order ticket clipped above the cup (filled in by takeOrder)
-      const tag = this.add.rectangle(0, -CUP_H - 14, 100, 26, 0xfff3c4).setStrokeStyle(1.5, 0x8a5a2b).setVisible(false);
-      const tagText = addText(this, 0, -CUP_H - 14, '', { size: 9, bold: true, align: 'center', origin: 0.5, color: '#3a2e2a', wrap: 96 });
-      container.add([tag, tagText]);
+      const tag = this.add.rectangle(0, -CUP_H - 2, 104, 26, 0xfff3c4).setOrigin(0.5, 1).setStrokeStyle(1.5, 0x8a5a2b).setVisible(false);
+      const tagText = addText(this, 0, -CUP_H - 5, '', { size: 9, bold: true, align: 'center', origin: [0.5, 1], color: '#3a2e2a', wrap: 98, lineSpacing: 0 });
+      const tagHint = addText(this, 0, -CUP_H - 5, '', { size: 8, align: 'center', origin: [0.5, 1], color: '#2f6d4a', wrap: 98, lineSpacing: 0 });
+      container.add([tag, tagText, tagHint]);
       // Hit box covers the whole cup + saucer: world y from CUP_BOTTOM - CUP_H - 8 to CUP_BOTTOM + 16.
       // (A container's local hit space starts at its position minus half its size.)
       const hitH = CUP_H + 24;
       container.setSize(CUP_W + 24, hitH);
       container.setInteractive(new Phaser.Geom.Rectangle(0, hitH / 2 - CUP_H - 8, CUP_W + 24, hitH), Phaser.Geom.Rectangle.Contains);
       this.input.setDraggable(container);
-      const slot = { i, x, cup: null, container, art, label, tag, tagText, ticket: null };
+      const slot = { i, x, cup: null, container, art, label, tag, tagText, tagHint, ticket: null };
       container.on('dragstart', () => this.onCupDragStart(slot));
       container.on('drag', (p) => this.onCupDrag(slot, p));
       container.on('dragend', (p) => this.onCupDragEnd(slot, p));
@@ -277,7 +279,7 @@ export default class StallScene extends Phaser.Scene {
     this.placeCup(slot);
     c.ticketsTaken = (c.ticketsTaken ?? 0) + 1;
     const cupNo = c.n > 1 ? ` ${c.served + c.ticketsTaken}/${c.n}` : '';
-    slot.ticket = { c, spec: c.spec, who: c.def.name, text: `${c.orderText}${cupNo}` };
+    slot.ticket = { c, spec: c.spec, who: c.def.short ?? c.def.name, text: `${c.orderText}${cupNo}` };
     this.drawTicket(slot);
     play('tap');
     logEvent(this.log, 'ticket', { who: c.def.id, order: c.orderText }, this.clockMs);
@@ -288,11 +290,15 @@ export default class StallScene extends Phaser.Scene {
   drawTicket(slot) {
     const t = slot.ticket;
     slot.tag.setVisible(!!t);
-    slot.tagText.setText(t ? `${t.text}\n${t.who}${t.left ? ' (left)' : ''}` : '');
+    // the order and who it's for, and under it how to make it (same words as the pour bar)
+    slot.tagText.setText(t ? `${t.text} · ${t.who}${t.left ? ' (left)' : ''}` : '');
+    slot.tagHint.setText(t && !t.left ? recipeHint(t.spec) : '');
     if (t) {
       slot.tag.setFillStyle(t.left ? 0xdedede : 0xfff3c4);
       slot.tagText.setColor(t.left ? '#8a8a8a' : '#3a2e2a');
-      slot.tag.setSize(Math.min(104, slot.tagText.width + 10), slot.tagText.height + 6);
+      const hintH = slot.tagHint.text ? slot.tagHint.height + 1 : 0;
+      slot.tagText.setY(-CUP_H - 5 - hintH);
+      slot.tag.setSize(104, slot.tagText.height + hintH + 7);
     }
   }
 
@@ -300,7 +306,7 @@ export default class StallScene extends Phaser.Scene {
   targetFill(slot) {
     const spec = slot.ticket?.spec;
     if (!spec || slot.ticket.left) return null;
-    return spec.iced ? 0.7 : 0.95;
+    return spec.iced ? 0.68 : 0.94;
   }
 
   slotAt(x, y) {
@@ -382,6 +388,7 @@ export default class StallScene extends Phaser.Scene {
     const t = tool.tool;
     const slot = this.slotAt(p.worldX, p.worldY - LIFT + t.h / 2);
     if (t.kind === 'drop' && slot?.cup) this.dropOnCup(slot, t.apply);
+    if (t.kind === 'stir' && slot?.cup?.base) this.autoStir(slot); // drop the spoon on a cup: it stirs itself
     if (t.kind === 'rack' && slot && !slot.cup) this.placeCup(slot);
     this.pouring = null;
     tool.setAngle(0);
@@ -404,6 +411,18 @@ export default class StallScene extends Phaser.Scene {
     else addPowder(slot.cup);
     play('ice');
     this.redrawSlot(slot);
+  }
+
+  // The spoon stirs the cup by itself: a little animation while the milk swirls in.
+  autoStir(slot) {
+    if (slot.stirring) return;
+    slot.stirring = true;
+    const ms = TUNING.autoStirMs;
+    slot.art.startStir(ms);
+    for (let i = 1; i <= TUNING.stirWigglesNeeded; i++) {
+      this.time.delayedCall((ms / TUNING.stirWigglesNeeded) * i, () => slot.cup && slot.cup.stir < 1 && this.stirCup(slot));
+    }
+    this.time.delayedCall(ms, () => (slot.stirring = false));
   }
 
   stirCup(slot) {
@@ -581,14 +600,12 @@ export default class StallScene extends Phaser.Scene {
     let h = words.height + pad * 2;
     if (kind === 'order' && c.n > 1) {
       extras.push(addText(this, x + pad, 0, `Cup ${c.served + 1}/${c.n}`, { size: 10, color: '#8a7a70' }));
-      h += 13;
     }
     if (kind === 'order') {
       const owed = this.ticketsOwed(c);
-      const mark = !owed ? '✓ ticket taken' : c.ticketsTaken ? `✓ ${c.ticketsTaken} taken · tap for next` : this.hintsLeft > 0 ? 'tap me to take the order' : '';
+      const mark = !owed ? '✓ ticket' : c.ticketsTaken ? `✓ ${c.ticketsTaken} · tap for next` : this.hintsLeft > 0 ? 'tap me to take the order' : '';
       if (mark) {
         extras.push(addText(this, x + pad, 0, mark, { size: 9, bold: true, color: owed ? '#c8562e' : '#2f7a3a' }));
-        h += 12;
         if (owed && !c.ticketsTaken && !c.hinted) {
           c.hinted = true;
           this.hintsLeft -= 1;
@@ -596,9 +613,14 @@ export default class StallScene extends Phaser.Scene {
       }
       h += 8; // patience bar
     }
+    h += extras.reduce((sum, o) => sum + o.height + 1, 0);
     const y = table ? TABLE.bubble.y : BUBBLE_BOTTOM - h;
     words.objects.forEach((o) => o.setY(o.y + y + pad));
-    extras.forEach((o, i) => o.setY(y + pad + words.height + i * 13));
+    let ey = y + pad + words.height;
+    for (const o of extras) {
+      o.setY(ey);
+      ey += o.height + 1;
+    }
     const frame = this.add.rectangle(x, y, w, h, 0xffffff).setOrigin(0).setStrokeStyle(2, COLORS.inkHex, 0.8).setDepth(30);
     const tx = table ? x + 6 : Phaser.Math.Clamp(this.centerX(c), x + 12, x + w - 12);
     const tail = table
