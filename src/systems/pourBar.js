@@ -1,0 +1,106 @@
+// The pour bar: a horizontal gauge docked under the HUD while something is poured, so the
+// player's finger (down at the cup) never covers it. Zones touch (no gaps); the bar trembles in
+// GA DAI-style "careful" zones and shakes harder in the red ones.
+import { GAME_W, COLORS } from '../config.js';
+import { ZONES } from '../data/stallTuning.js';
+import { addText } from './text.js';
+import { sweetness } from './cup.js';
+
+const Z = ZONES;
+const mid = (a, b) => (a + b) / 2;
+// [label, from, to, kind]; kind: none | lo | ok | hi (careful) | bad (gone too far)
+const SWEET = [
+  ['KOSONG', 0, mid(Z.sugar.none[1], Z.sugar.less[0]), 'none'],
+  ['SIEW DAI', mid(Z.sugar.none[1], Z.sugar.less[0]), mid(Z.sugar.less[1], Z.sugar.normal[0]), 'lo'],
+  ['NORMAL', mid(Z.sugar.less[1], Z.sugar.normal[0]), mid(Z.sugar.normal[1], Z.sugar.more[0]), 'ok'],
+  ['GA DAI', mid(Z.sugar.normal[1], Z.sugar.more[0]), mid(Z.sugar.more[1], Z.sugar.tooMuch), 'hi'],
+  ['TOO SWEET', mid(Z.sugar.more[1], Z.sugar.tooMuch), 1.9, 'bad'],
+];
+const EVAP = [
+  ['NONE (O)', 0, mid(Z.milk.none[1], Z.milk.normal[0]), 'none'],
+  ['C · NORMAL', mid(Z.milk.none[1], Z.milk.normal[0]), mid(Z.milk.normal[1], Z.milk.tooMuch), 'ok'],
+  ['TOO MILKY', mid(Z.milk.normal[1], Z.milk.tooMuch), 1.9, 'bad'],
+];
+const PENG = Z.fill.good[0] - 0.25; // the ¾ line: pour to here, the ice tops it up
+const FILL = [
+  ['FILLING…', 0, PENG - 0.02, 'none'],
+  ['¾ PENG', PENG - 0.02, mid(PENG + 0.2, Z.fill.good[0]), 'lo'],
+  ['FULL', mid(PENG + 0.2, Z.fill.good[0]), mid(Z.fill.good[1], Z.fill.spill), 'ok'],
+  ['SPILL', mid(Z.fill.good[1], Z.fill.spill), 1.3, 'bad'],
+];
+const FILL_COLORS = { none: 0xf2f2f2, lo: 0xcfe9cf, ok: 0x66bb6a, hi: 0xf2c14e, bad: 0xe57368 };
+
+const KIND = {
+  kopi: { name: 'Kopi pot · fill', zones: FILL, value: (c) => c.fill },
+  teh: { name: 'Teh pot · fill', zones: FILL, value: (c) => c.fill },
+  milo: { name: 'Milo · fill', zones: FILL, value: (c) => c.fill },
+  condensed: { name: 'Condensed milk · sweetness', zones: SWEET, value: sweetness },
+  sugar: { name: 'Sugar · sweetness', zones: SWEET, value: sweetness },
+  evap: { name: 'Evaporated milk · C', zones: EVAP, value: (c) => c.evap },
+};
+
+const X = 8;
+const W = GAME_W - 16;
+const BAR_H = 22;
+
+export class PourBar {
+  constructor(scene, y, depth = 55) {
+    this.scene = scene;
+    this.y = y;
+    this.c = scene.add.container(0, y).setDepth(depth).setAlpha(0);
+    this.panel = scene.add.rectangle(X - 4, -4, W + 8, BAR_H + 26, COLORS.paper, 0.96).setOrigin(0).setStrokeStyle(2, COLORS.inkHex, 0.9);
+    this.label = addText(scene, X, -1, '', { size: 11, bold: true });
+    this.now = addText(scene, X + W, -1, '', { size: 11, bold: true, color: '#c8562e', origin: [1, 0] });
+    this.g = scene.add.graphics();
+    this.marker = scene.add.graphics();
+    this.c.add([this.panel, this.g, this.marker, this.label, this.now]);
+    this.zoneTexts = [];
+    this.kind = null;
+    this.hideAt = 0;
+  }
+
+  // Called every frame while pouring: ingredient key, the cup, and the slot number (1-3).
+  show(ingredient, cup, slotNo) {
+    const k = KIND[ingredient];
+    if (!k || !cup) return;
+    if (this.kind !== ingredient) this.layout(ingredient);
+    const v = k.value(cup);
+    const max = k.zones.at(-1)[2];
+    const mx = X + (Math.min(v, max) / max) * W;
+    const zone = k.zones.find((z) => v >= z[1] && v < z[2]) ?? k.zones.at(-1);
+    this.label.setText(`Cup ${slotNo} · ${k.name}`);
+    this.now.setText(zone[0]);
+    this.marker.clear().fillStyle(0x111111, 1).fillRect(mx - 2.5, 12, 5, BAR_H + 8).lineStyle(1, 0xffffff, 1).strokeRect(mx - 2.5, 12, 5, BAR_H + 8);
+    // tremble in the careful zone, shake in the red one (never wild)
+    const t = this.scene.time.now;
+    const amp = zone[3] === 'bad' ? 2.6 : zone[3] === 'hi' ? 0.9 : 0;
+    this.c.setPosition(amp ? Math.sin(t / (zone[3] === 'bad' ? 22 : 38)) * amp : 0, this.y + (amp ? Math.cos(t / 31) * amp * 0.35 : 0));
+    this.c.setAlpha(1);
+    this.hideAt = t + 700;
+  }
+
+  layout(ingredient) {
+    this.kind = ingredient;
+    const k = KIND[ingredient];
+    const max = k.zones.at(-1)[2];
+    this.g.clear();
+    this.zoneTexts.forEach((t) => t.destroy());
+    this.zoneTexts = [];
+    for (const [label, a, b, kind] of k.zones) {
+      const x0 = X + (a / max) * W;
+      const x1 = X + (b / max) * W;
+      this.g.fillStyle(FILL_COLORS[kind], 1).fillRect(x0, 16, x1 - x0, BAR_H);
+      this.g.lineStyle(1, 0x000000, 0.18).lineBetween(x1, 16, x1, 16 + BAR_H);
+      const t = addText(this.scene, (x0 + x1) / 2, 16 + BAR_H / 2, label, { size: 9, bold: true, color: '#1f1f1f', origin: 0.5 });
+      this.zoneTexts.push(t);
+      this.c.add(t);
+    }
+    this.g.lineStyle(2, COLORS.inkHex, 1).strokeRoundedRect(X, 16, W, BAR_H, 4);
+    this.c.bringToTop(this.marker);
+  }
+
+  // Fade out shortly after the pour stops.
+  update() {
+    if (this.c.alpha > 0 && this.scene.time.now > this.hideAt) this.c.setAlpha(Math.max(0, this.c.alpha - 0.08));
+  }
+}

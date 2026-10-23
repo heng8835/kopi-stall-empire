@@ -60,6 +60,7 @@ canvas { width: 100%; max-width: 420px; aspect-ratio: 360 / 420; justify-self: c
     <button type="button" id="pick-tehC" data-recipe="tehC">Teh C siew dai</button>
     <button type="button" id="pick-milo" data-recipe="miloDino">Milo Dinosaur</button>
     <button type="button" id="pick-horlicks" data-recipe="horlicks">Horlicks (hot)</button>
+    <button type="button" id="pick-sweet" data-recipe="kopiTooSweet">Too sweet (shake)</button>
   </div>
 
   <div class="stage">
@@ -75,7 +76,8 @@ canvas { width: 100%; max-width: 420px; aspect-ratio: 360 / 420; justify-self: c
   <div class="notes">
     <p><b>What's new:</b> the liquid sits inside the glass with 2-tone shading, a wobbling surface and the glass's shine over it. Streams, milk clouds, sugar, ice splashes and steam replace the flat coloured box.</p>
     <p><b>Ice:</b> the code-drawn pixel cubes from the plan, dropped with a splash and bobbing at the surface.</p>
-    <p><b>Pour bar:</b> each ingredient shows its own labelled zones; the yellow outline is the order's target.</p>
+    <p><b>Pour bar:</b> zones touch with no gaps; the yellow outline is the order's target. It trembles in GA DAI and shakes harder when TOO SWEET (try the last button).</p>
+    <p><b>Colours:</b> Kopi O near-black, Kopi golden caramel, Kopi C lighter and creamier, Teh O amber-red, Teh orange caramel, Teh C peachy beige. The game uses the same palette.</p>
   </div>
 </div>
 
@@ -109,37 +111,47 @@ const sx = (x) => GX + x * GS, sy = (y) => GY + y * GS;
 const wallAt = (y) => { const t = (y - IN.top) / (IN.bottom - IN.top); return [IN.l0 + (IN.l1 - IN.l0) * t, IN.r0 + (IN.r1 - IN.r0) * t]; };
 const levelY = (fill) => IN.bottom - (IN.bottom - IN.top) * Math.min(fill, 1.12) / 1.0;
 
-const COL = { kopi: [59, 36, 22], teh: [154, 74, 30], milo: [90, 58, 40], horlicks: [196, 160, 112], condensed: [243, 226, 192], evap: [247, 239, 226] };
+const COL = { kopi: [42, 24, 16], teh: [122, 58, 20], milo: [94, 61, 43], horlicks: [214, 188, 147], condensed: [243, 226, 192], evap: [247, 240, 228] };
+const WITH_MILK = { condensed: { kopi: [150, 96, 50], teh: [196, 122, 64] }, evap: { kopi: [168, 124, 84], teh: [206, 152, 106] } };
+const STREAMC = { kopi: [52, 30, 18], teh: [140, 66, 22], milo: [94, 61, 43], horlicks: [214, 188, 147], condensed: [243, 226, 192], evap: [250, 245, 236] };
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 const shade = (c, k) => c.map((v) => Math.max(0, Math.min(255, Math.round(v * k))));
 
 // ---------- recipes: a list of steps, each with a pour-bar definition ----------
+// Same zones as the game (src/systems/pourBar.js): they touch, no gaps. [label, class, from, to]
+const SWEET = [['KOSONG', 'z-none', 0, 0.19], ['SIEW DAI', 'z-lo', 0.19, 0.675], ['NORMAL', 'z-ok', 0.675, 1.1], ['GA DAI', 'z-hi', 1.1, 1.45], ['TOO SWEET', 'z-bad', 1.45, 1.9]];
 const BARS = {
-  fill: { name: 'Kopi / Teh pot · fill', zones: [['filling…', 'z-gap', 2.2], ['¾ PENG', 'z-lo', 1], ['', 'z-gap', .3], ['FULL', 'z-ok', 1], ['spill', 'z-bad', .8]], max: 1.12 },
-  condensed: { name: 'Condensed milk · sweetness', zones: [['none', 'z-none', 1], ['', 'z-gap', .5], ['SIEW DAI', 'z-lo', 1.4], ['', 'z-gap', .4], ['NORMAL', 'z-ok', 1.4], ['GA DAI', 'z-hi', 1.2], ['too sweet', 'z-bad', 1]], max: 1.6 },
-  sugar: { name: 'Sugar · sweetness', zones: [['KOSONG', 'z-none', 1.1], ['', 'z-gap', .4], ['SIEW DAI', 'z-lo', 1.4], ['', 'z-gap', .4], ['NORMAL', 'z-ok', 1.4], ['GA DAI', 'z-hi', 1.2], ['too sweet', 'z-bad', 1]], max: 1.6 },
-  evap: { name: 'Evaporated milk · C', zones: [['none (O)', 'z-none', 1.2], ['', 'z-gap', .8], ['C · NORMAL', 'z-ok', 1.8], ['a lot', 'z-hi', 1], ['too milky', 'z-bad', 1]], max: 1.6 },
+  fill: { name: 'Pot · fill', zones: [['FILLING…', 'z-none', 0, 0.58], ['¾ PENG', 'z-lo', 0.58, 0.825], ['FULL', 'z-ok', 0.825, 1.085], ['SPILL', 'z-bad', 1.085, 1.3]] },
+  condensed: { name: 'Condensed milk · sweetness', zones: SWEET },
+  sugar: { name: 'Sugar · sweetness', zones: SWEET },
+  evap: { name: 'Evaporated milk · C', zones: [['NONE (O)', 'z-none', 0, 0.415], ['C · NORMAL', 'z-ok', 0.415, 1.175], ['TOO MILKY', 'z-bad', 1.175, 1.9]] },
 };
+for (const b of Object.values(BARS)) b.max = b.zones.at(-1)[3];
 // target = index of the zone the order wants; `to` = where the marker ends (0..max)
 const RECIPES = {
   kopi: { base: 'kopi', hot: true, steps: [
-    { k: 'pour', what: 'kopi', to: 0.98, bar: 'fill', target: 3, label: 'Hold the kopi pot · FULL' },
-    { k: 'milk', what: 'condensed', to: 0.92, bar: 'condensed', target: 4, label: 'Condensed milk · NORMAL' },
+    { k: 'pour', what: 'kopi', to: 0.98, bar: 'fill', target: 2, label: 'Hold the kopi pot · FULL' },
+    { k: 'milk', what: 'condensed', to: 0.92, bar: 'condensed', target: 2, label: 'Condensed milk · NORMAL' },
     { k: 'stir', label: 'Wiggle the spoon' },
     { k: 'rest', label: 'Hot! Steam rises' },
   ]},
+  kopiTooSweet: { base: 'kopi', hot: true, steps: [
+    { k: 'pour', what: 'kopi', to: 0.98, bar: 'fill', target: 2, label: 'Kopi pot · FULL' },
+    { k: 'milk', what: 'condensed', to: 1.75, bar: 'condensed', target: 3, label: 'Condensed milk… GA DAI shakes, TOO SWEET shakes harder' },
+    { k: 'rest', label: 'Too sweet!' },
+  ]},
   kopiOPeng: { base: 'kopi', hot: false, steps: [
     { k: 'pour', what: 'kopi', to: 0.72, bar: 'fill', target: 1, label: 'Kopi pot · ¾ line (peng)' },
-    { k: 'sugar', to: 0.92, bar: 'sugar', target: 4, label: 'Sugar · NORMAL' },
+    { k: 'sugar', to: 0.92, bar: 'sugar', target: 2, label: 'Sugar · NORMAL' },
     { k: 'stir', label: 'Stir' },
     { k: 'ice', label: 'Drop the ice · level rises to FULL' },
     { k: 'rest', label: 'Cold glass, condensation' },
   ]},
   tehC: { base: 'teh', hot: true, steps: [
-    { k: 'pour', what: 'teh', to: 0.98, bar: 'fill', target: 3, label: 'Hold the teh pot · FULL' },
-    { k: 'milk', what: 'evap', to: 0.92, bar: 'evap', target: 2, label: 'Evaporated milk · C' },
-    { k: 'sugar', to: 0.45, bar: 'sugar', target: 2, label: 'Sugar · SIEW DAI' },
+    { k: 'pour', what: 'teh', to: 0.98, bar: 'fill', target: 2, label: 'Hold the teh pot · FULL' },
+    { k: 'milk', what: 'evap', to: 0.92, bar: 'evap', target: 1, label: 'Evaporated milk · C' },
+    { k: 'sugar', to: 0.45, bar: 'sugar', target: 1, label: 'Sugar · SIEW DAI' },
     { k: 'stir', label: 'Stir' },
     { k: 'rest', label: 'Hot! Steam rises' },
   ]},
@@ -150,7 +162,7 @@ const RECIPES = {
     { k: 'rest', label: 'Rawr' },
   ]},
   horlicks: { base: 'horlicks', hot: true, steps: [
-    { k: 'pour', what: 'horlicks', to: 0.98, bar: 'fill', target: 3, label: 'Horlicks · FULL' },
+    { k: 'pour', what: 'horlicks', to: 0.98, bar: 'fill', target: 2, label: 'Horlicks · FULL' },
     { k: 'stir', label: 'Stir' },
     { k: 'rest', label: 'Hot! Steam rises' },
   ]},
@@ -163,7 +175,7 @@ let recipe, stepIdx, stepT, S, parts, speed = 1, last = performance.now();
 
 function reset(name) {
   recipe = RECIPES[name];
-  stepIdx = 0; stepT = 0; parts = [];
+  stepIdx = 0; stepT = 0; parts = []; puffs = [];
   // fill 0..1.12, milkLayer = unstirred milk amount, mixed = how blended the milk is, wob = surface wobble
   S = { base: recipe.base, fill: 0, milk: 0, milkKind: null, mixed: 0, sugar: 0, iceIn: false, iceY: 0, iceV: 0, powder: 0, wob: 0, wobT: 0, steam: 0, cold: 0, swirl: 0, stream: null, barVal: 0 };
   renderSteps(); setBar(recipe.steps[0]);
@@ -177,18 +189,17 @@ function setBar(step) {
   barDef = BARS[step.bar];
   barEl.classList.remove('idle');
   document.getElementById('bar-name').textContent = barDef.name;
-  const total = barDef.zones.reduce((a, z) => a + z[2], 0);
-  zonesEl.innerHTML = barDef.zones.map(([t, c, f], i) => `<span class="${c}${i === step.target ? ' target' : ''}" style="flex:${f}">${t}</span>`).join('') + '<i></i>';
+  zonesEl.innerHTML = barDef.zones.map(([t, c, a, b], i) => `<span class="${c}${i === step.target ? ' target' : ''}" style="flex:${b - a}">${t}</span>`).join('') + '<i></i>';
   marker = zonesEl.querySelector('i');
-  barDef.total = total;
 }
 function updateBar(v) {
   if (!marker || !barDef) return;
   marker.style.left = `${Math.min(100, (v / barDef.max) * 100)}%`;
-  // which zone is the marker in
-  let acc = 0, pct = v / barDef.max * barDef.total, name = '';
-  for (const [t, , f] of barDef.zones) { if (pct >= acc && pct < acc + f) { name = t; break; } acc += f; }
-  document.getElementById('bar-zone').textContent = name ? `now: ${name}` : '';
+  const z = barDef.zones.find((z) => v >= z[2] && v < z[3]) ?? barDef.zones.at(-1);
+  document.getElementById('bar-zone').textContent = `now: ${z[0]}`;
+  // tremble in GA DAI, shake harder when too sweet (never wild)
+  const amp = z[1] === 'z-bad' ? 2.6 : z[1] === 'z-hi' ? 0.9 : 0, t = performance.now();
+  barEl.style.transform = amp ? `translate(${Math.sin(t / (z[1] === 'z-bad' ? 22 : 38)) * amp}px, ${Math.cos(t / 31) * amp * 0.35}px)` : '';
 }
 function renderSteps() {
   document.getElementById('steps').innerHTML = recipe.steps.map((s, i) => `<span class="${i === stepIdx ? 'now' : i < stepIdx ? 'done' : ''}">${s.label}</span>`).join('');
@@ -208,14 +219,14 @@ function step(dt) {
     const p = Math.min(1, t / 0.88);
     S.fill = from + (st.to - from) * ease(p);
     S.wob = Math.max(S.wob, 0.6);
-    if (p < 1) S.stream = { color: COL[st.what], w: 6.5, x: 0.42 };
+    if (p < 1) S.stream = { color: STREAMC[st.what], w: 11, x: 0.42 };
     S.barVal = S.fill;
     if (p < 1 && Math.random() < 0.5) bubble();
   } else if (st.k === 'milk') {
     const p = Math.min(1, t / 0.85);
     S.milkKind = st.what;
     S.milk = st.to * ease(p);
-    if (p < 1) S.stream = { color: COL[st.what], w: st.what === 'condensed' ? 4.5 : 3.5, x: 0.55, thick: st.what === 'condensed' };
+    if (p < 1) S.stream = { color: STREAMC[st.what], w: 8, x: 0.55 };
     S.barVal = S.milk;
     if (p < 1 && st.what === 'evap' && Math.random() < 0.5) cloud();
   } else if (st.k === 'sugar') {
@@ -272,7 +283,17 @@ function splash() {
   const y = sy(levelY(S.fill));
   for (let i = 0; i < 14; i++) { const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2; const v = 0.1 + Math.random() * 0.12; parts.push({ kind: 'drop', x: surfaceX(0.5) + (Math.random() - 0.5) * 30, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 700, r: 1.5 + Math.random() * 1.8 }); }
 }
+let puffs = [], puffIn = 0;
+function updatePuffs(dt) {
+  if (S.steam > 0) {
+    puffIn -= dt;
+    if (puffIn <= 0) { puffIn = 110 + Math.random() * 90; const y = levelY(S.fill), [l, r] = wallAt(y); puffs.push({ x: sx((l + r) / 2 + (Math.random() - 0.5) * (r - l) * 0.55), y: sy(y) - 2, r: 4.5 + Math.random() * 3, age: 0, life: 1700 + Math.random() * 900, seed: Math.random() * 6 }); }
+  }
+  for (const p of puffs) { p.age += dt; p.y -= dt * 0.022; p.x += Math.sin(p.age / 380 + p.seed) * dt * 0.01; }
+  puffs = puffs.filter((p) => p.age < p.life);
+}
 function updateParts(dt) {
+  updatePuffs(dt);
   for (const p of parts) {
     p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt;
     if (p.kind === 'drop') p.vy += 0.0005 * dt;
@@ -289,12 +310,10 @@ function fitCanvas() {
   cv.width = Math.round(w * dpr); cv.height = Math.round(w * (H / W) * dpr);
 }
 function liquidColor() {
-  let c = COL[S.base];
-  if (S.milkKind) {
-    const m = Math.min(1, S.milk / 1.6) * 0.95;
-    c = mix(c, COL[S.milkKind], m * S.mixed + m * 0.25 * (1 - S.mixed));
-  }
-  return c;
+  const base = COL[S.base];
+  if (!S.milkKind || !WITH_MILK[S.milkKind][S.base]) return base;
+  const full = mix(base, WITH_MILK[S.milkKind][S.base], Math.min(1, S.milk / 0.9));
+  return mix(base, full, 0.25 + 0.75 * S.mixed); // unstirred: still mostly the plain drink
 }
 function oval(y) {
   const [l, r] = wallAt(y);
@@ -425,15 +444,14 @@ function draw() {
   }
 
   // steam (hot) and condensation (cold)
-  if (S.steam > 0) {
-    const t = performance.now() / 1000;
-    for (let i = 0; i < 3; i++) {
-      const bx = sx(40 + i * 22), by = sy(IN.top) - 6;
-      g.strokeStyle = `rgba(255,255,255,${0.5 * S.steam})`; g.lineWidth = 4; g.lineCap = 'round';
-      g.beginPath();
-      for (let j = 0; j <= 12; j++) { const yy = by - j * 6 - ((t * 22 + i * 13) % 18); const xx = bx + Math.sin(j / 2 + t * 2 + i) * 5; j ? g.lineTo(xx, yy) : g.moveTo(xx, yy); }
-      g.stroke();
-    }
+  // soft steam: overlapping radial puffs that rise, grow and fade
+  for (const p of puffs) {
+    const k = p.age / p.life, r = p.r * (1 + k * 2.2);
+    const a = 0.3 * S.steam * Math.sin(Math.PI * Math.min(1, k * 1.15)) * (1 - k * 0.3);
+    if (a <= 0.005) continue;
+    const rg = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+    rg.addColorStop(0, `rgba(255,255,255,${a})`); rg.addColorStop(0.55, `rgba(255,255,255,${a * 0.45})`); rg.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = rg; g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); g.fill();
   }
   if (S.cold > 0) {
     for (let i = 0; i < 26; i++) {

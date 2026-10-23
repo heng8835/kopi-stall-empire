@@ -1,10 +1,10 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-23
 phase: development
-next: "Build phase A of docs/specs/next-phase-plan.md (pour bar near top, HD liquid stand-in + code-drawn ice, condensed rule, recipe calendar + cards + book, Day 1 tutorial, clock). Malt decision: keep Horlicks. User reviewing the pour prototype first."
+next: "Phase A built. User playtests; then phase B (order tickets, docs/specs/order-tickets-day-summary.md) or C (night shop). Waiting on P1 art (docs/art/ASSET_LIST.md)."
 tier_hint: 1
 blockers: ["Sophie flag/Merlion fix (user)"]
-touched: [src/scenes/StallScene.js, src/scenes/DramaScene.js, src/scenes/TitleScene.js, src/data/events.js, src/data/stallTuning.js, src/data/glossary.js, src/systems/queue.js, src/systems/story.js, src/systems/run.js, src/systems/economy.js, public/sprites/]
+touched: [src/systems/drinkArt.js, src/systems/pourBar.js, src/systems/cards.js, src/systems/menu.js, src/data/recipes.js, src/systems/cup.js, src/scenes/StallScene.js, src/data/tutorial.js, src/data/customers.js]
 validation: passing
 open_decisions: ["Walk-frame route (IDEAS.md)", "Pour animation look (prototype: docs/plan/pour-prototype.html)"]
 spec: "docs/specs/next-phase-plan.md"

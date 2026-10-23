@@ -4,14 +4,16 @@ import { GLOSSARY } from '../data/glossary.js';
 // A drink spec is { base, milk, sugar, iced, topping }.
 //   base:  'kopi' | 'teh' | 'milo'
 //   milk:  'condensed' | 'evap' | 'none'   (null for milo)
-//   sugar: 'normal' | 'less' | 'none'       (null for milo)
+//   sugar: 'normal' | 'less' | 'none' | 'more'   (null for milo)
+//   For condensed-milk drinks (Kopi, Teh) the condensed milk is the sweetness; O and C use the sugar can.
 
 const MILK_WORD = { O: 'none', C: 'evap' };
 const MILK_TO_WORD = { none: 'O', evap: 'C', condensed: '' };
-const SUGAR_TO_WORD = { none: 'kosong', less: 'siew dai', normal: '' };
+const SUGAR_TO_WORD = { none: 'kosong', less: 'siew dai', normal: '', more: 'ga dai' };
 
 export function findDrink(spec) {
-  return Object.values(DRINKS).find((d) => d.base === spec.base && (d.base === 'milo' || d.milk === spec.milk)) ?? null;
+  if (spec.base === 'milo') return spec.topping ? DRINKS.miloDino : DRINKS.milo;
+  return Object.values(DRINKS).find((d) => d.base === spec.base && d.milk === spec.milk) ?? null;
 }
 
 // "Teh C siew dai peng" -> { base: 'teh', milk: 'evap', sugar: 'less', iced: true, topping: null }
@@ -20,8 +22,11 @@ export function parseOrder(text) {
   const first = words.shift()?.toLowerCase();
 
   if (first === 'milo') {
-    const d = DRINKS.miloDino;
-    return { base: 'milo', milk: null, sugar: null, iced: d.iced, topping: d.topping };
+    // "Milo", "Milo peng", "Milo Dinosaur" (iced, powder on top)
+    const rest = words.join(' ').toLowerCase();
+    if (rest === 'dinosaur') return { base: 'milo', milk: null, sugar: null, iced: true, topping: 'milo' };
+    if (rest === '' || rest === 'peng') return { base: 'milo', milk: null, sugar: null, iced: rest === 'peng', topping: null };
+    throw new Error(`Unknown Milo order: "${text}"`);
   }
   if (first !== 'kopi' && first !== 'teh') throw new Error(`Unknown drink: "${text}"`);
 

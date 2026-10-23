@@ -22,7 +22,7 @@ describe('parseOrder', () => {
 
 describe('formatOrder round-trip', () => {
   const coffeeTea = Object.values(DRINKS).filter((d) => d.base !== 'milo');
-  const mods = ['', ' kosong', ' siew dai', ' peng', ' kosong peng', ' siew dai peng'];
+  const mods = ['', ' kosong', ' siew dai', ' ga dai', ' peng', ' kosong peng', ' siew dai peng'];
 
   for (const d of coffeeTea) {
     for (const m of mods) {

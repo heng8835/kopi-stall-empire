@@ -14,11 +14,15 @@ const stirAll = (cup) => {
 function makePerfect(orderText) {
   const spec = parseOrder(orderText);
   const cup = newCup();
-  pour(cup, spec.base, holdFor(spec.base, 0.95));
+  pour(cup, spec.base, holdFor(spec.base, spec.iced ? 0.7 : 0.95)); // peng: ¾ line, the ice tops it up
   if (spec.base !== 'milo') {
-    if (spec.milk !== 'none') pour(cup, spec.milk, holdFor(spec.milk, 0.9));
-    const sugarAmt = { none: 0, less: 0.45, normal: 0.9 }[spec.sugar];
-    if (sugarAmt) pour(cup, 'sugar', holdFor('sugar', sugarAmt));
+    const sweet = { none: 0, less: 0.45, normal: 0.9, more: 1.25 }[spec.sugar];
+    // Kopi / Teh: condensed milk is the sweetness. C: evap + sugar. O: sugar only.
+    if (spec.milk === 'condensed') pour(cup, 'condensed', holdFor('condensed', sweet));
+    else {
+      if (spec.milk === 'evap') pour(cup, 'evap', holdFor('evap', 0.9));
+      if (sweet) pour(cup, 'sugar', holdFor('sugar', sweet));
+    }
     stirAll(cup);
   }
   if (spec.iced) addIce(cup);
@@ -46,13 +50,13 @@ describe('cup model', () => {
   });
 
   it('buckets sugar into zones', () => {
-    expect([0, 0.2, 0.45, 0.7, 0.9, 1.2, 1.4].map(sugarBucket)).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    expect([0, 0.2, 0.45, 0.7, 0.9, 1.1, 1.25, 1.45, 1.6].map(sugarBucket)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
   });
 });
 
 describe('gradeCup', () => {
   const orders = [
-    'Kopi', 'Kopi O', 'Kopi C', 'Teh', 'Teh C',
+    'Kopi', 'Kopi O', 'Kopi C', 'Teh', 'Teh O', 'Teh C', 'Kopi siew dai', 'Teh ga dai', 'Kopi O ga dai', 'Teh peng',
     'Kopi O kosong', 'Kopi C kosong', 'Kopi C kosong peng', 'Teh C siew dai', 'Teh C siew dai peng', 'Milo Dinosaur',
   ];
   for (const o of orders) {
@@ -73,6 +77,21 @@ describe('gradeCup', () => {
     expect(gradeCup(makePerfect('Kopi C').cup, parseOrder('Kopi C kosong')).tier).toBe('oops');
   });
 
+  it('condensed milk is the sweetness for Kopi / Teh', () => {
+    // a Kopi made with normal condensed milk is too sweet for "Kopi siew dai"
+    expect(gradeCup(makePerfect('Kopi').cup, parseOrder('Kopi siew dai')).reasons).toContain('too sweet for siew dai');
+    // adding sugar on top of condensed milk makes it ga dai
+    const extra = pour(makePerfect('Teh').cup, 'sugar', holdFor('sugar', 0.4));
+    stirAll(extra);
+    expect(gradeCup(extra, parseOrder('Teh ga dai')).tier).toBe('perfect');
+  });
+
+  it('peng: pour to ¾ then ice; full + ice spills', () => {
+    const full = addIce(stirAll(pour(pour(newCup(), 'kopi', holdFor('kopi', 0.95)), 'condensed', holdFor('condensed', 0.9))));
+    expect(gradeCup(full, parseOrder('Kopi peng')).reasons).toContain('spilled over');
+    expect(gradeCup(makePerfect('Kopi peng').cup, parseOrder('Kopi peng')).tier).toBe('perfect');
+  });
+
   it('wrong milk or wrong base is oops', () => {
     expect(gradeCup(makePerfect('Kopi C').cup, parseOrder('Kopi')).reasons).toContain('evaporated milk instead of condensed');
     expect(gradeCup(makePerfect('Teh').cup, parseOrder('Kopi')).tier).toBe('oops');
@@ -81,7 +100,7 @@ describe('gradeCup', () => {
 
   it('forgetting peng or the Milo powder is close', () => {
     expect(gradeCup(makePerfect('Kopi C kosong').cup, parseOrder('Kopi C kosong peng')).reasons).toEqual(['forgot the ice (peng)']);
-    const iceMiloNoPowder = addIce(pour(newCup(), 'milo', holdFor('milo', 0.95)));
+    const iceMiloNoPowder = addIce(pour(newCup(), 'milo', holdFor('milo', 0.7)));
     expect(gradeCup(iceMiloNoPowder, parseOrder('Milo Dinosaur'))).toEqual({ tier: 'close', reasons: ['forgot the Milo powder on top'] });
   });
 

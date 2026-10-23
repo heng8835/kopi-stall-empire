@@ -25,7 +25,12 @@ export function pour(cup, ingredient, dtMs) {
   return cup;
 }
 
-export const addIce = (cup) => ((cup.ice = true), cup);
+// Ice raises the level once, so a peng drink is poured to the ¾ line and then iced.
+export function addIce(cup) {
+  if (!cup.ice && cup.base) cup.fill += TUNING.iceVolume;
+  cup.ice = true;
+  return cup;
+}
 export const addPowder = (cup) => ((cup.powder = true), cup);
 
 export function stirStep(cup) {
@@ -42,6 +47,11 @@ export function milkAmount(cup) {
   return cup.condensed + cup.evap;
 }
 
+// How sweet the cup is: the sugar can plus condensed milk (which is sweet itself).
+export function sweetness(cup) {
+  return cup.sugar + cup.condensed;
+}
+
 // Which milk is in the cup: null, 'condensed', 'evap' or 'mixed'.
 export function milkType(cup) {
   const n = ZONES.milk.none[1];
@@ -50,7 +60,8 @@ export function milkType(cup) {
   return c && e ? 'mixed' : c ? 'condensed' : e ? 'evap' : null;
 }
 
-// Bucket an amount on a 0..6 scale: 0 none, 1 between, 2 less, 3 between, 4 normal, 5 between, 6 too much.
+// Bucket a sweetness on a 0..8 scale: 0 none, 2 less (siew dai), 4 normal, 6 more (ga dai), 8 too much;
+// odd numbers are the gaps between zones.
 export function sugarBucket(x) {
   const z = ZONES.sugar;
   if (x <= z.none[1]) return 0;
@@ -58,12 +69,14 @@ export function sugarBucket(x) {
   if (x <= z.less[1]) return 2;
   if (x < z.normal[0]) return 3;
   if (x <= z.normal[1]) return 4;
-  if (x < z.tooMuch) return 5;
-  return 6;
+  if (x < z.more[0]) return 5;
+  if (x <= z.more[1]) return 6;
+  if (x < z.tooMuch) return 7;
+  return 8;
 }
 
-const SUGAR_IDX = { none: 0, less: 2, normal: 4 };
-const SUGAR_WORD = { none: 'kosong', less: 'siew dai', normal: 'normal sugar' };
+const SUGAR_IDX = { none: 0, less: 2, normal: 4, more: 6 };
+const SUGAR_WORD = { none: 'kosong', less: 'siew dai', normal: 'normal sweet', more: 'ga dai' };
 
 // Compare a cup with an order spec (from parseOrder). Returns { tier, reasons }.
 export function gradeCup(cup, spec) {
@@ -86,16 +99,18 @@ export function gradeCup(cup, spec) {
     const got = milkType(cup);
     if (got === 'mixed') oops.push('two kinds of milk');
     else if (want !== got) oops.push(!got ? 'forgot the milk' : !want ? 'should be no milk (O)' : got === 'evap' ? 'evaporated milk instead of condensed' : 'condensed milk instead of evaporated (C)');
-    else if (want) {
+    else if (want === 'evap') {
+      // (condensed milk is judged as sweetness below)
       const m = milkAmount(cup);
       if (m < ZONES.milk.normal[0]) close.push('not enough milk');
       else if (m > ZONES.milk.normal[1]) close.push('too much milk');
     }
 
-    // Sugar
-    const diff = Math.abs(sugarBucket(cup.sugar) - SUGAR_IDX[spec.sugar]);
+    // Sweetness: condensed milk for Kopi / Teh, the sugar can for O and C
+    const sweet = sugarBucket(sweetness(cup));
+    const diff = Math.abs(sweet - SUGAR_IDX[spec.sugar]);
     if (diff > 0) {
-      const sweeter = sugarBucket(cup.sugar) > SUGAR_IDX[spec.sugar];
+      const sweeter = sweet > SUGAR_IDX[spec.sugar];
       const msg = diff <= 1 ? (sweeter ? 'a bit too sweet' : 'a bit not sweet enough') : sweeter ? `too sweet for ${SUGAR_WORD[spec.sugar]}` : `not sweet enough for ${SUGAR_WORD[spec.sugar]}`;
       (diff <= 2 ? close : oops).push(msg);
     }
@@ -115,14 +130,14 @@ export function formatCup(cup) {
   if (isEmpty(cup)) return 'empty cup';
   if (!cup.base) return 'no kopi or teh yet';
   if (cup.base === 'cham') return 'kopi + teh mix?!';
-  const s = sugarBucket(cup.sugar);
-  const sugar = s <= 1 ? 'none' : s <= 3 ? 'less' : 'normal';
+  const s = sugarBucket(sweetness(cup));
+  const sugar = s <= 1 ? 'none' : s <= 3 ? 'less' : s <= 5 ? 'normal' : 'more';
   const mt = milkType(cup);
   const milk = mt === 'evap' ? 'evap' : mt === 'condensed' ? 'condensed' : 'none';
   let text = cup.base === 'milo' ? (cup.ice && cup.powder ? 'Milo Dinosaur' : cup.ice ? 'Milo peng' : 'Milo') : formatOrder({ base: cup.base, milk, sugar, iced: cup.ice });
   const notes = [];
   if (cup.fill < ZONES.fill.good[0]) notes.push('not full');
-  if (s === 6) notes.push('too sweet');
+  if (s === 8) notes.push('too sweet');
   if (mt === 'mixed') notes.push('2 milks');
   if (needsStir(cup)) notes.push('unstirred');
   if (notes.length) text += ` (${notes.join(', ')})`;

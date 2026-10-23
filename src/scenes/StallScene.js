@@ -3,7 +3,7 @@ import { GAME_W, GAME_H, COLORS } from '../config.js';
 import { CUSTOMERS } from '../data/customers.js';
 import { OWNERS } from '../data/owners.js';
 import { TOOLS, SLOT_X, SPOT_X } from '../data/tools.js';
-import { TUNING, ZONES } from '../data/stallTuning.js';
+import { TUNING } from '../data/stallTuning.js';
 import { pickLine, UI } from '../i18n/lines.js';
 import { addText } from '../systems/text.js';
 import { fitCamera } from '../systems/view.js';
@@ -11,7 +11,11 @@ import { addSprite } from '../systems/sprites.js';
 import { makeButton, layoutLine, showGlossary, addMuteToggle } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
 import { parseOrder } from '../systems/order.js';
-import { newCup, pour, addIce, addPowder, stirStep, gradeCup, formatCup, liquidColor, needsStir } from '../systems/cup.js';
+import { newCup, pour, addIce, addPowder, stirStep, gradeCup, formatCup } from '../systems/cup.js';
+import { DrinkArt, ART_ORIGIN } from '../systems/drinkArt.js';
+import { PourBar } from '../systems/pourBar.js';
+import { showRecipeCard, showRecipeBook } from '../systems/cards.js';
+import { ordersFor, lessonFor } from '../systems/menu.js';
 import { createDayState, applyServe, applyTimeout, formatMoney, customersForFame, clampFame } from '../systems/economy.js';
 import { weightedPick } from '../systems/random.js';
 import { placeArrival, frontCanTake, arrivalSchedule } from '../systems/queue.js';
@@ -32,20 +36,17 @@ const OPEN_MIN = 7 * 60; // 7:00am
 const CLOSE_MIN = 19 * 60; // 7:00pm
 
 // Layout (logical px, 360x640), matched to the stall background art (901x1600 = 2.5x).
-const HUD_H = 28;
+const HUD_H = 40; // clock + day bar + fame + money
+const POUR_BAR_Y = HUD_H + 6; // the pour bar docks here, above the order bubbles
 const COUNTER_Y = 282; // top of the wooden counter in the background
 const FEET_Y = 318; // counter customers stand behind the counter (legs hidden)
 const CUP_BOTTOM = 384; // cups sit on the tray plates
 const CUP_W = 50;
 const CUP_H = 62;
-// Inside of the glass in the cup sprite (measured from the art), relative to the cup's bottom centre.
-const GLASS = { x0: -17, x1: 9, bottom: -9, top: -52 };
-const TABLE = { x: 46, feetY: 112, h: 80, bubble: { x: 96, y: 36, w: 176 } }; // Ah Gong by the window, above the order bubbles
+const TABLE = { x: 46, feetY: 116, h: 80, bubble: { x: 96, y: 46, w: 176 } }; // Ah Gong by the window, above the order bubbles
 const GROUP_X = [40, 130, 220, 310];
 const BUBBLE_BOTTOM = 172;
 const LIFT = 36; // dragged things float above the finger so you can see them
-const METER_H = 58;
-const METER_MAX = 1.6;
 const TABLE_LINGER_MS = 3500;
 const BG_SCALE = 901 / GAME_W; // background art pixels per logical px
 // Customers walk in from the street opening on the left (small = far away) and, when the
@@ -53,6 +54,9 @@ const BG_SCALE = 901 / GAME_W; // background art pixels per logical px
 const ENTRY = { x: -40, feetY: 236 };
 const QUEUE_POS = [{ x: 126, feetY: 270 }, { x: 88, feetY: 262 }, { x: 50, feetY: 254 }];
 const MID_STORY_AT = 0.4; // a 'mid' episode plays this far into the day
+const LESSON_AT_MS = 5000; // a recipe teacher walks in this far into a lesson day
+// Day periods on the HUD bar, in minutes from opening (7am): morning, lunch rush, teatime, closing.
+const PERIODS = [['Morning', 0, 240, 0xffe9a8], ['Lunch', 240, 420, 0xffb870], ['Teatime', 420, 600, 0xbfe0c4], ['Closing', 600, 720, 0x9fb3d9]];
 const DRAG_WAIT_MS = 3000; // ...once the player lets go of a cup/tool (or after this long at most)
 
 export default class StallScene extends Phaser.Scene {
@@ -77,6 +81,8 @@ export default class StallScene extends Phaser.Scene {
     this.midWaitMs = 0;
     this.dragging = 0;
     this.ending = null;
+    this.lesson = lessonFor(this.day); // today's new recipe (src/data/recipes.js), if any
+    this.lessonState = this.lesson ? 'waiting' : 'none';
     this.paused = false;
     this.ended = false;
     this.pouring = null; // { tool, slot }
@@ -109,11 +115,38 @@ export default class StallScene extends Phaser.Scene {
 
   drawHud() {
     this.add.rectangle(0, 0, GAME_W, HUD_H, 0x2e5e63).setOrigin(0).setDepth(50);
-    const opts = { size: 14, bold: true, color: '#ffffff' };
-    this.hudClock = addText(this, 8, 6, '', opts).setDepth(51);
-    addMuteToggle(this, 166, 7, { color: '#ffffff', size: 12 }).setDepth(51);
-    this.hudFame = addText(this, GAME_W / 2 + 44, 6, '', { ...opts, origin: [0.5, 0] }).setDepth(51);
-    this.hudMoney = addText(this, GAME_W - 8, 6, '', { ...opts, origin: [1, 0] }).setDepth(51);
+    const opts = { size: 13, bold: true, color: '#ffffff' };
+    // wall clock (code-drawn until the clock art arrives): the hour hand sweeps 7am -> 7pm
+    const cx = 20;
+    const cy = HUD_H / 2;
+    const face = this.add.graphics().setDepth(51);
+    face.fillStyle(0x8a5a2b, 1).fillCircle(cx, cy, 17).fillStyle(0xfffaf0, 1).fillCircle(cx, cy, 14.5);
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      face.fillStyle(0x3a2e2a, 1).fillCircle(cx + Math.sin(a) * 12, cy - Math.cos(a) * 12, i % 3 ? 0.8 : 1.4);
+    }
+    this.clockHands = this.add.graphics().setDepth(52);
+    this.clockCenter = { x: cx, y: cy };
+    this.hudDay = addText(this, 42, 3, '', { ...opts, size: 12 }).setDepth(51);
+    // the day as a bar with labelled periods and a moving marker
+    this.dayBar = { x: 42, y: 20, w: 172, h: 14 };
+    const bar = this.add.graphics().setDepth(51);
+    for (const [name, a, b, color] of PERIODS) {
+      const x0 = this.dayBar.x + (a / 720) * this.dayBar.w;
+      const x1 = this.dayBar.x + (b / 720) * this.dayBar.w;
+      bar.fillStyle(color, 1).fillRect(x0, this.dayBar.y, x1 - x0, this.dayBar.h);
+      addText(this, (x0 + x1) / 2, this.dayBar.y + this.dayBar.h / 2, name, { size: 8, bold: true, color: '#2b2420', origin: 0.5 }).setDepth(52);
+    }
+    bar.lineStyle(1.5, 0x1c3a3d, 1).strokeRect(this.dayBar.x, this.dayBar.y, this.dayBar.w, this.dayBar.h);
+    this.dayMarker = this.add.graphics().setDepth(53);
+    this.hudFame = addText(this, 222, 12, '', opts).setDepth(51);
+    this.hudMoney = addText(this, GAME_W - 8, 12, '', { ...opts, origin: [1, 0] }).setDepth(51);
+    // under the HUD, top right: recipe book + sound
+    const book = makeButton(this, GAME_W - 40, HUD_H + 4, 34, 24, '📖', () => this.openRecipeBook(), { size: 13 });
+    book.bg.setDepth(45);
+    book.txt.setDepth(46);
+    addMuteToggle(this, GAME_W - 62, HUD_H + 9, { size: 11 }).setDepth(45);
+    this.pourBar = new PourBar(this, POUR_BAR_Y);
     this.refreshHud();
   }
 
@@ -121,19 +154,18 @@ export default class StallScene extends Phaser.Scene {
     this.slots = SLOT_X.map((x, i) => {
       const label = addText(this, x, CUP_BOTTOM + 6, '', { size: 10, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: 112 }).setDepth(16);
       label.setStroke('#3a2414', 3);
-      const meter = this.add.graphics().setDepth(17);
       const container = this.add.container(x, CUP_BOTTOM).setDepth(14);
-      const saucer = this.add.graphics();
-      const glass = addSprite(this, 'cupGlass', 0, 0, CUP_H).setVisible(false);
-      const g = this.add.graphics(); // liquid, ice, powder: drawn inside the glass
-      container.add([saucer, glass, g]);
+      // the cup, its drink, stream, steam and ice: drawn on a canvas at the glass art's resolution
+      const art = new DrinkArt(this, `cupArt${i}`);
+      const img = this.add.image(0, 0, `cupArt${i}`).setOrigin(ART_ORIGIN.x, ART_ORIGIN.y).setScale(CUP_H / 186);
+      container.add(img);
       // Hit box covers the whole cup + saucer: world y from CUP_BOTTOM - CUP_H - 8 to CUP_BOTTOM + 16.
       // (A container's local hit space starts at its position minus half its size.)
       const hitH = CUP_H + 24;
       container.setSize(CUP_W + 24, hitH);
       container.setInteractive(new Phaser.Geom.Rectangle(0, hitH / 2 - CUP_H - 8, CUP_W + 24, hitH), Phaser.Geom.Rectangle.Contains);
       this.input.setDraggable(container);
-      const slot = { i, x, cup: null, container, g, saucer, glass, label, meter, meterUntil: 0, meterKind: null };
+      const slot = { i, x, cup: null, container, art, label };
       container.on('dragstart', () => this.onCupDragStart(slot));
       container.on('drag', (p) => this.onCupDrag(slot, p));
       container.on('dragend', (p) => this.onCupDragEnd(slot, p));
@@ -184,63 +216,9 @@ export default class StallScene extends Phaser.Scene {
     g.lineStyle(2, 0x3a3a3a).lineBetween(-7, top + 14, -7, top + h - 6).lineBetween(0, top + 14, 0, top + h - 6).lineBetween(7, top + 14, 7, top + h - 6);
   }
 
-  // Draw a cup into its slot: saucer under the glass sprite, the drink drawn inside the glass.
+  // The drink itself is drawn every frame by slot.art (systems/drinkArt.js); this updates the label.
   redrawSlot(slot) {
-    const { g, saucer, glass, cup } = slot;
-    g.clear();
-    saucer.clear();
-    glass.setVisible(!!cup);
-    if (!cup) {
-      slot.label.setText('');
-      return;
-    }
-    saucer.fillStyle(0xffffff, 1).fillEllipse(-4, 0, 66, 12).lineStyle(1, 0x9aa3ab).strokeEllipse(-4, 0, 66, 12);
-    const full = GLASS.bottom - GLASS.top;
-    const fillFrac = Math.min(cup.fill, ZONES.fill.spill) / ZONES.fill.spill;
-    const lh = Math.round(full * fillFrac);
-    const w = GLASS.x1 - GLASS.x0;
-    const surface = GLASS.bottom - lh;
-    if (cup.base && lh > 0) {
-      g.fillStyle(liquidColor(cup), 0.93).fillRect(GLASS.x0, surface, w, lh);
-      g.fillStyle(0xffffff, 0.22).fillRect(GLASS.x0 + 2, surface + 2, 3, Math.max(0, lh - 4)); // glass shine
-    }
-    if (cup.fill > ZONES.fill.spill) g.fillStyle(liquidColor(cup), 0.8).fillEllipse(18, 0, 22, 6); // spill on the saucer
-    if (needsStir(cup) && lh > 6) g.fillStyle(0xffffff, 0.45).fillRect(GLASS.x0 + 4, surface + 3, w - 8, 3); // unmixed streak
-    if (cup.ice) g.fillStyle(0xe6f6ff, 0.95).fillRect(GLASS.x0 + 3, surface - 2, 9, 9).fillRect(GLASS.x0 + 13, surface + 2, 9, 9);
-    if (cup.powder) g.fillStyle(0x5a3a28, 1).fillEllipse((GLASS.x0 + GLASS.x1) / 2, GLASS.top - 2, w + 8, 16);
-    slot.label.setText(formatCup(cup));
-  }
-
-  // Vertical gauge beside a cup for the ingredient being poured (like the mockup).
-  drawMeter(slot, kind) {
-    const m = slot.meter;
-    m.clear();
-    if (!slot.cup || !kind) return;
-    const x = slot.x + 34;
-    const top = CUP_BOTTOM - METER_H;
-    const yOf = (v) => top + METER_H - (Math.min(v, METER_MAX) / METER_MAX) * METER_H;
-    const band = (a, b, color) => m.fillStyle(color, 1).fillRect(x, yOf(b), 10, yOf(a) - yOf(b));
-    m.fillStyle(0x2b2b2b, 0.85).fillRect(x - 2, top - 2, 14, METER_H + 4);
-    let value;
-    if (kind === 'fill') {
-      band(0, ZONES.fill.good[0], 0xbfc6cc);
-      band(ZONES.fill.good[0], ZONES.fill.good[1], 0x5fbf6a);
-      band(ZONES.fill.good[1], ZONES.fill.spill, 0xf2c14e);
-      band(ZONES.fill.spill, METER_MAX, 0xe0574f);
-      value = slot.cup.fill;
-    } else {
-      const z = kind === 'sugar' ? ZONES.sugar : ZONES.milk;
-      band(0, METER_MAX, 0xbfc6cc);
-      band(z.none[0], z.none[1], 0xffffff);
-      if (z.less) band(z.less[0], z.less[1], 0x9fd8a6);
-      band(z.normal[0], z.normal[1], 0x3fa356);
-      band(z.tooMuch, METER_MAX, 0xe0574f);
-      value = kind === 'sugar' ? slot.cup.sugar : slot.cup.condensed + slot.cup.evap;
-    }
-    const ay = yOf(value);
-    m.fillStyle(0xffffff, 1).fillTriangle(x + 12, ay, x + 20, ay - 5, x + 20, ay + 5).lineStyle(1, 0x2b2b2b).strokeTriangle(x + 12, ay, x + 20, ay - 5, x + 20, ay + 5);
-    slot.meterKind = kind;
-    slot.meterUntil = this.time.now + 1400;
+    slot.label.setText(slot.cup ? formatCup(slot.cup) : '');
   }
 
   // ---------- cups on the tray ----------
@@ -264,7 +242,6 @@ export default class StallScene extends Phaser.Scene {
 
   removeCup(slot) {
     slot.cup = null;
-    slot.meter.clear();
     this.redrawSlot(slot);
   }
 
@@ -361,7 +338,7 @@ export default class StallScene extends Phaser.Scene {
     if (!slot?.cup) return;
     pour(slot.cup, ingredient, dtMs);
     this.redrawSlot(slot);
-    this.drawMeter(slot, ['kopi', 'teh', 'milo'].includes(ingredient) ? 'fill' : ingredient === 'sugar' ? 'sugar' : 'milk');
+    this.pourBar.show(ingredient, slot.cup, slot.i + 1);
   }
 
   dropOnCup(slot, what) {
@@ -376,14 +353,6 @@ export default class StallScene extends Phaser.Scene {
     play('stir');
     this.redrawSlot(slot);
     this.tweens.add({ targets: slot.container, angle: { from: -3, to: 3 }, duration: 60, yoyo: true, onComplete: () => slot.container.setAngle(0) });
-  }
-
-  pourParticles(tool, slot, ingredient) {
-    const colors = { kopi: 0x3b2416, teh: 0x9a4a1e, milo: 0x5a3a28, sugar: 0xffffff, condensed: 0xf3e2c0, evap: 0xf7efe2 };
-    const sx = tool.x + (ingredient === 'sugar' ? 0 : 18);
-    const sy = tool.y + tool.tool.h / 2 - 8;
-    const drop = this.add.circle(sx, sy, ingredient === 'sugar' ? 2 : 3, colors[ingredient]).setDepth(44);
-    this.tweens.add({ targets: drop, x: slot.x + Phaser.Math.Between(-6, 6), y: CUP_BOTTOM - CUP_H + 10, duration: 160, onComplete: () => drop.destroy() });
   }
 
   // ---------- customers ----------
@@ -412,12 +381,13 @@ export default class StallScene extends Phaser.Scene {
     if (this.ended) return null;
     const forced = forcedId && CUSTOMERS.find((c) => c.id === forcedId);
     const here = new Set([...this.allCustomers(), ...this.queue].map((c) => c.def.id)); // one of each character at a time
-    const pool = CUSTOMERS.filter((c) => c.enabled && c.sprite && !here.has(c.id) && this.placeFor(c));
+    const menu = (d) => ordersFor(d.orders, this.day);
+    const pool = CUSTOMERS.filter((c) => c.enabled && c.sprite && !here.has(c.id) && menu(c).length && this.placeFor(c));
     const def = forcedId ? (forced && this.placeFor(forced) ? forced : null) : pool.length ? weightedPick(pool) : null;
     if (!def) return null;
 
     const place = this.placeFor(def);
-    const orderText = forcedOrder ?? weightedPick(def.orders).text;
+    const orderText = forcedOrder ?? weightedPick(menu(def)).text;
     const n = def.groupSize;
     const c = {
       def,
@@ -528,6 +498,7 @@ export default class StallScene extends Phaser.Scene {
     if (c.state === 'gone') return;
     c.state = 'waiting';
     this.showBubble(c, c.orderLine, 'order');
+    if (c.lesson) this.time.delayedCall(500, () => !this.ended && this.showLesson(c.lessonLine));
     if (c.episode) {
       this.time.delayedCall(400, () => {
         if (this.ended) return; // closing time plays it instead
@@ -719,27 +690,42 @@ export default class StallScene extends Phaser.Scene {
     const h24 = Math.floor(mins / 60);
     const mm = String(Math.floor((mins % 60) / 15) * 15).padStart(2, '0');
     const h12 = ((h24 + 11) % 12) + 1;
-    this.hudClock.setText(`Day ${this.day}/${MONTH_DAYS}  ${h12}:${mm}${h24 < 12 ? 'am' : 'pm'}`);
+    this.hudDay.setText(`Day ${this.day}/${MONTH_DAYS}   ${h12}:${mm}${h24 < 12 ? 'am' : 'pm'}`);
+    // clock hands (smooth) and the day-bar marker
+    const exact = OPEN_MIN + (this.clockMs / TUNING.dayMs) * (CLOSE_MIN - OPEN_MIN);
+    const { x: cx, y: cy } = this.clockCenter;
+    const ha = ((exact / 60) % 12) / 12 * Math.PI * 2;
+    const ma = ((exact % 60) / 60) * Math.PI * 2;
+    this.clockHands.clear()
+      .lineStyle(3, 0x2b2420, 1).lineBetween(cx, cy, cx + Math.sin(ha) * 8, cy - Math.cos(ha) * 8)
+      .lineStyle(1.6, 0xc8402c, 1).lineBetween(cx, cy, cx + Math.sin(ma) * 12, cy - Math.cos(ma) * 12)
+      .fillStyle(0x2b2420, 1).fillCircle(cx, cy, 2);
+    const mx = this.dayBar.x + (this.clockMs / TUNING.dayMs) * this.dayBar.w;
+    this.dayMarker.clear().fillStyle(0xc8402c, 1).fillRect(mx - 1.5, this.dayBar.y - 3, 3, this.dayBar.h + 6);
     this.hudFame.setText(`名气 ${Math.floor(this.econ.fame)}`);
     this.hudMoney.setText(formatMoney(this.econ.money));
   }
 
   update(time, delta) {
-    if (this.ended || this.paused) return;
+    if (this.paused) return;
+    for (const s of this.slots) {
+      s.art.update(s.cup, delta, this.pouring?.slot === s ? { ingredient: this.pouring.tool.tool.ingredient } : null);
+      s.art.draw();
+    }
+    if (this.ended) return;
 
     // pouring while a tool is held over a cup
     if (this.pouring) {
       const { tool, slot } = this.pouring;
       const ing = tool.tool.ingredient;
       this.pourInto(slot, ing, delta);
-      if (Math.random() < 0.6) this.pourParticles(tool, slot, ing);
       const gap = ing === 'sugar' ? 220 : 900;
       if (time - this.lastPourSound > gap) {
         play(ing === 'sugar' ? 'sugar' : ['condensed', 'evap'].includes(ing) ? 'milk' : 'pour');
         this.lastPourSound = time;
       }
     }
-    for (const s of this.slots) if (s.meterKind && time > s.meterUntil && this.pouring?.slot !== s) (s.meter.clear(), (s.meterKind = null));
+    this.pourBar.update();
 
     // The tutorial is a calm intro: the day clock and random spawns wait for it.
     const teaching = this.tutorial?.active;
@@ -750,6 +736,7 @@ export default class StallScene extends Phaser.Scene {
     if (!teaching) {
       this.runArrivals();
       this.maybeMidStory(delta);
+      this.maybeBringTeacher();
     }
 
     for (const c of this.waitingCustomers()) {
@@ -829,6 +816,7 @@ export default class StallScene extends Phaser.Scene {
         this.arrivals.sort((a, b) => a - b);
         logEvent(this.log, 'story', { id: ep.id, flags: this.flags.join(',') }, this.clockMs);
         this.refreshHud();
+        if (this.lesson?.afterStory === ep.id && this.lessonState === 'waiting') this.time.delayedCall(300, () => this.showLesson(true));
         then();
       },
     });
@@ -845,6 +833,48 @@ export default class StallScene extends Phaser.Scene {
 
   todayRating() {
     return auntyRating(this.econ.perfect, this.econ.served);
+  }
+
+  // ---------- recipe calendar ----------
+
+  // On a lesson day (not taught by a story episode), the teacher walks in early with the new order.
+  maybeBringTeacher() {
+    const l = this.lesson;
+    if (this.lessonState !== 'waiting' || l.afterStory || this.clockMs < LESSON_AT_MS) return;
+    const real = CUSTOMERS.find((c) => c.id === l.teacher);
+    const who = real?.enabled && real.sprite ? real.id : l.fallback ?? l.teacher;
+    const c = this.spawnCustomer(who, l.order);
+    if (!c) return; // no room yet: try again next frame
+    this.lessonState = 'coming';
+    c.lesson = true;
+    c.lessonLine = who === l.teacher; // a stand-in teacher doesn't say the real teacher's line
+    c.patienceMs = c.patienceMax = c.patienceMax * 1.5; // learning takes a moment
+  }
+
+  // Pause the day for a modal card; resume when it closes.
+  pauseFor(open) {
+    if (this.paused) return;
+    this.paused = true;
+    this.pouring = null;
+    this.tweens.pauseAll();
+    this.time.paused = true;
+    open(() => {
+      this.paused = false;
+      this.tweens.resumeAll();
+      this.time.paused = false;
+    });
+  }
+
+  showLesson(showLine = true) {
+    if (this.lessonState === 'done') return;
+    this.lessonState = 'done';
+    logEvent(this.log, 'lesson', { day: this.day, features: this.lesson.features.join(',') }, this.clockMs);
+    this.pauseFor((resume) => showRecipeCard(this, this.lesson, { showLine, onClose: resume }));
+  }
+
+  openRecipeBook() {
+    if (this.ended) return;
+    this.pauseFor((resume) => showRecipeBook(this, this.day, resume));
   }
 
   // ---------- day end ----------

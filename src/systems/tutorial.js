@@ -29,6 +29,10 @@ export class Tutorial {
     this.i += 1;
     if (this.i >= this.steps.length) return this.finish();
     const step = this.steps[this.i];
+    if (step.info) {
+      this.clearGlows();
+      return this.showNote(step.note, true, () => this.next());
+    }
     this.showNote(step.note);
     this.highlight(step.highlight);
     this.trySpawn(step);
@@ -66,7 +70,8 @@ export class Tutorial {
     this.scene.onTutorialDone?.();
   }
 
-  showNote(note, withSkip = true) {
+  // onNext: show a Next button (info cards) instead of waiting for a serve.
+  showNote(note, withSkip = true, onNext = null) {
     this.clearNote();
     const s = this.scene;
     const { x, w } = CARD;
@@ -85,6 +90,12 @@ export class Tutorial {
     this.top = y;
     const card = s.add.rectangle(x, y, w, h, 0xfff1a8).setOrigin(0).setStrokeStyle(2, 0xd9b44a).setDepth(DEPTH);
     this.objs = [card, title, en, zh, this.status];
+    if (onNext) {
+      const next = makeButton(s, x + w - 112, y + h - 4, 64, 22, TUTORIAL_TEXT.next, onNext, { size: 11, bold: true, fill: 0xbfe3c0 });
+      next.bg.setDepth(DEPTH + 1);
+      next.txt.setDepth(DEPTH + 2);
+      this.objs.push(next.bg, next.txt);
+    }
     if (withSkip) {
       const btn = makeButton(s, x + w - 52, y + 4, 46, 20, TUTORIAL_TEXT.skip, () => this.skip(), { size: 11 });
       btn.bg.setDepth(DEPTH + 1);

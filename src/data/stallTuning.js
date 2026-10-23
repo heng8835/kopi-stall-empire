@@ -27,11 +27,13 @@ export const TUNING = {
   pourPerSec: { kopi: 0.8, teh: 0.8, milo: 0.8, sugar: 1.0, condensed: 1.0, evap: 1.0 },
 
   stirWigglesNeeded: 6,
+  iceVolume: 0.25, // ice raises the level: peng = pour to the ¾ line, then ice
 };
 
 // Amount zones (shared by the meters and the grading).
 export const ZONES = {
-  sugar: { none: [0, 0.08], less: [0.3, 0.6], normal: [0.75, 1.1], tooMuch: 1.25 },
+  // Sweetness: sugar for O and C drinks; for Kopi / Teh the condensed milk IS the sweetener.
+  sugar: { none: [0, 0.08], less: [0.3, 0.6], normal: [0.75, 1.05], more: [1.15, 1.4], tooMuch: 1.5 },
   milk: { none: [0, 0.08], normal: [0.75, 1.1], tooMuch: 1.25 },
   fill: { good: [0.85, 1.05], spill: 1.12 },
 };

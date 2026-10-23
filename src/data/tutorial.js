@@ -9,28 +9,50 @@ export const TUTORIAL_STEPS = [
   {
     customer: 'auntyLim',
     order: 'Teh',
-    highlight: ['rack', 'teh', 'condensed', 'sugar', 'stir'],
+    highlight: ['rack', 'teh', 'condensed', 'stir'],
     note: {
-      en: "Drag a cup to the tray. HOLD the teh pot over it till green, then condensed + sugar. Wiggle the spoon, then drag the cup to Aunty!",
-      zh: '拖杯到托盘，按住茶壶倒到绿色，再加炼奶和糖。搅一搅，拖给阿姨！',
+      en: 'Drag a cup to the tray. HOLD the teh pot till the bar says FULL, then condensed milk to NORMAL (it IS the sweetness). Wiggle the spoon, drag to Aunty!',
+      zh: '拖杯到托盘，按住茶壶到 FULL，再加炼奶到 NORMAL（炼奶就是甜度）。搅一搅，拖给阿姨！',
     },
   },
   {
     customer: 'officeGuy',
-    order: 'Kopi O kosong',
-    highlight: ['rack', 'kopi'],
+    order: 'Kopi',
+    highlight: ['kopi', 'condensed', 'stir'],
     note: {
-      en: "'O' = no milk, 'kosong' = no sugar. Just kopi — no stirring needed. Fast fast, he's rushing!",
-      zh: 'O = 不加奶，kosong = 不加糖。只倒咖啡就好，不用搅。',
+      en: 'Kopi = coffee + condensed milk. Same steps, kopi pot this time. Fast fast, he is rushing!',
+      zh: 'Kopi = 咖啡 + 炼奶。步骤一样，这次用咖啡壶。他赶时间！',
     },
   },
   {
     customer: 'auntyLim',
-    order: 'Teh C siew dai peng',
-    highlight: ['teh', 'evap', 'sugar', 'stir', 'ice'],
+    order: 'Kopi O',
+    highlight: ['kopi', 'sugar', 'stir'],
     note: {
-      en: "'C' = evaporated milk. 'Siew dai' = less sugar: stop in the LIGHT green zone. 'Peng' = drop ice in.",
-      zh: 'C = 淡奶。siew dai = 少甜（停在浅绿色）。peng = 加冰。',
+      en: "'O' = no milk. Use the sugar can instead, to NORMAL, then stir.",
+      zh: 'O = 不加奶。改用糖罐，加到 NORMAL，再搅一搅。',
+    },
+  },
+  // Info cards: no customer, tap Next.
+  {
+    info: true,
+    note: {
+      en: "Today's menu: Kopi, Teh, Kopi O, Teh O. Regulars will teach you more, one by one. Tap the book (top right) any time to see your recipes.",
+      zh: '今天的菜单：Kopi、Teh、Kopi O、Teh O。熟客会一个个教你新的。随时点右上角的本子看配方。',
+    },
+  },
+  {
+    info: true,
+    note: {
+      en: '名气 Fame: perfect drinks raise it, and more fame brings more customers tomorrow. Walk-outs dip it a little. No stress lah.',
+      zh: '名气：做得完美会上升，名气越高明天客人越多。客人走掉会掉一点点。不用紧张。',
+    },
+  },
+  {
+    info: true,
+    note: {
+      en: 'The clock runs 7am to 7pm: morning, lunch rush, teatime, closing. Every few days, something happens. Open the stall!',
+      zh: '营业时间早上7点到晚上7点：早上、午餐高峰、下午茶、打烊。每隔几天就会发生些事。开档！',
     },
   },
 ];
@@ -38,6 +60,7 @@ export const TUTORIAL_STEPS = [
 export const TUTORIAL_TEXT = {
   title: "Uncle Tan's note",
   skip: 'Skip',
+  next: 'Next ▸',
   almost: 'Almost! Check the gauge zones.',
   done: {
     en: 'Not bad leh! You can make up to 3 cups at once. Now the real crowd comes!',
