@@ -6,7 +6,7 @@ tier_hint: 1
 blockers: ["Sophie flag/Merlion fix (user)"]
 touched: [src/scenes/StallScene.js, docs/specs/regulars-and-walk-ins.md, IDEAS.md]
 validation: passing
-open_decisions: ["Walk-frame route (IDEAS.md)", "Pour animation look (prototype: docs/plan/pour-prototype.html)"]
+open_decisions: ["Walk-frame route (IDEAS.md)", "Regulars vs walk-ins questions (docs/specs/regulars-and-walk-ins.md)"]
 spec: "docs/specs/regulars-and-walk-ins.md"
 board_task: ""
 notes: "StallScene is reused by Phaser every day: reset per-day state in create (closing, towelUsed…). Jump to a day: ?day=N&fame=F&money=CENTS&flags=a,b. Pane testing: fake Date.now + game.step; renderer.snapshot for screenshots."
