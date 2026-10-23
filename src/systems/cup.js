@@ -1,9 +1,9 @@
 // Cup model for hands-on drink making: what's physically in a cup, how pouring changes it,
 // and how close it is to what the customer ordered. Pure functions, no Phaser.
 import { TUNING, ZONES, LIQUID } from '../data/stallTuning.js';
-import { formatOrder } from './order.js';
+import { formatOrder, MALT } from './order.js';
 
-const BASES = ['kopi', 'teh', 'milo'];
+const BASES = ['kopi', 'teh', 'milo', 'horlicks'];
 const MILKS = ['condensed', 'evap'];
 
 export function newCup() {
@@ -89,7 +89,7 @@ export function gradeCup(cup, spec) {
     else if (fill > ZONES.fill.good[1]) close.push('a bit too full');
   }
 
-  if (spec.base !== 'milo') {
+  if (!MALT.includes(spec.base)) {
     // Milk
     const want = spec.milk === 'none' ? null : spec.milk;
     const got = milkType(cup);
@@ -113,7 +113,7 @@ export function gradeCup(cup, spec) {
   }
 
   if (!!spec.iced !== cup.ice) close.push(spec.iced ? 'forgot the ice (peng)' : 'should be hot, not iced');
-  if (!!spec.topping !== cup.powder) close.push(spec.topping ? 'forgot the Milo powder on top' : 'extra powder on top');
+  if (!!spec.topping !== cup.powder) close.push(spec.topping ? 'forgot the powder on top' : 'extra powder on top');
   if (needsStir(cup)) close.push('forgot to stir');
 
   const reasons = [...oops, ...close];
@@ -125,12 +125,11 @@ export function gradeCup(cup, spec) {
 export function formatCup(cup) {
   if (isEmpty(cup)) return 'empty cup';
   if (!cup.base) return 'no kopi or teh yet';
-  if (cup.base === 'cham') return 'kopi + teh mix?!';
   const s = sugarBucket(sweetness(cup));
   const sugar = s <= 1 ? 'none' : s <= 3 ? 'less' : s <= 5 ? 'normal' : 'more';
   const mt = milkType(cup);
   const milk = mt === 'evap' ? 'evap' : mt === 'condensed' ? 'condensed' : 'none';
-  let text = cup.base === 'milo' ? (cup.ice && cup.powder ? 'Milo Dinosaur' : cup.ice ? 'Milo peng' : 'Milo') : formatOrder({ base: cup.base, milk, sugar, iced: cup.ice });
+  let text = MALT.includes(cup.base) ? formatOrder({ base: cup.base, iced: cup.ice, topping: cup.powder }) : formatOrder({ base: cup.base, milk, sugar, iced: cup.ice });
   const notes = [];
   if (cup.fill < ZONES.fill.good[0]) notes.push('not full');
   if (s === 8) notes.push('too sweet');

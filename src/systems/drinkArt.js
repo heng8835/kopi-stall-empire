@@ -34,13 +34,13 @@ const oval = (y) => {
 // Drink colours (stirred, normal milk). Kopi O near-black; Kopi golden caramel; Kopi C lighter,
 // creamier and a touch greyer (more evaporated milk, which is whiter); Teh O amber-red; Teh orange
 // caramel; Teh C peachy beige; Milo chocolate.
-const NO_MILK = { kopi: [42, 24, 16], teh: [122, 58, 20], milo: [94, 61, 43], cham: [78, 40, 22] };
+const NO_MILK = { kopi: [42, 24, 16], teh: [122, 58, 20], milo: [94, 61, 43], cham: [78, 40, 22], horlicks: [214, 188, 147] };
 const WITH_MILK = {
   condensed: { kopi: [150, 96, 50], teh: [196, 122, 64], milo: [140, 100, 72], cham: [164, 104, 58] },
   evap: { kopi: [168, 124, 84], teh: [206, 152, 106], milo: [150, 112, 84], cham: [176, 124, 84] },
 };
 const MILK = { condensed: [243, 226, 192], evap: [247, 240, 228] };
-export const STREAM = { kopi: [52, 30, 18], teh: [140, 66, 22], milo: [94, 61, 43], condensed: [243, 226, 192], evap: [250, 245, 236] };
+export const STREAM = { kopi: [52, 30, 18], teh: [140, 66, 22], milo: [94, 61, 43], horlicks: [214, 188, 147], condensed: [243, 226, 192], evap: [250, 245, 236] };
 
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 const shade = (c, k) => c.map((v) => Math.max(0, Math.min(255, Math.round(v * k))));
@@ -135,7 +135,7 @@ export class DrinkArt {
     } else if (ing) {
       this.stream = { color: STREAM[ing] ?? STREAM.kopi, w: ['condensed', 'evap'].includes(ing) ? 17 : 24 }; // chunky, easy to see at game size
       this.wob = Math.max(this.wob, 0.55);
-      if (['kopi', 'teh', 'milo'].includes(ing) && Math.random() < 0.5) this.spawn('bub');
+      if (['kopi', 'teh', 'milo', 'horlicks'].includes(ing) && Math.random() < 0.5) this.spawn('bub');
       if (ing === 'evap' && Math.random() < 0.6) this.spawn('cloud');
     }
     if (fill !== this.lastFill && !ing) this.wob = Math.max(this.wob, 0.4); // a stir or a drop moves it
@@ -298,8 +298,9 @@ export class DrinkArt {
     }
 
     // the ticket's target line: a dashed oval on the glass until the drink reaches it
-    if (this.targetFill && fill < this.targetFill + 0.08) {
-      const o = oval(levelY(this.targetFill));
+    for (const tf of [].concat(this.targetFill ?? [])) {
+      if (fill >= tf + 0.08) continue;
+      const o = oval(levelY(tf));
       g.save();
       g.setLineDash([7, 5]);
       g.lineWidth = 3;
@@ -314,7 +315,7 @@ export class DrinkArt {
       if (p.kind === 'bub') g.fillStyle = `rgba(255,240,220,${0.6 * a})`;
       else if (p.kind === 'cloud') g.fillStyle = rgb(MILK.evap, 0.35 * a);
       else if (p.kind === 'grain') g.fillStyle = `rgba(255,255,255,${a})`;
-      else if (p.kind === 'dust') g.fillStyle = rgb(NO_MILK.milo, a);
+      else if (p.kind === 'dust') g.fillStyle = rgb(cup.base === 'horlicks' ? [236, 220, 190] : NO_MILK.milo, a);
       else g.fillStyle = rgb(shade(lc, 1.1), a);
       g.beginPath();
       if (p.kind === 'grain') g.rect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
@@ -341,9 +342,10 @@ export class DrinkArt {
       const w = o.rx * 1.24 * (0.6 + 0.4 * this.powder);
       const top = o.cy - 4;
       const h = 62 * this.powder;
-      g.fillStyle = '#5a3a28';
+      const malt = cup.base === 'horlicks'; // Horlicks powder is pale cream, Milo is chocolate
+      g.fillStyle = malt ? '#e8d6b0' : '#5a3a28';
       g.beginPath(); g.moveTo(o.cx - w, top + 6); g.quadraticCurveTo(o.cx - w * 0.5, top - h * 0.6, o.cx, top - h); g.quadraticCurveTo(o.cx + w * 0.5, top - h * 0.6, o.cx + w, top + 6); g.closePath(); g.fill();
-      g.fillStyle = '#7a5038';
+      g.fillStyle = malt ? '#f6ead0' : '#7a5038';
       g.beginPath(); g.moveTo(o.cx - w * 0.55, top); g.quadraticCurveTo(o.cx - w * 0.3, top - h * 0.65, o.cx - w * 0.05, top - h * 0.9); g.lineTo(o.cx - w * 0.2, top); g.fill();
       g.fillStyle = 'rgba(40,24,14,.55)';
       for (let i = 0; i < 18; i++) g.fillRect(o.cx + Math.sin(i * 12.9) * w * 0.7, top - Math.abs(Math.cos(i * 7.3)) * h * 0.7, 3, 3);

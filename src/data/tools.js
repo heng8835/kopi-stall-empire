@@ -24,6 +24,12 @@ export const TOOLS = [
   { id: 'bin', label: 'Bin', kind: 'bin', x: 336, feet: RAIL, w: 42, h: 56, color: 0x6c757d },
 ].map((t) => ({ ...t, y: t.feet - t.h / 2 })); // y = centre (drag/hit maths use the centre)
 
+// Tools that come with a night-shop machine (shown only when it's owned), keyed by shop item id.
+export const MACHINE_TOOLS = {
+  horlicksShelf: { id: 'horlicks', label: 'Horlicks', kind: 'pour', ingredient: 'horlicks', x: 44, feet: RAIL, w: 46, h: 58, color: 0xd9c49a },
+};
+for (const t of Object.values(MACHINE_TOOLS)) t.y = t.feet - t.h / 2;
+
 // Cup spots on the tray plates of the background (x of each cup's centre).
 export const SLOT_X = [70, 182, 290];
 // Counter spots where customers stand (x of each customer).

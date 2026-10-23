@@ -53,3 +53,19 @@ describe('recipe calendar', () => {
     expect(lessonFor(4).teacher).toBe('auntyLim');
   });
 });
+
+describe('machines unlock drinks', () => {
+  it('owned machines add their features', async () => {
+    const { MACHINE_LESSONS } = await import('../src/data/recipes.js');
+    const { SHOP } = await import('../src/data/shop.js');
+    expect(canMake('Cham', unlockedFeatures(10))).toBe(false);
+    expect(canMake('Cham C kosong', unlockedFeatures(10, ['cham']))).toBe(true);
+    expect(canMake('Horlicks Dinosaur', unlockedFeatures(10, ['horlicks', 'horlicksDino']))).toBe(true);
+    for (const [id, l] of Object.entries(MACHINE_LESSONS)) {
+      const item = SHOP.find((i) => i.id === id);
+      expect(item.unlocks).toEqual(l.features);
+      expect(canMake(l.order, unlockedFeatures(30, l.features))).toBe(true);
+      for (const f of l.features) expect(BOOK[f], f).toBeTruthy();
+    }
+  });
+});

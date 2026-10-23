@@ -21,7 +21,7 @@ describe('parseOrder', () => {
 });
 
 describe('formatOrder round-trip', () => {
-  const coffeeTea = Object.values(DRINKS).filter((d) => d.base !== 'milo');
+  const coffeeTea = Object.values(DRINKS).filter((d) => d.milk !== null); // kopi / teh / cham grammar
   const mods = ['', ' kosong', ' siew dai', ' ga dai', ' peng', ' kosong peng', ' siew dai peng'];
 
   for (const d of coffeeTea) {
@@ -36,6 +36,13 @@ describe('formatOrder round-trip', () => {
   }
 
   it('Milo Dinosaur', () => expect(formatOrder(parseOrder('Milo Dinosaur'))).toBe('Milo Dinosaur'));
+
+  it('Horlicks family', () => {
+    for (const t of ['Horlicks', 'Horlicks peng', 'Horlicks Dinosaur']) expect(formatOrder(parseOrder(t))).toBe(t);
+    expect(parseOrder('Horlicks Dinosaur')).toEqual({ base: 'horlicks', milk: null, sugar: null, iced: true, topping: 'horlicks' });
+    expect(findDrink(parseOrder('Horlicks Dinosaur')).id).toBe('horlicksDino');
+    expect(() => parseOrder('Horlicks kosong')).toThrow();
+  });
 });
 
 describe('tokenize', () => {

@@ -5,6 +5,7 @@ import { parseOrder } from './order.js';
 // The building blocks an order needs, e.g. "Teh C siew dai peng" -> teh, C, siewDai, peng.
 export function featuresOf(spec) {
   if (spec.base === 'milo') return spec.topping ? ['miloDino'] : spec.iced ? ['milo', 'peng'] : ['milo']; // the Dinosaur is its own recipe
+  if (spec.base === 'horlicks') return spec.topping ? ['horlicksDino'] : spec.iced ? ['horlicks', 'peng'] : ['horlicks'];
   const f = [spec.base];
   if (spec.milk === 'none') f.push('O');
   if (spec.milk === 'evap') f.push('C');
@@ -15,9 +16,9 @@ export function featuresOf(spec) {
   return f;
 }
 
-// Everything taught up to and including `day`.
-export function unlockedFeatures(day) {
-  const set = new Set(STARTER);
+// Everything taught up to and including `day`, plus what owned machines add (shop perks().features).
+export function unlockedFeatures(day, extra = []) {
+  const set = new Set([...STARTER, ...extra]);
   for (const l of LESSONS) if (l.day <= day) l.features.forEach((f) => set.add(f));
   return set;
 }
@@ -28,9 +29,9 @@ export const lessonFor = (day) => LESSONS.find((l) => l.day === day) ?? null;
 
 // A customer's orders that can be made today. On a lesson day, orders using the new word are
 // weighted up so the player practises it.
-export function ordersFor(orders, day) {
-  const unlocked = unlockedFeatures(day);
-  const fresh = new Set(lessonFor(day)?.features ?? []);
+export function ordersFor(orders, day, extra = [], freshExtra = []) {
+  const unlocked = unlockedFeatures(day, extra);
+  const fresh = new Set([...(lessonFor(day)?.features ?? []), ...freshExtra]);
   return orders
     .filter((o) => canMake(o.text, unlocked))
     .map((o) => (featuresOf(parseOrder(o.text)).some((f) => fresh.has(f)) ? { ...o, weight: o.weight * 3 } : o));

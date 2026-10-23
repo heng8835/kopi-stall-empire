@@ -38,3 +38,11 @@ describe('run (the month)', () => {
     expect(runFromQuery('?day=99').day).toBe(30);
   });
 });
+
+describe('run + night shop', () => {
+  it('keeps what you own and clears last night\'s new machines', () => {
+    const r = nextDay({ ...newRun(), owned: ['fan', 'twinSock'], newItems: ['twinSock'] }, { money: 0, fame: 10, rating: 5 });
+    expect(r.owned).toEqual(['fan', 'twinSock']);
+    expect(r.newItems).toEqual([]);
+  });
+});

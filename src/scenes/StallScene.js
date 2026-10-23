@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../config.js';
 import { CUSTOMERS } from '../data/customers.js';
 import { OWNERS } from '../data/owners.js';
-import { TOOLS, SLOT_X, SPOT_X } from '../data/tools.js';
+import { TOOLS, SLOT_X, SPOT_X, MACHINE_TOOLS } from '../data/tools.js';
 import { TUNING } from '../data/stallTuning.js';
 import { pickLine, UI } from '../i18n/lines.js';
 import { addText } from '../systems/text.js';
@@ -12,10 +12,15 @@ import { makeButton, layoutLine, showGlossary, addMuteToggle } from '../systems/
 import { play } from '../systems/sfx.js';
 import { parseOrder } from '../systems/order.js';
 import { newCup, pour, addIce, addPowder, stirStep, gradeCup, formatCup } from '../systems/cup.js';
+import { DRINKS } from '../data/drinks.js';
 import { DrinkArt, ART_ORIGIN } from '../systems/drinkArt.js';
 import { PourBar } from '../systems/pourBar.js';
 import { showRecipeCard, showRecipeBook } from '../systems/cards.js';
-import { ordersFor, lessonFor } from '../systems/menu.js';
+import { ordersFor, lessonFor, unlockedFeatures } from '../systems/menu.js';
+import { perks, gift } from '../systems/shop.js';
+import { SHOP_FROM_DAY, GIFTS } from '../data/shop.js';
+import { MACHINE_LESSONS, BOOK } from '../data/recipes.js';
+import { MALT } from '../systems/order.js';
 import { summarizeDay } from '../systems/daySummary.js';
 import { recipeHint } from '../systems/hints.js';
 import { createDayState, applyServe, applyTimeout, formatMoney, customersForFame, clampFame } from '../systems/economy.js';
@@ -74,9 +79,13 @@ export default class StallScene extends Phaser.Scene {
     this.flags = [...this.run.flags];
     this.owner = OWNERS[this.registry.get('owner') ?? load('owner', 'mei')] ?? OWNERS.mei;
     this.econ = createDayState({ money: this.run.money, fame: this.run.fame });
+    // everything bought in the night shop (src/data/shop.js), added up
+    this.perks = perks(this.run.owned);
+    this.queueMax = TUNING.queueMax + this.perks.queueBonus;
+    if (this.perks.famePerDay) this.econ.fame = Math.min(100, this.econ.fame + this.perks.famePerDay);
     this.clockMs = 0;
     // Today's arrival times: more fame, more customers (a group counts as one arrival).
-    this.arrivals = arrivalSchedule(customersForFame(this.econ.fame), TUNING.firstSpawnMs, TUNING.dayMs - TUNING.lastSpawnBeforeEndMs, TUNING.spawnJitter);
+    this.arrivals = arrivalSchedule(customersForFame(this.econ.fame) + this.perks.extraCustomers, TUNING.firstSpawnMs, TUNING.dayMs - TUNING.lastSpawnBeforeEndMs, TUNING.spawnJitter);
     this.spots = [null, null, null]; // counter customers by spot
     this.queue = []; // customers waiting behind the counter, front first
     this.tableGuest = null;
@@ -84,8 +93,11 @@ export default class StallScene extends Phaser.Scene {
     this.midWaitMs = 0;
     this.dragging = 0;
     this.ending = null;
-    this.lesson = lessonFor(this.day); // today's new recipe (src/data/recipes.js), if any
-    this.lessonState = this.lesson ? 'waiting' : 'none';
+    // today's new recipes: the calendar's, then any machine bought last night (src/data/recipes.js)
+    const machineLessons = (this.run.newItems ?? []).map((id) => MACHINE_LESSONS[id] && { ...MACHINE_LESSONS[id], day: this.day }).filter(Boolean);
+    this.lessons = [lessonFor(this.day), ...machineLessons].filter(Boolean);
+    this.freshFeatures = machineLessons.flatMap((l) => l.features);
+    this.nextLesson();
     this.paused = false;
     this.ended = false;
     this.pouring = null; // { tool, slot }
@@ -105,6 +117,8 @@ export default class StallScene extends Phaser.Scene {
     this.drawHud();
     this.drawTray();
     this.drawTools();
+    if (this.perks.menuBoard) this.drawMenuBoard();
+    if (this.perks.famePerDay) this.time.delayedCall(800, () => this.setFeedback(`Your decor & comforts: 名气 +${this.perks.famePerDay} today`));
     this.feedback = addText(this, GAME_W / 2, COUNTER_Y + 10, '', { size: 12, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: 340 }).setDepth(40);
     this.feedback.setStroke('#3a2414', 3);
 
@@ -192,7 +206,8 @@ export default class StallScene extends Phaser.Scene {
 
   drawTools() {
     this.tools = {};
-    for (const t of TOOLS) {
+    const extra = (this.run.owned ?? []).map((id) => MACHINE_TOOLS[id]).filter(Boolean);
+    for (const t of [...TOOLS, ...extra]) {
       const c = this.add.container(t.x, t.y).setDepth(20);
       const parts = [];
       if (t.sprite) parts.push(addSprite(this, t.sprite, 0, t.h / 2 - 12, t.spriteH));
@@ -222,11 +237,18 @@ export default class StallScene extends Phaser.Scene {
     if (import.meta.env.DEV) TOOL_IDS.filter((id) => !this.tools[id]).forEach((id) => console.warn('[tutorial] no tool for id', id));
   }
 
-  // Shape for tools without art yet (the bin).
+  // Shape for tools without art yet: a tin for pouring tools (Horlicks), else the bin.
   drawToolShape(g, t) {
     const w = t.w - 10;
     const h = t.h - 18;
     const top = -t.h / 2 + 2;
+    if (t.kind === 'pour') {
+      g.fillStyle(t.color ?? 0xd9c49a, 1).fillRoundedRect(-w / 2, top + 6, w, h - 6, 5).lineStyle(2, 0x3a2e2a, 0.9).strokeRoundedRect(-w / 2, top + 6, w, h - 6, 5);
+      g.fillStyle(0xb8bfc6, 1).fillRoundedRect(-w / 2 - 2, top, w + 4, 9, 3).lineStyle(2, 0x3a2e2a, 0.9).strokeRoundedRect(-w / 2 - 2, top, w + 4, 9, 3);
+      g.fillStyle(0xfff3d6, 1).fillRect(-w / 2 + 3, top + 16, w - 6, 12); // plain label band (no logo)
+      g.fillStyle(0xc8402c, 1).fillRect(-w / 2 + 3, top + 30, w - 6, 3);
+      return;
+    }
     g.fillStyle(t.color ?? 0x6c757d, 1).fillRoundedRect(-w / 2, top + 6, w, h - 6, 6).lineStyle(2, 0x2b2b2b, 0.8).strokeRoundedRect(-w / 2, top + 6, w, h - 6, 6);
     g.fillStyle(0x4a4f55, 1).fillRoundedRect(-w / 2 - 3, top, w + 6, 8, 3);
     g.lineStyle(2, 0x3a3a3a).lineBetween(-7, top + 14, -7, top + h - 6).lineBetween(0, top + 14, 0, top + h - 6).lineBetween(7, top + 14, 7, top + h - 6);
@@ -305,7 +327,7 @@ export default class StallScene extends Phaser.Scene {
   // Where a ticketed cup should be poured to: ¾ for peng (the ice tops it up), else full.
   targetFill(slot) {
     const spec = slot.ticket?.spec;
-    if (!spec || slot.ticket.left) return null;
+    if (!spec || slot.ticket.left) return this.perks.marked && slot.cup ? [0.68, 0.94] : null; // Marked Glasses
     return spec.iced ? 0.68 : 0.94;
   }
 
@@ -368,7 +390,9 @@ export default class StallScene extends Phaser.Scene {
     // the "business end" of the tool (spout / spoon tip) is its bottom edge
     const slot = this.slotAt(p.worldX, p.worldY - LIFT + t.h / 2);
     const target = slot?.cup ? slot : null;
-    if (t.kind === 'pour') {
+    if (t.kind === 'pour' && this.dosed(t)) {
+      tool.setAngle(target ? -25 : 0); // scoop / pump: one dose when you let go over the cup
+    } else if (t.kind === 'pour') {
       this.pouring = target ? { tool, slot: target } : null;
       tool.setAngle(target ? -38 : 0);
     } else if (t.kind === 'stir' && target?.cup.base) {
@@ -388,6 +412,7 @@ export default class StallScene extends Phaser.Scene {
     const t = tool.tool;
     const slot = this.slotAt(p.worldX, p.worldY - LIFT + t.h / 2);
     if (t.kind === 'drop' && slot?.cup) this.dropOnCup(slot, t.apply);
+    if (t.kind === 'pour' && this.dosed(t) && slot?.cup) this.dose(slot, t.ingredient);
     if (t.kind === 'stir' && slot?.cup?.base) this.autoStir(slot); // drop the spoon on a cup: it stirs itself
     if (t.kind === 'rack' && slot && !slot.cup) this.placeCup(slot);
     this.pouring = null;
@@ -401,7 +426,8 @@ export default class StallScene extends Phaser.Scene {
   // Shared by the drag UI, the tutorial and tests (window.__stall in dev).
   pourInto(slot, ingredient, dtMs) {
     if (!slot?.cup) return;
-    pour(slot.cup, ingredient, dtMs);
+    const fast = ['kopi', 'teh', ...MALT].includes(ingredient) ? this.perks.pourMult : 1; // Long-Spout Pot
+    pour(slot.cup, ingredient, dtMs * fast);
     this.redrawSlot(slot);
     this.pourBar.show(ingredient, slot.cup, slot.i + 1, slot.ticket && !slot.ticket.left ? slot.ticket : null);
   }
@@ -413,11 +439,25 @@ export default class StallScene extends Phaser.Scene {
     this.redrawSlot(slot);
   }
 
+  // Sugar Scoop / Milk Pump (night shop): these pour in fixed doses, one zone each.
+  dosed(t) {
+    return (t.ingredient === 'sugar' && this.perks.sugarScoop) || (['condensed', 'evap'].includes(t.ingredient) && this.perks.milkPump);
+  }
+
+  dose(slot, ingredient) {
+    const ms = (TUNING.doseAmount * 1000) / TUNING.pourPerSec[ingredient];
+    pour(slot.cup, ingredient, ms);
+    slot.art.update(slot.cup, 0, { ingredient });
+    this.redrawSlot(slot);
+    this.pourBar.show(ingredient, slot.cup, slot.i + 1, slot.ticket && !slot.ticket.left ? slot.ticket : null);
+    play(ingredient === 'sugar' ? 'sugar' : 'milk');
+  }
+
   // The spoon stirs the cup by itself: a little animation while the milk swirls in.
   autoStir(slot) {
     if (slot.stirring) return;
     slot.stirring = true;
-    const ms = TUNING.autoStirMs;
+    const ms = this.perks.stirMs ?? TUNING.autoStirMs;
     slot.art.startStir(ms);
     for (let i = 1; i <= TUNING.stirWigglesNeeded; i++) {
       this.time.delayedCall((ms / TUNING.stirWigglesNeeded) * i, () => slot.cup && slot.cup.stir < 1 && this.stirCup(slot));
@@ -450,7 +490,7 @@ export default class StallScene extends Phaser.Scene {
   placeFor(def) {
     if (def.slot === 'table') return this.tableGuest ? null : 'table';
     const group = def.groupSize > 1;
-    return placeArrival({ freeSpots: this.freeSpots().length, totalSpots: this.spots.length, lineLength: this.queue.length, max: TUNING.queueMax, group });
+    return placeArrival({ freeSpots: this.freeSpots().length, totalSpots: this.spots.length, lineLength: this.queue.length, max: this.queueMax, group });
   }
 
   // forcedId / forcedOrder let the tutorial, the story (and tests) bring in a specific character + order.
@@ -458,7 +498,7 @@ export default class StallScene extends Phaser.Scene {
     if (this.ended) return null;
     const forced = forcedId && CUSTOMERS.find((c) => c.id === forcedId);
     const here = new Set([...this.allCustomers(), ...this.queue].map((c) => c.def.id)); // one of each character at a time
-    const menu = (d) => ordersFor(d.orders, this.day);
+    const menu = (d) => ordersFor(d.orders, this.day, this.perks.features, this.freshFeatures);
     const pool = CUSTOMERS.filter((c) => c.enabled && c.sprite && !here.has(c.id) && menu(c).length && this.placeFor(c));
     const def = forcedId ? (forced && this.placeFor(forced) ? forced : null) : pool.length ? weightedPick(pool) : null;
     if (!def) return null;
@@ -474,8 +514,8 @@ export default class StallScene extends Phaser.Scene {
       n,
       served: 0,
       state: 'walking',
-      patienceMax: def.patience * 1000 * TUNING.patienceScale,
-      patienceMs: def.patience * 1000 * TUNING.patienceScale,
+      patienceMax: def.patience * 1000 * TUNING.patienceScale * this.perks.patienceMult,
+      patienceMs: def.patience * 1000 * TUNING.patienceScale * this.perks.patienceMult,
       bubble: null,
     };
     c.orderLine = pickLine(def.lines, 'order', this.lineVars({ order: orderText, n }));
@@ -674,13 +714,32 @@ export default class StallScene extends Phaser.Scene {
 
   serveCup(slot, c) {
     const cup = slot.cup;
-    const { tier, reasons } = gradeCup(cup, c.spec);
+    let { tier, reasons } = gradeCup(cup, c.spec);
+    // Uncle Tan's towel forgives the first spill of the day
+    if (this.perks.towel && !this.towelUsed && reasons.includes('spilled over')) {
+      this.towelUsed = true;
+      reasons = reasons.filter((r) => r !== 'spilled over');
+      tier = reasons.length ? tier : 'perfect';
+      this.time.delayedCall(900, () => this.setFeedback("Uncle Tan's towel wiped the spill!"));
+    }
     const res = applyServe(this.econ, tier, c.spec);
+    // night-shop tip bonuses: tip jar, cup warmer (hot), ice machine (peng)
+    if (tier !== 'oops') {
+      const hot = !c.spec.iced && !MALT.includes(c.spec.base);
+      const extra = Math.round(res.tip * (this.perks.tipMult - 1)) + (hot ? this.perks.hotTip : 0) + (c.spec.iced ? this.perks.icedTip : 0);
+      if (extra) {
+        res.tip += extra;
+        this.econ.money += extra;
+        this.econ.earnedToday += extra;
+        this.econ.tipsToday += extra;
+      }
+    }
     c.served += 1;
     c.state = 'reacting';
     logEvent(this.log, 'serve', { who: c.def.id, wanted: c.orderText, made: formatCup(cup), tier, reasons, waitMs: Math.round(c.patienceMax - c.patienceMs) }, this.clockMs);
     this.tutorial?.onServed(c, tier);
     this.removeCup(slot);
+    if (this.perks.autoCup) this.time.delayedCall(350, () => !slot.cup && !this.ended && this.placeCup(slot)); // Cup Rack Pro
 
     play('clink');
     this.time.delayedCall(140, () => play('coin'));
@@ -933,13 +992,31 @@ export default class StallScene extends Phaser.Scene {
   // ---------- recipe calendar ----------
 
   // On a lesson day (not taught by a story episode), the teacher walks in early with the new order.
+  nextLesson() {
+    this.lesson = this.lessons.shift() ?? null;
+    this.lessonState = this.lesson ? 'waiting' : 'none';
+    this.lessonAt = Math.max(LESSON_AT_MS, (this.clockMs ?? 0) + 8000);
+  }
+
   maybeBringTeacher() {
     const l = this.lesson;
-    if (this.lessonState !== 'waiting' || l.afterStory || this.clockMs < LESSON_AT_MS) return;
+    if (this.lessonState !== 'waiting' || l.afterStory || this.clockMs < this.lessonAt) return;
     const real = CUSTOMERS.find((c) => c.id === l.teacher);
     const who = real?.enabled && real.sprite ? real.id : l.fallback ?? l.teacher;
-    const c = this.spawnCustomer(who, l.order);
+    // already at the stall? they change their order to the new recipe (no twin walks in)
+    const here = [...this.allCustomers(), ...this.queue].find((c) => c.def.id === who);
+    if (here && (here.state === 'reacting' || here.state === 'gone' || here.served)) return; // wait till they've gone
+    const c = here ?? this.spawnCustomer(who, l.order);
     if (!c) return; // no room yet: try again next frame
+    if (here) {
+      c.orderText = l.order;
+      c.spec = parseOrder(l.order);
+      c.orderLine = pickLine(c.def.lines, 'order', this.lineVars({ order: l.order, n: c.n }));
+      if (c.state === 'waiting') {
+        this.showBubble(c, c.orderLine, 'order');
+        this.time.delayedCall(400, () => !this.ended && this.showLesson(who === l.teacher));
+      }
+    }
     this.lessonState = 'coming';
     c.lesson = true;
     c.lessonLine = who === l.teacher; // a stand-in teacher doesn't say the real teacher's line
@@ -964,7 +1041,20 @@ export default class StallScene extends Phaser.Scene {
     if (this.lessonState === 'done') return;
     this.lessonState = 'done';
     logEvent(this.log, 'lesson', { day: this.day, features: this.lesson.features.join(',') }, this.clockMs);
-    this.pauseFor((resume) => showRecipeCard(this, this.lesson, { showLine, onClose: resume }));
+    this.pauseFor((resume) => showRecipeCard(this, this.lesson, { showLine, onClose: () => (resume(), this.nextLesson()) }));
+  }
+
+  // Wall Menu Board (night shop): today's drinks on a little board on the wall.
+  drawMenuBoard() {
+    const known = unlockedFeatures(this.day, this.perks.features);
+    const names = Object.values(DRINKS).filter((d) => d.base && (known.has(d.base) || (d.topping && known.has(`${d.base}Dino`))) && (d.milk !== 'none' || known.has('O')) && (d.milk !== 'evap' || known.has('C'))).map((d) => d.name);
+    const x = GAME_W - 76;
+    const y = HUD_H + 34;
+    const lines = names.slice(0, 9);
+    const board = this.add.rectangle(x, y, 70, 18 + lines.length * 10, 0x2b3a2f).setOrigin(0).setStrokeStyle(3, 0x8a5a2b).setDepth(1);
+    addText(this, x + 35, y + 3, 'MENU 菜单', { size: 8, bold: true, color: '#ffd28a', origin: [0.5, 0] }).setDepth(1);
+    lines.forEach((n, i) => addText(this, x + 6, y + 14 + i * 10, n, { size: 7.5, color: '#f4efe2' }).setDepth(1));
+    return board;
   }
 
   openRecipeBook() {
@@ -1000,7 +1090,9 @@ export default class StallScene extends Phaser.Scene {
 
   showSummary() {
     const e = this.econ;
-    const tomorrow = nextDay(this.run, { money: e.money, fame: e.fame, flags: this.flags, rating: this.rating, ending: this.ending ?? this.run.ending });
+    let tomorrow = nextDay(this.run, { money: e.money, fame: e.fame, flags: this.flags, rating: this.rating, ending: this.ending ?? this.run.ending });
+    const gifted = GIFTS[this.day];
+    if (gifted) tomorrow = gift(tomorrow, gifted);
     saveRun(tomorrow);
     const done = monthOver(tomorrow);
 
@@ -1029,7 +1121,8 @@ export default class StallScene extends Phaser.Scene {
     line(`Uncle Tan says: ${sum.tip.en}`, { size: 12, color: '#2f7a3a', bold: true, align: 'left' }, 2, left);
     line(sum.tip.zh, { size: 11, color: '#6b5a50', align: 'left' }, 6, left);
     if (sum.quote) line(`${sum.quote.who}: "${sum.quote.line}"`, { size: 11, color: '#8a5a1e', align: 'left' }, 6, left);
-    if (!done) line(`Tomorrow: about ${customersForFame(e.fame)} customers`, { size: 11, color: '#8a7a70' }, 8);
+    if (gifted) line("Uncle Tan left you his old towel. (It forgives one spill a day.)", { size: 11, color: '#8a5a1e', bold: true }, 6);
+    if (!done) line(`Tomorrow: about ${customersForFame(e.fame) + this.perks.extraCustomers} customers`, { size: 11, color: '#8a7a70' }, 8);
     const textH = items.reduce((h, [t, gap]) => h + t.height + gap, 0);
     const cardH = 16 + textH + 8 + 54 + 6 + 30 + 6 + 28 + 14;
     const top = Math.max(6, Math.round((GAME_H - cardH) / 2));
@@ -1048,6 +1141,7 @@ export default class StallScene extends Phaser.Scene {
       return b;
     };
     if (done) button(54, 'Month 1 complete  完', () => this.scene.start('Title'), { size: 17, bold: true, fill: 0xbfe3c0 });
+    else if (this.day >= SHOP_FROM_DAY) button(54, 'Night shop ▸  供应商', () => this.scene.start('Shop', { run: tomorrow }), { size: 17, bold: true, fill: 0xbfe3c0 });
     else button(54, `Next day ▸  Day ${tomorrow.day}`, () => this.scene.start('Day', { run: tomorrow }), { size: 18, bold: true, fill: 0xbfe3c0 });
     button(30, UI.closeStall, () => this.scene.start('Title'), { size: 13 });
     const copy = button(28, 'Copy playtest notes', () => this.copyNotes(copy), { size: 12 });

@@ -19,5 +19,7 @@ describe('recipe hints under orders', () => {
     expect(h('Milo')).toBe('Milo FULL');
     expect(h('Milo peng')).toBe('Milo ¾ · ice');
     expect(h('Milo Dinosaur')).toBe('Milo ¾ · ice · powder on top');
+    expect(h('Horlicks peng')).toBe('Horlicks ¾ · ice');
+    expect(h('Cham O')).toBe('Kopi + teh FULL · no milk · sugar NORMAL · stir');
   });
 });

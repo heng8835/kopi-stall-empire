@@ -24,10 +24,11 @@ export const TUNING = {
 
   // Pour speeds, in "units per second" while holding a tool over a cup.
   // 1.0 = a full cup of base / a normal amount of sugar or milk.
-  pourPerSec: { kopi: 0.8, teh: 0.8, milo: 0.8, sugar: 1.0, condensed: 1.0, evap: 1.0 },
+  pourPerSec: { kopi: 0.8, teh: 0.8, milo: 0.8, horlicks: 0.8, sugar: 1.0, condensed: 1.0, evap: 1.0 },
 
   stirWigglesNeeded: 6,
   autoStirMs: 1000, // dropping the spoon on a cup stirs it in this long
+  doseAmount: 0.45, // Sugar Scoop / Milk Pump: one dose = one sweetness zone (1 siew dai, 2 normal, 3 ga dai)
   iceVolume: 0.25, // ice raises the level: peng = pour to the ¾ line, then ice
 };
 
@@ -48,6 +49,7 @@ export const LIQUID = {
   kopi: 0x3b2416,
   teh: 0x9a4a1e,
   milo: 0x5a3a28,
+  horlicks: 0xd6bc93,
   cham: 0x6a3a1e, // kopi + teh mixed by accident
   condensed: 0xf3e2c0,
   evap: 0xf7efe2,

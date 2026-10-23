@@ -1,12 +1,12 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-23
 phase: development
-next: "Phase B (order tickets + richer summary) built, not pushed. After the user playtests: tune, then phase C night shop (docs/specs/next-phase-plan.md)."
+next: "Phase C night shop built (not pushed). Playtest; then phase D: new drink mechanics for the coming-soon machines (kettle, tarik, halia, limau, freezer, gula melaka, butter, tapau, 4th plate, second table)."
 tier_hint: 1
 blockers: ["Sophie flag/Merlion fix (user)"]
-touched: [src/scenes/StallScene.js, src/systems/pourBar.js, src/systems/drinkArt.js, src/systems/daySummary.js, src/data/tips.js, src/systems/economy.js, src/data/tutorial.js]
+touched: [src/scenes/ShopScene.js, src/data/shop.js, src/systems/shop.js, src/scenes/StallScene.js, src/systems/order.js, src/systems/cup.js, src/data/recipes.js, src/data/customers.js, src/data/tools.js]
 validation: passing
 open_decisions: ["Walk-frame route (IDEAS.md)", "Pour animation look (prototype: docs/plan/pour-prototype.html)"]
-spec: "docs/specs/order-tickets-day-summary.md"
+spec: "docs/specs/night-shop.md"
 board_task: ""
 notes: "Jump to any day: ?day=14&fame=60&flags=kidsOwe (title -> Open stall). Pane testing: fake Date.now (tweens use it) + game.step; wait for Title status 5 before starting; screenshots lag, use renderer.snapshotPixel to check pixels."

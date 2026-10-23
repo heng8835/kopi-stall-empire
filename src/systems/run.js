@@ -7,7 +7,7 @@ export const MONTH_DAYS = 30;
 const KEY = 'run';
 
 export function newRun() {
-  return { day: 1, money: 0, fame: TUNING.fameStart, flags: [], ratings: [], ending: null };
+  return { day: 1, money: 0, fame: TUNING.fameStart, flags: [], ratings: [], ending: null, owned: [], newItems: [] };
 }
 
 // Aunty Lim's nightly teh score, out of 10 (she's kind: never below 3).
@@ -17,8 +17,9 @@ export function auntyRating(perfect, served) {
 }
 
 // The run for tomorrow, after today ends with this money / fame / flags / rating.
+// Machines bought last night have had their recipe card today, so newItems clears.
 export function nextDay(run, { money, fame, flags = run.flags, rating, ending = run.ending }) {
-  return { ...run, day: run.day + 1, money, fame, flags: [...flags], ratings: [...run.ratings, rating], ending };
+  return { ...run, day: run.day + 1, money, fame, flags: [...flags], ratings: [...run.ratings, rating], ending, owned: [...(run.owned ?? [])], newItems: [] };
 }
 
 export const monthOver = (run) => run.day > MONTH_DAYS;

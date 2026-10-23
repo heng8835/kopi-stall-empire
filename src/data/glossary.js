@@ -44,4 +44,9 @@ export const GLOSSARY = {
   等我吃完先: { term: '等我吃完先', en: '"Wait, let me finish eating first." Nothing interrupts Aunty Lim’s meal.', zh: '等我先吃完。' },
   房东: { term: '房东', en: 'Landlord — the owner of the building.', zh: '房东。' },
   有心: { term: '有心', en: '"You have heart" — sincere, thoughtful.', zh: '有心意，真诚。' },
+  // Night-shop machines
+  cham: { term: 'Cham', en: 'Kopi and teh mixed in one cup. Also called Yuan Yang.', zh: '鸳鸯（咖啡加茶）。' },
+  'yuan yang': { term: 'Yuan Yang', en: 'Another name for cham: coffee and tea together.', zh: '鸳鸯。' },
+  horlicks: { term: 'Horlicks', en: 'A malted milk drink, made like Milo. Very kopitiam.', zh: '好立克（麦芽饮品）。' },
+  dinosaur: { term: 'Dinosaur', en: 'Iced Milo or Horlicks with a big mountain of powder on top.', zh: '冰饮上面堆满粉。' },
 };

@@ -4,8 +4,11 @@ const SWEET = { none: 'KOSONG', less: 'SIEW DAI', normal: 'NORMAL', more: 'GA DA
 
 export function recipeHint(spec) {
   const pot = spec.iced ? '¾' : 'FULL';
-  if (spec.base === 'milo') return [`Milo ${pot}`, spec.iced && 'ice', spec.topping && 'powder on top'].filter(Boolean).join(' · ');
-  const name = spec.base === 'kopi' ? 'Kopi' : 'Teh';
+  if (spec.base === 'milo' || spec.base === 'horlicks') {
+    const name = spec.base === 'milo' ? 'Milo' : 'Horlicks';
+    return [`${name} ${pot}`, spec.iced && 'ice', spec.topping && 'powder on top'].filter(Boolean).join(' · ');
+  }
+  const name = { kopi: 'Kopi', teh: 'Teh', cham: 'Kopi + teh' }[spec.base];
   const steps = [`${name} ${pot}`];
   if (spec.milk === 'condensed') steps.push(`condensed ${SWEET[spec.sugar]}`);
   else {

@@ -98,6 +98,35 @@ export const LESSONS = [
   },
 ];
 
+// Machines from the night shop teach their drink the same way: the morning after you buy one,
+// a regular orders it with a card. Keyed by shop item id (src/data/shop.js).
+export const MACHINE_LESSONS = {
+  twinSock: {
+    features: ['cham'],
+    teacher: 'auntyLim',
+    order: 'Cham',
+    card: {
+      title: 'Cham = kopi + teh',
+      zh: '鸳鸯',
+      line: 'Aunty Lim: "Wah, got cham now? Give me one, half kopi half teh!"',
+      steps: ['Kopi pot to about half', 'Teh pot on top to FULL', 'Condensed milk to the ★', 'Stir, serve'],
+      zone: 'FULL',
+    },
+  },
+  horlicksShelf: {
+    features: ['horlicks', 'horlicksDino'],
+    teacher: 'schoolKids',
+    order: 'Horlicks Dinosaur',
+    card: {
+      title: 'Horlicks · Horlicks Dinosaur',
+      zh: '好立克',
+      line: 'Darren: "Boss! Horlicks Dinosaur! Same as Milo but white mountain!"',
+      steps: ['Horlicks tin (on the rail) to the ¾ line', 'Drop in the ice', 'Powder on top, no stirring', 'Plain Horlicks: tin to FULL'],
+      zone: '¾ PENG',
+    },
+  },
+};
+
 // What each feature means, for the recipe book.
 export const BOOK = {
   kopi: { name: 'Kopi', zh: '咖啡', text: 'Coffee + condensed milk. The condensed milk is the sweetness.' },
@@ -110,4 +139,7 @@ export const BOOK = {
   peng: { name: 'Peng', zh: '加冰', text: 'Iced: pour to the ¾ line, then ice tops it up.' },
   milo: { name: 'Milo', zh: '美禄', text: 'Milo tin to FULL. Peng: ¾ + ice.' },
   miloDino: { name: 'Milo Dinosaur', zh: '美禄恐龙', text: 'Iced Milo with a mountain of powder on top. No stirring.' },
+  cham: { name: 'Cham', zh: '鸳鸯', text: 'Kopi + teh in one cup: half kopi, teh to FULL, then milk as usual.' },
+  horlicks: { name: 'Horlicks', zh: '好立克', text: 'Horlicks tin to FULL. Peng: ¾ + ice.' },
+  horlicksDino: { name: 'Horlicks Dinosaur', zh: '好立克恐龙', text: 'Iced Horlicks with a mountain of powder on top.' },
 };

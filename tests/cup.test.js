@@ -113,6 +113,23 @@ describe('gradeCup', () => {
     }
   });
 
+  it('Cham = kopi and teh in one cup (Twin Sock Stand)', () => {
+    const cup = pour(pour(newCup(), 'kopi', holdFor('kopi', 0.5)), 'teh', holdFor('teh', 0.45));
+    pour(cup, 'condensed', holdFor('condensed', 0.9));
+    stirAll(cup);
+    expect(cup.base).toBe('cham');
+    expect(gradeCup(cup, parseOrder('Cham')).tier).toBe('perfect');
+    expect(gradeCup(cup, parseOrder('Kopi')).reasons).toContain('kopi and teh mixed');
+    expect(formatCup(cup)).toBe('Cham');
+  });
+
+  it('Horlicks drinks are made like Milo', () => {
+    expect(gradeCup(pour(newCup(), 'horlicks', holdFor('horlicks', 0.95)), parseOrder('Horlicks')).tier).toBe('perfect');
+    const dino = addPowder(addIce(pour(newCup(), 'horlicks', holdFor('horlicks', 0.7))));
+    expect(gradeCup(dino, parseOrder('Horlicks Dinosaur')).tier).toBe('perfect');
+    expect(formatCup(dino)).toBe('Horlicks Dinosaur');
+  });
+
   it('wrong milk or wrong base is oops', () => {
     expect(gradeCup(makePerfect('Kopi C').cup, parseOrder('Kopi')).reasons).toContain('evaporated milk instead of condensed');
     expect(gradeCup(makePerfect('Teh').cup, parseOrder('Kopi')).tier).toBe('oops');
@@ -122,7 +139,7 @@ describe('gradeCup', () => {
   it('forgetting peng or the Milo powder is close', () => {
     expect(gradeCup(makePerfect('Kopi C kosong').cup, parseOrder('Kopi C kosong peng')).reasons).toEqual(['forgot the ice (peng)']);
     const iceMiloNoPowder = addIce(pour(newCup(), 'milo', holdFor('milo', 0.7)));
-    expect(gradeCup(iceMiloNoPowder, parseOrder('Milo Dinosaur'))).toEqual({ tier: 'close', reasons: ['forgot the Milo powder on top'] });
+    expect(gradeCup(iceMiloNoPowder, parseOrder('Milo Dinosaur'))).toEqual({ tier: 'close', reasons: ['forgot the powder on top'] });
   });
 
   it('three small mistakes add up to oops', () => {

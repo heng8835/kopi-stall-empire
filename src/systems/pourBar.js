@@ -33,6 +33,7 @@ const KIND = {
   kopi: { name: 'Kopi pot · fill', zones: FILL, value: (c) => c.fill },
   teh: { name: 'Teh pot · fill', zones: FILL, value: (c) => c.fill },
   milo: { name: 'Milo · fill', zones: FILL, value: (c) => c.fill },
+  horlicks: { name: 'Horlicks · fill', zones: FILL, value: (c) => c.fill },
   condensed: { name: 'Condensed milk · sweetness', zones: SWEET, value: sweetness },
   sugar: { name: 'Sugar · sweetness', zones: SWEET, value: sweetness },
   evap: { name: 'Evaporated milk · C', zones: EVAP, value: (c) => c.evap },
@@ -42,7 +43,7 @@ const KIND = {
 const SWEET_ZONE = { none: 'KOSONG', less: 'SIEW DAI', normal: 'NORMAL', more: 'GA DAI' };
 export function targetZone(ingredient, spec) {
   if (!spec) return null;
-  if (['kopi', 'teh', 'milo'].includes(ingredient)) return spec.iced ? '¾ PENG' : 'FULL';
+  if (['kopi', 'teh', 'milo', 'horlicks'].includes(ingredient)) return spec.iced ? '¾ PENG' : 'FULL';
   if (ingredient === 'evap') return spec.milk === 'evap' ? 'C · NORMAL' : 'NONE (O)';
   if (ingredient === 'condensed' || ingredient === 'sugar') return spec.sugar ? SWEET_ZONE[spec.sugar] : null;
   return null;

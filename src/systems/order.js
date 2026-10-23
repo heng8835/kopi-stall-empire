@@ -2,17 +2,20 @@ import { DRINKS, MODIFIERS } from '../data/drinks.js';
 import { GLOSSARY } from '../data/glossary.js';
 
 // A drink spec is { base, milk, sugar, iced, topping }.
-//   base:  'kopi' | 'teh' | 'milo'
-//   milk:  'condensed' | 'evap' | 'none'   (null for milo)
-//   sugar: 'normal' | 'less' | 'none' | 'more'   (null for milo)
+//   base:  'kopi' | 'teh' | 'cham' (kopi + teh) | 'milo' | 'horlicks'
+//   milk:  'condensed' | 'evap' | 'none'   (null for the malt drinks, Milo and Horlicks)
+//   sugar: 'normal' | 'less' | 'none' | 'more'   (null for the malt drinks)
 //   For condensed-milk drinks (Kopi, Teh) the condensed milk is the sweetness; O and C use the sugar can.
 
 const MILK_WORD = { O: 'none', C: 'evap' };
 const MILK_TO_WORD = { none: 'O', evap: 'C', condensed: '' };
+export const MALT = ['milo', 'horlicks']; // malt drinks: one tin, no milk or sugar to judge
+const NAME = { kopi: 'Kopi', teh: 'Teh', cham: 'Cham', milo: 'Milo', horlicks: 'Horlicks' };
 const SUGAR_TO_WORD = { none: 'kosong', less: 'siew dai', normal: '', more: 'ga dai' };
 
 export function findDrink(spec) {
   if (spec.base === 'milo') return spec.topping ? DRINKS.miloDino : DRINKS.milo;
+  if (spec.base === 'horlicks') return spec.topping ? DRINKS.horlicksDino : DRINKS.horlicks;
   return Object.values(DRINKS).find((d) => d.base === spec.base && d.milk === spec.milk) ?? null;
 }
 
@@ -21,14 +24,14 @@ export function parseOrder(text) {
   const words = text.trim().split(/\s+/);
   const first = words.shift()?.toLowerCase();
 
-  if (first === 'milo') {
-    // "Milo", "Milo peng", "Milo Dinosaur" (iced, powder on top)
+  if (MALT.includes(first)) {
+    // "Milo", "Milo peng", "Milo Dinosaur" (iced, powder on top); Horlicks the same
     const rest = words.join(' ').toLowerCase();
-    if (rest === 'dinosaur') return { base: 'milo', milk: null, sugar: null, iced: true, topping: 'milo' };
-    if (rest === '' || rest === 'peng') return { base: 'milo', milk: null, sugar: null, iced: rest === 'peng', topping: null };
-    throw new Error(`Unknown Milo order: "${text}"`);
+    if (rest === 'dinosaur') return { base: first, milk: null, sugar: null, iced: true, topping: first };
+    if (rest === '' || rest === 'peng') return { base: first, milk: null, sugar: null, iced: rest === 'peng', topping: null };
+    throw new Error(`Unknown ${first} order: "${text}"`);
   }
-  if (first !== 'kopi' && first !== 'teh') throw new Error(`Unknown drink: "${text}"`);
+  if (!['kopi', 'teh', 'cham'].includes(first)) throw new Error(`Unknown drink: "${text}"`);
 
   const spec = { base: first, milk: 'condensed', sugar: 'normal', iced: false, topping: null };
   for (let i = 0; i < words.length; i++) {
@@ -45,8 +48,8 @@ export function parseOrder(text) {
 // Inverse of parseOrder: spec -> real kopitiam lingo.
 export function formatOrder(spec) {
   if (!spec?.base) return '';
-  if (spec.base === 'milo') return spec.iced && spec.topping ? 'Milo Dinosaur' : spec.iced ? 'Milo peng' : 'Milo';
-  const name = spec.base === 'kopi' ? 'Kopi' : 'Teh';
+  if (MALT.includes(spec.base)) return `${NAME[spec.base]}${spec.iced && spec.topping ? ' Dinosaur' : spec.iced ? ' peng' : ''}`;
+  const name = NAME[spec.base];
   return [name, MILK_TO_WORD[spec.milk], SUGAR_TO_WORD[spec.sugar], spec.iced ? 'peng' : '']
     .filter(Boolean)
     .join(' ');
