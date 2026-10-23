@@ -23,6 +23,7 @@ import { MACHINE_LESSONS, BOOK } from '../data/recipes.js';
 import { MALT } from '../systems/order.js';
 import { summarizeDay } from '../systems/daySummary.js';
 import { recipeHint, nextStep } from '../systems/hints.js';
+import { pickFor, fitScore } from '../systems/assign.js';
 import { createDayState, applyServe, applyTimeout, formatMoney, customersForFame, clampFame } from '../systems/economy.js';
 import { weightedPick } from '../systems/random.js';
 import { placeArrival, frontCanTake, arrivalSchedule } from '../systems/queue.js';
@@ -61,8 +62,7 @@ const BG_SCALE = 901 / GAME_W; // background art pixels per logical px
 const ENTRY = { x: -40, feetY: 236 };
 const QUEUE_POS = [{ x: 126, feetY: 270 }, { x: 88, feetY: 262 }, { x: 50, feetY: 254 }];
 const MID_STORY_AT = 0.4; // a 'mid' episode plays this far into the day
-const COACH_Y = 414; // the owner's thought bubble, between the tray and the tools
-const TICKET_HINTS = 3; // show "tap to take order" on the first few bubbles of the day
+const COACH_Y = 410; // the owner's thought bubble, between the tray and the tools
 const LESSON_AT_MS = 5000; // a recipe teacher walks in this far into a lesson day
 // Day periods on the HUD bar, in minutes from opening (7am): morning, lunch rush, teatime, closing.
 const PERIODS = [['Morning', 0, 240, 0xffe9a8], ['Lunch', 240, 420, 0xffb870], ['Teatime', 420, 600, 0xbfe0c4], ['Closing', 600, 720, 0x9fb3d9]];
@@ -105,14 +105,6 @@ export default class StallScene extends Phaser.Scene {
     this.lastPourSound = 0;
     this.log = startDay({ day: this.day, owner: this.owner.name });
     this.input.dragDistanceThreshold = 6; // taps don't start drags
-    this.hintsLeft = TICKET_HINTS;
-    // Tap a waiting customer (sprite or bubble) to take their order: a ticketed cup appears.
-    this.input.on('pointerup', (p, over) => {
-      if (this.paused || this.ended || p.getDistance() > 8) return;
-      if (over.some((o) => o.tool || this.slots.some((sl) => sl.container === o))) return;
-      const c = this.customerAt(p.worldX, p.worldY);
-      if (c) this.takeOrder(c);
-    });
 
     this.drawBackdrop();
     this.drawHud();
@@ -186,18 +178,17 @@ export default class StallScene extends Phaser.Scene {
       const art = new DrinkArt(this, `cupArt${i}`);
       const img = this.add.image(0, 0, `cupArt${i}`).setOrigin(ART_ORIGIN.x, ART_ORIGIN.y).setScale(CUP_H / 186);
       container.add(img);
-      // the order ticket clipped above the cup (filled in by takeOrder)
-      const tag = this.add.rectangle(0, -CUP_H - 2, 104, 26, 0xfff3c4).setOrigin(0.5, 1).setStrokeStyle(1.5, 0x8a5a2b).setVisible(false);
-      const tagText = addText(this, 0, -CUP_H - 5, '', { size: 9, bold: true, align: 'center', origin: [0.5, 1], color: '#3a2e2a', wrap: 98, lineSpacing: 0 });
-      const tagHint = addText(this, 0, -CUP_H - 5, '', { size: 8, align: 'center', origin: [0.5, 1], color: '#2f6d4a', wrap: 98, lineSpacing: 0 });
-      container.add([tag, tagText, tagHint]);
       // Hit box covers the whole cup + saucer: world y from CUP_BOTTOM - CUP_H - 8 to CUP_BOTTOM + 16.
       // (A container's local hit space starts at its position minus half its size.)
       const hitH = CUP_H + 24;
       container.setSize(CUP_W + 24, hitH);
       container.setInteractive(new Phaser.Geom.Rectangle(0, hitH / 2 - CUP_H - 8, CUP_W + 24, hitH), Phaser.Geom.Rectangle.Contains);
       this.input.setDraggable(container);
-      const slot = { i, x, cup: null, container, art, label, tag, tagText, tagHint, ticket: null };
+      // who the cup is for, just above it (moves with the cup when dragged)
+      const forText = addText(this, 0, -CUP_H - 6, '', { size: 9, bold: true, color: '#fff6dc', origin: [0.5, 1] });
+      forText.setStroke('#3a2414', 3);
+      container.add(forText);
+      const slot = { i, x, cup: null, container, art, label, forText, ticket: null }; // ticket = who it's for (assignCup)
       container.on('dragstart', () => this.onCupDragStart(slot));
       container.on('drag', (p) => this.onCupDrag(slot, p));
       container.on('dragend', (p) => this.onCupDragEnd(slot, p));
@@ -259,7 +250,7 @@ export default class StallScene extends Phaser.Scene {
   // The drink itself is drawn every frame by slot.art (systems/drinkArt.js); this updates the label.
   redrawSlot(slot) {
     slot.label.setText(slot.cup ? formatCup(slot.cup) : '');
-    this.drawTicket(slot);
+    slot.forText.setText(slot.cup && slot.ticket ? `for ${slot.ticket.who}` : '');
   }
 
   // ---------- cups on the tray ----------
@@ -271,9 +262,9 @@ export default class StallScene extends Phaser.Scene {
     const w = GAME_W - x - 8;
     this.coachFace = addSprite(this, this.owner.sprite, 17, COACH_Y + 34, 34).setDepth(18);
     const g = this.add.graphics().setDepth(18);
-    g.fillStyle(0xffffff, 0.95).fillRoundedRect(x, COACH_Y, w, 26, 12).lineStyle(2, 0x3a2e2a, 0.8).strokeRoundedRect(x, COACH_Y, w, 26, 12);
-    g.fillStyle(0xffffff, 0.95).fillCircle(x - 3, COACH_Y + 19, 4).lineStyle(1.5, 0x3a2e2a, 0.8).strokeCircle(x - 3, COACH_Y + 19, 4);
-    this.coachText = addText(this, x + 10, COACH_Y + 13, '', { size: 11, bold: true, color: '#3a2e2a', origin: [0, 0.5] }).setDepth(19);
+    g.fillStyle(0xffffff, 0.95).fillRoundedRect(x, COACH_Y, w, 32, 12).lineStyle(2, 0x3a2e2a, 0.8).strokeRoundedRect(x, COACH_Y, w, 32, 12);
+    g.fillStyle(0xffffff, 0.95).fillCircle(x - 3, COACH_Y + 24, 4).lineStyle(1.5, 0x3a2e2a, 0.8).strokeCircle(x - 3, COACH_Y + 24, 4);
+    this.coachText = addText(this, x + 9, COACH_Y + 16, '', { size: 10, bold: true, color: '#3a2e2a', origin: [0, 0.5], wrap: w - 16, lineSpacing: 0 }).setDepth(19);
     this.coachParts = [this.coachFace, g, this.coachText];
     this.coachShown = '';
     this.coachIn = 0;
@@ -286,26 +277,32 @@ export default class StallScene extends Phaser.Scene {
     this.coachParts.forEach((o) => o.setVisible(!!text));
     if (!text) return;
     this.coachText.setText(text).setColor(warn ? '#c8402c' : '#3a2e2a');
-    // shrink long hints to fit the bubble
+    // two lines fit; anything longer shrinks a little
     this.coachText.setScale(1);
-    const room = GAME_W - 34 - 8 - 20;
-    if (this.coachText.width > room) this.coachText.setScale(room / this.coachText.width);
+    if (this.coachText.height > 30) this.coachText.setScale(30 / this.coachText.height);
     this.tweens.add({ targets: this.coachText, alpha: { from: 0.3, to: 1 }, duration: 200 });
   }
 
-  // Which cup to coach: the one last worked on, else the first with a live ticket.
+  // The owner murmurs: the next step for the cup last worked on, else what the latest
+  // customer wants and how to make it.
   updateCoach(delta) {
     this.coachIn -= delta;
     if (this.coachIn > 0) return;
     this.coachIn = 200;
-    const live = (sl) => sl?.cup && sl.ticket && !sl.ticket.left;
+    const live = (sl) => sl?.cup && sl.ticket;
     const slot = live(this.focusSlot) ? this.focusSlot : this.slots.find(live);
-    if (slot) {
+    if (slot && (slot.cup.base || slot === this.focusSlot)) {
       const r = nextStep(slot.cup, slot.ticket.spec, slot.ticket.who);
-      return this.setCoach(`Cup ${slot.i + 1}: ${r.text}`, r.bin);
+      return this.setCoach(`Cup ${slot.i + 1} for ${slot.ticket.who}: ${r.text}`, r.bin);
     }
-    const owed = this.waitingCustomers().find((c) => this.ticketsOwed(c));
-    if (owed) return this.setCoach(this.freeSlot() ? `Tap ${owed.def.short ?? owed.def.name} to take the order` : 'Tray full: serve or bin a cup first', !this.freeSlot());
+    const f = this.focusSlot;
+    if (f?.cup?.base && !f.ticket) return this.setCoach(`Cup ${f.i + 1}: nobody waiting wants a ${formatCup(f.cup)}. Bin it, or keep it for later`, true);
+    const unmade = this.waitingCustomers().filter((c) => this.cupsOwed(c) > 0);
+    const latest = unmade.sort((a, b) => (b.arrivedAt ?? 0) - (a.arrivedAt ?? 0))[0];
+    if (latest) {
+      const grab = this.slots.some((sl) => sl.cup && !sl.cup.base) ? '' : this.freeSlot() ? 'Tap Cups, then: ' : 'Tray full! ';
+      return this.setCoach(`${grab}${latest.def.short ?? latest.def.name} wants ${latest.orderText}: ${recipeHint(latest.spec)}`);
+    }
     if (this.closing) return this.setCoach("Closing time. Last customers, then we 收档!");
     if (!this.allCustomers().length) return this.setCoach('Waiting for customers… 等客人');
     this.setCoach('');
@@ -318,7 +315,7 @@ export default class StallScene extends Phaser.Scene {
   placeCup(slot) {
     if (!slot || slot.cup || this.ended) return false;
     slot.cup = newCup();
-    this.redrawSlot(slot);
+    this.assignCup(slot);
     play('cupDown');
     this.tweens.add({ targets: slot.container, y: { from: CUP_BOTTOM - 10, to: CUP_BOTTOM }, duration: 120 });
     return true;
@@ -329,55 +326,41 @@ export default class StallScene extends Phaser.Scene {
   }
 
   removeCup(slot) {
-    if (slot.ticket) slot.ticket.c.ticketsTaken = Math.max(0, (slot.ticket.c.ticketsTaken ?? 0) - 1);
     slot.ticket = null;
     slot.cup = null;
     this.redrawSlot(slot);
   }
 
-  // ---------- order tickets ----------
+  // ---------- who is each cup for? (no tickets: the game guesses from the cup) ----------
 
-  // How many more cups this customer still needs a ticket for.
-  ticketsOwed(c) {
-    return Math.max(0, c.n - c.served - (c.ticketsTaken ?? 0));
+  // Cups a customer still needs that no cup on the tray is already heading to.
+  cupsOwed(c, except = null) {
+    const heading = this.slots.filter((sl) => sl !== except && sl.cup && sl.ticket?.c === c).length;
+    return c.n - c.served - heading;
   }
 
-  takeOrder(c) {
-    if (c.state !== 'waiting') return;
-    if (!this.ticketsOwed(c)) return this.setFeedback('Already got their ticket — make the drink!');
-    const slot = this.freeSlot();
-    if (!slot) return this.setFeedback('Tray full — serve or bin a cup first');
-    this.placeCup(slot);
-    c.ticketsTaken = (c.ticketsTaken ?? 0) + 1;
-    const cupNo = c.n > 1 ? ` ${c.served + c.ticketsTaken}/${c.n}` : '';
-    slot.ticket = { c, spec: c.spec, who: c.def.short ?? c.def.name, text: `${c.orderText}${cupNo}` };
-    this.focusSlot = slot;
-    this.drawTicket(slot);
-    play('tap');
-    logEvent(this.log, 'ticket', { who: c.def.id, order: c.orderText }, this.clockMs);
-    this.tutorial?.onTicket?.(c);
-    this.showBubble(c, c.orderLine, 'order'); // shows the ✓
+  // Match a cup to the waiting customer it fits best (oldest first on a tie).
+  assignCup(slot) {
+    const cands = this.waitingCustomers()
+      .filter((c) => this.cupsOwed(c, slot) > 0)
+      .sort((a, b) => (a.arrivedAt ?? 0) - (b.arrivedAt ?? 0))
+      .map((c) => ({ c, spec: c.spec }));
+    const pick = slot.cup ? pickFor(slot.cup, cands) : null;
+    slot.ticket = pick ? { c: pick.c, spec: pick.spec, who: pick.c.def.short ?? pick.c.def.name } : null;
+    this.redrawSlot(slot);
   }
 
-  drawTicket(slot) {
+  // After the cup changes: keep its customer unless it no longer fits (or they left).
+  recheckCup(slot) {
     const t = slot.ticket;
-    slot.tag.setVisible(!!t);
-    // the order and who it's for, and under it how to make it (same words as the pour bar)
-    slot.tagText.setText(t ? `${t.text} · ${t.who}${t.left ? ' (left)' : ''}` : '');
-    slot.tagHint.setText(t && !t.left ? recipeHint(t.spec) : '');
-    if (t) {
-      slot.tag.setFillStyle(t.left ? 0xdedede : 0xfff3c4);
-      slot.tagText.setColor(t.left ? '#8a8a8a' : '#3a2e2a');
-      const hintH = slot.tagHint.text ? slot.tagHint.height + 1 : 0;
-      slot.tagText.setY(-CUP_H - 5 - hintH);
-      slot.tag.setSize(104, slot.tagText.height + hintH + 7);
-    }
+    if (!t || t.c.state === 'gone' || fitScore(slot.cup, t.spec) < 0) this.assignCup(slot);
+    else this.redrawSlot(slot);
   }
 
-  // Where a ticketed cup should be poured to: ¾ for peng (the ice tops it up), else full.
+  // Where this cup should be poured to: ¾ for peng (the ice tops it up), else full.
   targetFill(slot) {
     const spec = slot.ticket?.spec;
-    if (!spec || slot.ticket.left) return this.perks.marked && slot.cup ? [0.68, 0.94] : null; // Marked Glasses
+    if (!spec) return this.perks.marked && slot.cup ? [0.68, 0.94] : null; // Marked Glasses
     return spec.iced ? 0.68 : 0.94;
   }
 
@@ -479,8 +462,8 @@ export default class StallScene extends Phaser.Scene {
     this.focusSlot = slot;
     const fast = ['kopi', 'teh', ...MALT].includes(ingredient) ? this.perks.pourMult : 1; // Long-Spout Pot
     pour(slot.cup, ingredient, dtMs * fast);
-    this.redrawSlot(slot);
-    this.pourBar.show(ingredient, slot.cup, slot.i + 1, slot.ticket && !slot.ticket.left ? slot.ticket : null);
+    this.recheckCup(slot);
+    this.pourBar.show(ingredient, slot.cup, slot.i + 1, slot.ticket);
   }
 
   dropOnCup(slot, what) {
@@ -488,7 +471,7 @@ export default class StallScene extends Phaser.Scene {
     if (what === 'ice') addIce(slot.cup);
     else addPowder(slot.cup);
     play('ice');
-    this.redrawSlot(slot);
+    this.recheckCup(slot);
   }
 
   // Sugar Scoop / Milk Pump (night shop): these pour in fixed doses, one zone each.
@@ -501,8 +484,8 @@ export default class StallScene extends Phaser.Scene {
     pour(slot.cup, ingredient, ms);
     slot.art.update(slot.cup, 0, { ingredient });
     this.focusSlot = slot;
-    this.redrawSlot(slot);
-    this.pourBar.show(ingredient, slot.cup, slot.i + 1, slot.ticket && !slot.ticket.left ? slot.ticket : null);
+    this.recheckCup(slot);
+    this.pourBar.show(ingredient, slot.cup, slot.i + 1, slot.ticket);
     play(ingredient === 'sugar' ? 'sugar' : 'milk');
   }
 
@@ -668,7 +651,9 @@ export default class StallScene extends Phaser.Scene {
   arrive(c) {
     if (c.state === 'gone') return;
     c.state = 'waiting';
+    c.arrivedAt = this.clockMs;
     this.showBubble(c, c.orderLine, 'order');
+    for (const sl of this.slots) if (sl.cup && !sl.ticket) this.assignCup(sl);
     if (c.lesson) this.time.delayedCall(500, () => !this.ended && this.showLesson(c.lessonLine));
     if (c.episode) {
       this.time.delayedCall(400, () => {
@@ -695,18 +680,7 @@ export default class StallScene extends Phaser.Scene {
     if (kind === 'order' && c.n > 1) {
       extras.push(addText(this, x + pad, 0, `Cup ${c.served + 1}/${c.n}`, { size: 10, color: '#8a7a70' }));
     }
-    if (kind === 'order') {
-      const owed = this.ticketsOwed(c);
-      const mark = !owed ? '✓ ticket' : c.ticketsTaken ? `✓ ${c.ticketsTaken} · tap for next` : this.hintsLeft > 0 ? 'tap me to take the order' : '';
-      if (mark) {
-        extras.push(addText(this, x + pad, 0, mark, { size: 9, bold: true, color: owed ? '#c8562e' : '#2f7a3a' }));
-        if (owed && !c.ticketsTaken && !c.hinted) {
-          c.hinted = true;
-          this.hintsLeft -= 1;
-        }
-      }
-      h += 8; // patience bar
-    }
+    if (kind === 'order') h += 8; // patience bar
     h += extras.reduce((sum, o) => sum + o.height + 1, 0);
     const y = table ? TABLE.bubble.y : BUBBLE_BOTTOM - h;
     words.objects.forEach((o) => o.setY(o.y + y + pad));
@@ -842,7 +816,7 @@ export default class StallScene extends Phaser.Scene {
     this.clearBubble(c);
     if (c === this.tableGuest) this.tableGuest = null;
     this.spots = this.spots.map((s) => (s === c ? null : s));
-    for (const sl of this.slots) if (sl.ticket?.c === c && sl.cup) (sl.ticket.left = true), this.drawTicket(sl);
+    for (const sl of this.slots) if (sl.ticket?.c === c && sl.cup) this.assignCup(sl);
     c.sprites.forEach((s) => this.tweens.add({ targets: s, alpha: 0, y: s.y - 12, duration: 450, onComplete: () => s.destroy() }));
     this.time.delayedCall(350, () => this.advanceQueue());
   }

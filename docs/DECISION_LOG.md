@@ -19,3 +19,4 @@
 | 2026-10-23 | Chill pacing: 3-minute days, 6 customers on Day 1 (+1 per 15 fame, max 12), patience x2.2; closing time waits for counter customers (max 60 s) | Playtest: served under half the customers; day cut orders off |
 | 2026-10-23 | Owner 'coach' thought bubble shows the next step for the cup being worked on | Playtest: hard to remember what each order needs |
 | 2026-10-23 | Retuned: 2-minute days, 8 customers on Day 1 (+1 per 15 fame, max 15) | Playtest: 3 minutes with 6 customers felt too empty |
+| 2026-10-23 | No order tickets: cups are matched to the waiting customer they fit best (oldest first), shown as 'for X' above the cup; the coach murmurs the latest order's recipe and the next step | Playtest: tapping customers to take orders got messy with several cups |

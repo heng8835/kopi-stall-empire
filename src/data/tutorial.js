@@ -9,10 +9,10 @@ export const TUTORIAL_STEPS = [
   {
     customer: 'auntyLim',
     order: 'Teh',
-    highlight: ['teh', 'condensed', 'stir'],
+    highlight: ['rack', 'teh', 'condensed', 'stir'],
     note: {
-      en: 'TAP Aunty to take her order: a cup with her ticket appears. HOLD the teh pot to the ★, condensed milk to the ★ (it IS the sweetness), drop the spoon on the cup, drag to Aunty!',
-      zh: '点阿姨接单，会出现带单子的杯子。按住茶壶到 ★，炼奶到 ★（炼奶就是甜度），把汤匙放到杯上搅一搅，拖给阿姨！',
+      en: 'Tap the Cups rack for a cup. HOLD the teh pot to the ★, condensed milk to the ★ (it IS the sweetness), drop the spoon on the cup, drag to Aunty! Your thought bubble below says each step.',
+      zh: '点杯架拿杯子。按住茶壶到 ★，炼奶到 ★（炼奶就是甜度），把汤匙放到杯上，拖给阿姨！下面的小泡泡会提示每一步。',
     },
   },
   {
@@ -20,7 +20,7 @@ export const TUTORIAL_STEPS = [
     order: 'Kopi',
     highlight: ['kopi', 'condensed', 'stir'],
     note: {
-      en: 'Kopi = coffee + condensed milk. Tap Marcus for his ticket, same steps with the kopi pot. Fast fast, he is rushing!',
+      en: 'Kopi = coffee + condensed milk. Same steps with the kopi pot. Fast fast, he is rushing!',
       zh: 'Kopi = 咖啡 + 炼奶。步骤一样，这次用咖啡壶。他赶时间！',
     },
   },
