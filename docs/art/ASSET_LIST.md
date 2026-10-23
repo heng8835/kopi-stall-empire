@@ -25,6 +25,7 @@ How to make them: same style and pipeline as `docs/ART_BIBLE.md`.
 | 1.4 | Traditional ceramic kopi cup + saucer | 1 | Thick white cup with a green or red rim line, for hot drinks (very kopitiam). Optional; glass for everything also works. |
 | ✅ | Liquid, surface, milk clouds, sugar grains, splashes, steam, condensation | – | Drawn in code (the approved preview). |
 | ✅ | Ice cubes | – | Code-drawn pixel art, done. |
+| 1.7 | **Horlicks tin (`toolHorlicks`)** | 1 | P1. Upright malted-drink tin, cream with a brown lid, small cup drawing, no text or logo. Same size/angle as the Milo tin. |
 | 1.5 | Milo powder mountain | 1 | A heap of dry Milo powder, to sit on top of a glass. Optional; code draws one now. |
 | 1.6 | Bin lid open / closed | 2 | The bin is still a grey box drawn in code. |
 
@@ -36,7 +37,7 @@ How to make them: same style and pipeline as `docs/ART_BIBLE.md`.
 | 2.2 | **Makcik, standing, no stall** | 1 | P1. She teaches "peng" on Day 5. The current art has the stall and sign attached. |
 | 2.3 | Reaction faces for counter customers | 2 each × 6 | P2. A happy (perfect) and a sad (oops) version of Aunty Lim, Marcus, Darren, Wei Ling, Hafiz and Jia Hui. Same pose, only the face changes. |
 | 2.4 | Walk cycles | 4 each × 6 | P2. Side view walking right, same 6 characters. Prompt in ART_BIBLE. |
-| 2.7 | **Walk-in customers, standing at the counter** | 1 each × 4 | P1. Most of the day's customers are random walk-ins (src/data/customers.js `WALK_INS`). Same chibi style, empty hands or a phone/bag, facing the counter: office worker (`walkOffice`, lanyard, shirt), uncle (`walkUncle`, singlet or polo, towel on shoulder), student (`walkStudent`, school uniform + bag), auntie (`walkAuntie`, floral blouse, market bag). Code tints each in 3 colour variants. Until they arrive, Kai and Rain Uncle stand in. Later: NSF, tourist. |
+| 2.7 | **Walk-in customers: 20 kinds** | 20 | P1. The neighbourhood crowd, full list + looks in docs/specs/opening-and-art-plan.md §2. 4 per image. Kai and Rain Uncle stand in until they arrive. |
 | 2.5 | Ah Gong reading, page-turn | 2 | P3. An idle loop at his table. |
 | 2.6 | Oyen idle + knock-cup pose | 2–3 | P3. Sleeping loop and a paw swipe for the "daily tax". |
 
@@ -77,6 +78,14 @@ How to make them: same style and pipeline as `docs/ART_BIBLE.md`.
 
 Ginger slices, calamansi half, butter cube, ice cream scoop, gula melaka layer, tarik froth, Horlicks powder heap,
 a takeaway bag with a red string handle, and two tarik mugs mid-pour (2 frames).
+
+## 8. Opening cutscene backgrounds (P1)
+
+4 portrait backgrounds (1024x1536): estate at dawn, flashback back table, office cubicle, shutter up at sunrise (an edit of the first). Optional 5th: owner's bedroom at night. Panels + notes: docs/specs/opening-and-art-plan.md §1.
+
+## 9. Music (P2, later)
+
+7 loops + 2 stings, royalty-free with a commercial licence. List: docs/specs/opening-and-art-plan.md §4.
 
 ## 7. Still blocked or nice to have
 

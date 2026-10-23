@@ -1,12 +1,12 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-23
 phase: development
-next: "Phase D drink mechanics (IDEAS.md). Playtest regulars + walk-ins; walk-in art pending (ASSET_LIST 2.7)."
+next: "Waiting on art (opening bgs, 20 walk-ins, Horlicks tin: docs/specs/opening-and-art-plan.md). Then build the opening cutscene + swap walk-ins in. Else: phase D drink mechanics."
 tier_hint: 1
 blockers: ["Sophie flag/Merlion fix (user)"]
-touched: [src/data/customers.js, src/systems/queue.js, src/systems/menu.js, src/scenes/StallScene.js, src/i18n/lines.js, tests/regulars.test.js]
+touched: [src/scenes/DramaScene.js, src/systems/story.js, src/data/events.js, docs/specs/opening-and-art-plan.md, docs/art/ASSET_LIST.md]
 validation: passing
 open_decisions: ["Walk-frame route (IDEAS.md)"]
-spec: ""
+spec: "docs/specs/opening-and-art-plan.md"
 board_task: ""
-notes: "StallScene is reused by Phaser every day: reset per-day state in create (closing, towelUsed…). Jump to a day: ?day=N&fame=F&money=CENTS&flags=a,b. Pane testing: another project's vite may own localhost:5174, use 127.0.0.1; fake Date.now + game.step; renderer.snapshot for screenshots."
+notes: "StallScene is reused by Phaser every day: reset per-day state in create (closing, towelUsed…). Jump to a day: ?day=N&fame=F&money=CENTS&flags=a,b. Pane testing: another project's vite may own localhost:5174, use 127.0.0.1; fake Date.now + game.step; renderer.snapshot for screenshots (pane rAF often frozen: drive g.step by hand; POST snapshots to a tiny local receiver to view them)."
