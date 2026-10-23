@@ -101,6 +101,15 @@ export default class StallScene extends Phaser.Scene {
     this.nextLesson();
     this.paused = false;
     this.ended = false;
+    // Phaser reuses this scene object every day: reset everything the last day may have left set
+    // (a leftover `closing` turned every Day 2 customer away)
+    this.closing = false;
+    this.overtimeMs = 0;
+    this.focusSlot = null;
+    this.towelUsed = false;
+    this.leaving = false;
+    this.rating = undefined;
+    this.guestEpisode = null;
     this.pouring = null; // { tool, slot }
     this.lastPourSound = 0;
     this.log = startDay({ day: this.day, owner: this.owner.name });
@@ -1156,9 +1165,11 @@ export default class StallScene extends Phaser.Scene {
     this.tableGuest = null;
     this.setFeedback(UI.closing);
     this.rating = this.todayRating();
+    // tonight's story first (with the stall still open behind it), then the shutter, then the summary
     const owed = this.guestEpisode;
-    const closing = () => this.playStory('end', () => this.showSummary());
-    this.closeShutter(() => (owed ? this.playEpisode(owed, closing) : closing()));
+    const shutter = () => this.closeShutter(() => this.showSummary());
+    const story = () => this.playStory('end', shutter);
+    this.time.delayedCall(600, () => (owed ? this.playEpisode(owed, story) : story()));
   }
 
   showSummary() {
