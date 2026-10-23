@@ -1,0 +1,494 @@
+<title>Stall Upgrade Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;600;700&family=Noto+Sans+SC:wght@400;700&display=swap">
+<style>
+/* Layout: one long kopitiam "menu board" column; each section is a board panel, grids collapse to 1 column on phones. */
+:root {
+  --bg: #eef3ef;          /* pale kopitiam wall tile */
+  --panel: #ffffff;
+  --ink: #23201d;
+  --muted: #6c675f;
+  --line: #d6ddd7;
+  --tile: #2f6d5c;        /* green tile band */
+  --tile-ink: #f4f8f2;
+  --kopi: #6b3f22;
+  --chilli: #c8402c;      /* red menu-board lettering */
+  --gold: #b8862b;
+  --chip: #e7efe9;
+  --starter: #2f7a3a;
+  --fame: #8a5a1e;
+  --machine: #2a5f8f;
+  --display: "Archivo Black", "Arial Black", system-ui, sans-serif;
+  --body: "Archivo", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --zh: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121714; --panel: #1b221e; --ink: #ecefe9; --muted: #a6ada6; --line: #2e3833;
+    --tile: #1f4a3f; --tile-ink: #e9f2ec; --kopi: #c99268; --chilli: #ff7a63; --gold: #e2b456;
+    --chip: #25302a; --starter: #79c784; --fame: #e0a65a; --machine: #7fb4e6; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121714; --panel: #1b221e; --ink: #ecefe9; --muted: #a6ada6; --line: #2e3833;
+  --tile: #1f4a3f; --tile-ink: #e9f2ec; --kopi: #c99268; --chilli: #ff7a63; --gold: #e2b456;
+  --chip: #25302a; --starter: #79c784; --fame: #e0a65a; --machine: #7fb4e6; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 64px; display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: clamp(28px, 6vw, 44px); line-height: 1.05; }
+h2 { font-size: clamp(21px, 4.2vw, 28px); line-height: 1.15; }
+h3 { font-size: 17px; }
+p { margin: 0; max-width: 68ch; }
+.zh { font-family: var(--zh); }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--chilli); }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+
+/* hero: the tile band of a kopitiam wall */
+.hero { background: var(--tile); color: var(--tile-ink); border-radius: 14px; padding: 22px; display: grid; gap: 12px;
+  background-image: linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px);
+  background-size: 28px 28px; }
+.hero .eyebrow { color: #ffd38a; }
+.hero p { color: var(--tile-ink); opacity: .92; }
+.toc { display: flex; flex-wrap: wrap; gap: 8px; }
+.toc a { color: var(--tile-ink); text-decoration: none; font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,.35); padding: 5px 10px; border-radius: 999px; }
+.toc a:focus-visible, .toc a:hover { background: rgba(255,255,255,.14); outline: none; }
+
+section { display: grid; gap: 14px; scroll-margin-top: 12px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+
+/* decision checklist */
+.decisions { display: grid; gap: 10px; counter-reset: d; }
+.decision { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; }
+.decision::before { counter-increment: d; content: counter(d); font-family: var(--display); color: var(--panel); background: var(--chilli); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; }
+.decision b { display: block; }
+.rec { display: inline-block; font-size: 12px; font-weight: 700; color: var(--starter); }
+
+/* tags */
+.tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.t-starter { color: var(--starter); }
+.t-fame { color: var(--fame); }
+.t-machine { color: var(--machine); }
+.t-no { color: var(--muted); }
+
+/* drink matrix */
+.matrix-wrap { overflow-x: auto; }
+table.matrix { border-collapse: separate; border-spacing: 6px; min-width: 640px; width: 100%; }
+.matrix th { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); text-align: left; font-weight: 700; padding: 0 4px; }
+.matrix th.row { text-transform: none; letter-spacing: 0; color: var(--ink); font-family: var(--display); font-weight: 400; font-size: 15px; white-space: nowrap; }
+.matrix th.row small { display: block; font-family: var(--body); font-size: 11px; color: var(--muted); font-weight: 400; }
+.cell { background: var(--chip); border-radius: 10px; padding: 8px; display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: center; min-height: 64px; }
+.cell .name { font-weight: 700; font-size: 13px; line-height: 1.2; }
+.cell .name .zh { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+.cell.off { background: transparent; border: 1px dashed var(--line); }
+.cell.off .name { color: var(--muted); font-weight: 400; }
+.cup { width: 30px; height: 40px; position: relative; border: 2px solid var(--ink); border-top: none; border-radius: 0 0 7px 7px; overflow: hidden; background: rgba(255,255,255,.35); }
+.cup .liq { position: absolute; left: 0; right: 0; bottom: 0; height: 82%; }
+.cup .liq::after { content: ""; position: absolute; left: 3px; top: 4px; width: 3px; bottom: 4px; background: rgba(255,255,255,.28); border-radius: 2px; }
+.cup .sug { position: absolute; top: 2px; left: 3px; display: flex; gap: 2px; }
+.cup .sug i { width: 5px; height: 5px; background: #fff; border: 1px solid #555; border-radius: 1px; display: block; }
+
+.mods { display: grid; gap: 8px; }
+.mod { display: grid; grid-template-columns: minmax(100px, 150px) 1fr; gap: 10px; align-items: baseline; border-top: 1px solid var(--line); padding-top: 8px; }
+.mod b { font-size: 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { background: var(--chip); border-radius: 8px; padding: 3px 8px; font-size: 13px; }
+
+/* specials cards */
+.drink { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; grid-template-columns: 42px 1fr; gap: 10px; align-items: start; min-width: 0; }
+.drink .cup { width: 38px; height: 50px; }
+.drink h3 { font-size: 15px; }
+.drink .zh { font-size: 13px; color: var(--muted); }
+.drink p { font-size: 13px; color: var(--muted); }
+.drink .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.layered .liq { background: linear-gradient(#b5652a 0 45%, #f3e6cf 45% 70%, #6a3c14 70%); }
+
+/* pour bar mockups */
+.bar { display: grid; gap: 4px; }
+.bar .lbl { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; }
+.zones { display: flex; height: 34px; border-radius: 8px; overflow: hidden; border: 2px solid var(--ink); position: relative; }
+.zones span { display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #1f1f1f; text-align: center; line-height: 1.05; padding: 0 2px; border-right: 1px solid rgba(0,0,0,.18); }
+.zones span:last-child { border-right: none; }
+.zones .target { outline: 3px solid #ffd23f; outline-offset: -3px; }
+.zones .marker { position: absolute; top: -6px; bottom: -6px; width: 4px; background: #111; border: 1px solid #fff; border-radius: 2px; }
+.zones .marker.anim { animation: pour 4.5s ease-in-out infinite alternate; }
+@keyframes pour { from { left: 2%; } to { left: 62%; } }
+.z-none { background: #f4f4f4; } .z-lo { background: #cfe9cf; } .z-ok { background: #66bb6a; } .z-hi { background: #f2c14e; } .z-bad { background: #e57368; }
+.z-gap { background: #dcdcdc; }
+
+/* phone mockup */
+.phone { width: 220px; max-width: 100%; aspect-ratio: 9 / 16; border: 3px solid var(--ink); border-radius: 22px; overflow: hidden; display: grid; grid-template-rows: 30px 34px 1fr 26px 70px 52px; background: #f6efe4; justify-self: center; position: relative; }
+.phone > div { display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #3a2e2a; text-align: center; }
+.ph-hud { background: #2e5e63; color: #fff !important; grid-template-columns: auto 1fr auto; gap: 6px; padding: 0 8px; justify-items: start; }
+.ph-hud svg { width: 22px; height: 22px; }
+.ph-bar { background: #fffaf0; border-bottom: 2px solid #3a2e2a; padding: 4px 8px; }
+.ph-bar .zones { height: 18px; width: 100%; border-width: 1px; }
+.ph-bar .zones span { font-size: 7px; }
+.ph-cust { background: #cfe3d8; }
+.ph-counter { background: #b5713f; color: #fff !important; }
+.ph-cups { background: #d8c6a8; grid-template-columns: repeat(3, 1fr); }
+.ph-tools { background: #9aa3ab; }
+.finger { position: absolute; left: 50%; bottom: 72px; width: 30px; height: 46px; background: #f0c2a0; border: 2px solid #8a5a3a; border-radius: 15px 15px 8px 8px; transform: translateX(-50%) rotate(-8deg); opacity: .92; }
+
+/* clock */
+.clockbox { display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: center; }
+@media (max-width: 560px) { .clockbox { grid-template-columns: 1fr; justify-items: center; } }
+.clock { width: 150px; height: 150px; }
+.hand-h { transform-origin: 75px 75px; animation: spinH 24s linear infinite; }
+.hand-m { transform-origin: 75px 75px; animation: spinM 2s linear infinite; }
+@keyframes spinH { from { transform: rotate(210deg); } to { transform: rotate(570deg); } }
+@keyframes spinM { to { transform: rotate(360deg); } }
+.daybar { width: 100%; display: grid; gap: 6px; min-width: 0; }
+.periods { display: grid; grid-template-columns: 4fr 3fr 3fr 2fr; height: 34px; border: 2px solid var(--ink); border-radius: 10px; overflow: hidden; position: relative; }
+.periods span { display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #1f1f1f; }
+.p1 { background: #ffe9a8; } .p2 { background: #ffb870; } .p3 { background: #bfe0c4; } .p4 { background: #9fb3d9; }
+.periods .now { position: absolute; top: -2px; bottom: -2px; width: 4px; background: var(--chilli); left: 0; animation: day 24s linear infinite; }
+@keyframes day { to { left: calc(100% - 4px); } }
+.ticks { display: grid; grid-template-columns: 4fr 3fr 3fr 2fr; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ticks span:last-child { display: flex; justify-content: space-between; }
+
+/* catalogue */
+.cat-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.item { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.item .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.item h3 { font-size: 15px; }
+.price { font-family: var(--display); color: var(--chilli); font-size: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.item .zh { font-size: 13px; color: var(--muted); }
+.item p { font-size: 13px; }
+.item .unl { font-size: 12px; color: var(--machine); font-weight: 700; }
+.tier { font-size: 11px; font-weight: 700; color: var(--fame); }
+
+/* sprite list */
+.sprites { display: grid; gap: 10px; }
+.sgroup { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; }
+.sgroup header { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; justify-content: space-between; }
+.prio { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; color: var(--panel); }
+.p-1 { background: var(--chilli); } .p-2 { background: var(--gold); } .p-3 { background: var(--muted); }
+.sgroup ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14px; }
+.sgroup li span { color: var(--muted); font-size: 13px; }
+.have { color: var(--starter); font-weight: 700; font-size: 12px; }
+
+/* phases */
+.phases { display: grid; gap: 10px; }
+.phase { display: grid; grid-template-columns: 76px 1fr; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.phase .ph { font-family: var(--display); color: var(--tile); font-size: 22px; line-height: 1; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .phase .ph { color: var(--starter); } }
+:root[data-theme="dark"] .phase .ph { color: var(--starter); }
+.phase ul { margin: 4px 0 0; padding-left: 18px; font-size: 14px; }
+
+code { font-size: 12.5px; background: var(--chip); padding: 1px 5px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .hand-h, .hand-m, .periods .now, .zones .marker.anim { animation: none; } }
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">Kopi Stall Empire · next phase · for approval</div>
+  <h1>Stall Upgrade Plan</h1>
+  <p>Everything for the next build, in one place: the full kopitiam drink list, the starter menu, the upgrade catalogue, a new pour bar your finger can't cover, a real wall clock, and the art I need from you. Nothing here is built yet.</p>
+  <nav class="toc" aria-label="Sections">
+    <a href="#decide">Decide</a><a href="#drinks">Drinks</a><a href="#specials">Specials</a><a href="#pour">Pour bar</a><a href="#clock">Clock</a><a href="#catalogue">Catalogue</a><a href="#art">Art needed</a><a href="#phases">Build order</a>
+  </nav>
+</header>
+
+<section id="decide">
+  <div class="eyebrow">Decisions</div>
+  <h2>Six calls to approve first</h2>
+  <div class="panel decisions">
+    <div class="decision"><div><b>Condensed milk is the sugar for Kopi and Teh.</b> Kopi / Teh = condensed milk only; siew dai = less condensed, ga dai = more. The sugar can is for O and C drinks. That's how a real uncle makes it, and it means one less pour. "Kopi kosong" isn't on the menu (customers say "Kopi C kosong"). <span class="rec">Recommended</span></div></div>
+    <div class="decision"><div><b>The pour bar docks under the clock, full width.</b> While you pour, a big labelled bar shows at the top of the screen, so your finger is never on it. The small meter beside the cup goes away. <span class="rec">Recommended</span></div></div>
+    <div class="decision"><div><b>Liquid becomes HD art, tinted and cropped by code.</b> It replaces the flat drawn rectangles. I'll draw an HD-quality stand-in myself so we're not blocked, and swap in your art when it arrives. <span class="rec">Recommended</span></div></div>
+    <div class="decision"><div><b>Starter menu + unlocks.</b> Day 1 serves 6 bases × kosong / siew dai / normal × hot / peng, plus Milo drinks. Everything else unlocks from the night shop or by fame. <span class="rec">Recommended</span></div></div>
+    <div class="decision"><div><b>Night shop after each day's summary, from Day 3.</b> Items are gated by fame tiers (0 / 25 / 50 / 75), so the month has a steady drip of new toys. <span class="rec">Recommended</span></div></div>
+    <div class="decision"><div><b>Malt drink name.</b> "Horlicks" is what people actually order, but it's a brand, like the Toto issue before. Call it <b>"Malt"</b> in game, keeping Milo as it is already. <span class="rec">Recommended: "Malt"</span></div></div>
+  </div>
+</section>
+
+<section id="drinks">
+  <div class="eyebrow">Drinks · the full grammar</div>
+  <h2>Every Kopi and Teh combination</h2>
+  <p class="muted">Rows are base + milk, columns are sweetness. Each cell is a real order. Multiply every valid cell by the modifiers underneath: <b>22 cells × hot/peng × 4 strengths = 176 kopi/teh orders</b>, before the specials.</p>
+  <div class="panel">
+    <div class="matrix-wrap"><table class="matrix" id="matrix" aria-label="Kopi and teh combinations"></table></div>
+    <div class="chips small" style="gap:10px">
+      <span><span class="tag t-starter">Starter</span> on the Day 1 menu</span>
+      <span><span class="tag t-fame">Fame</span> unlocks free at a fame level</span>
+      <span><span class="tag t-machine">Machine</span> needs a shop item</span>
+      <span>Sugar cubes on the cup = sweetness</span>
+    </div>
+  </div>
+  <div class="panel mods">
+    <h3>Modifiers (stack on any cell)</h3>
+    <div class="mod"><b>Temperature</b><div class="chips"><span class="chip">Hot <span class="tag t-starter">Starter</span></span><span class="chip">Peng (iced) <span class="tag t-starter">Starter</span></span><span class="chip">aka "Kopi ice", "Teh bing"</span></div></div>
+    <div class="mod"><b>Strength</b><div class="chips"><span class="chip">Poh (thin)</span><span class="chip">Normal <span class="tag t-starter">Starter</span></span><span class="chip">Gao (strong)</span><span class="chip">Di Lo (no water at all)</span><span class="tag t-machine">Big Brass Kettle</span></div></div>
+    <div class="mod"><b>Style</b><div class="chips"><span class="chip">Tarik (pulled, frothy)</span><span class="tag t-machine">Tarik Mugs</span><span class="chip">Halia (ginger)</span><span class="tag t-machine">Halia Pot</span></div></div>
+    <div class="mod"><b>To go</b><div class="chips"><span class="chip">Tapau / Da bao (bag + string)</span><span class="tag t-machine">Tapau Station</span></div></div>
+  </div>
+</section>
+
+<section id="specials">
+  <div class="eyebrow">Drinks · specials</div>
+  <h2>Signature drinks to unlock</h2>
+  <div class="grid3" id="specials-grid"></div>
+</section>
+
+<section id="pour">
+  <div class="eyebrow">Making drinks · new pour bar</div>
+  <h2>A horizontal bar your finger can't cover</h2>
+  <div class="grid2">
+    <div class="panel">
+      <p>While a pot, can or sugar is over a cup, the bar appears under the clock. It shows <b>which ingredient</b>, <b>which cup</b>, labelled zones, and the order's target zone outlined in yellow once order tickets land. Each ingredient has its own zones:</p>
+      <div class="bar"><div class="lbl"><span>Condensed milk · Kopi / Teh</span><span class="muted">sweetness</span></div>
+        <div class="zones"><span class="z-none" style="flex:1">none</span><span class="z-gap" style="flex:.5"></span><span class="z-lo target" style="flex:1.4">SIEW DAI</span><span class="z-gap" style="flex:.4"></span><span class="z-ok" style="flex:1.4">NORMAL</span><span class="z-hi" style="flex:1.2">GA DAI</span><span class="z-bad" style="flex:1">too sweet</span><i class="marker anim"></i></div></div>
+      <div class="bar"><div class="lbl"><span>Sugar · O and C drinks</span><span class="muted">sweetness</span></div>
+        <div class="zones"><span class="z-none" style="flex:1.1">KOSONG</span><span class="z-gap" style="flex:.4"></span><span class="z-lo" style="flex:1.4">SIEW DAI</span><span class="z-gap" style="flex:.4"></span><span class="z-ok" style="flex:1.4">NORMAL</span><span class="z-hi" style="flex:1.2">GA DAI</span><span class="z-bad" style="flex:1">too sweet</span></div></div>
+      <div class="bar"><div class="lbl"><span>Evaporated milk · C drinks</span><span class="muted">milk</span></div>
+        <div class="zones"><span class="z-none" style="flex:1.2">none (O)</span><span class="z-gap" style="flex:.8"></span><span class="z-ok" style="flex:1.8">C · NORMAL</span><span class="z-hi" style="flex:1">a lot</span><span class="z-bad" style="flex:1">too milky</span></div></div>
+      <div class="bar"><div class="lbl"><span>Kopi / Teh · fill</span><span class="muted">level</span></div>
+        <div class="zones"><span class="z-gap" style="flex:2.2">filling…</span><span class="z-lo" style="flex:1">¾ PENG</span><span class="z-gap" style="flex:.3"></span><span class="z-ok" style="flex:1">FULL (hot)</span><span class="z-bad" style="flex:.8">spill</span></div></div>
+      <div class="bar"><div class="lbl"><span>Hot water · strength <span class="tag t-machine">Kettle</span></span><span class="muted">kopi : water</span></div>
+        <div class="zones"><span class="z-hi" style="flex:1">DI LO</span><span class="z-lo" style="flex:1">GAO</span><span class="z-ok" style="flex:1.3">NORMAL</span><span class="z-lo" style="flex:1">POH</span><span class="z-bad" style="flex:.8">watery</span></div></div>
+    </div>
+    <div class="panel" style="justify-items:center; align-content:start">
+      <div class="phone" aria-label="Phone layout mockup">
+        <div class="ph-hud"><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="#fffaf0" stroke="#1d1d1d" stroke-width="1.5"/><line x1="11" y1="11" x2="11" y2="5" stroke="#1d1d1d" stroke-width="2"/><line x1="11" y1="11" x2="15" y2="13" stroke="#c8402c" stroke-width="1.5"/></svg><span>Day 4 · ▮▮▮▯ lunch</span><span>$12.40</span></div>
+        <div class="ph-bar"><div class="zones"><span class="z-none" style="flex:1">none</span><span class="z-lo target" style="flex:1.4">SIEW DAI</span><span class="z-ok" style="flex:1.4">NORMAL</span><span class="z-hi" style="flex:1">GA DAI</span><span class="z-bad" style="flex:.8">!!</span></div></div>
+        <div class="ph-cust">customers + bubbles</div>
+        <div class="ph-counter">counter</div>
+        <div class="ph-cups"><span>cup 1</span><span>cup 2 ◀</span><span>cup 3</span></div>
+        <div class="ph-tools">tools</div>
+        <span class="finger" aria-hidden="true"></span>
+      </div>
+      <p class="small muted" style="text-align:center">Finger on cup 2, bar at the top. The bar names the cup it's measuring.</p>
+    </div>
+  </div>
+</section>
+
+<section id="clock">
+  <div class="eyebrow">Time of day</div>
+  <h2>A real wall clock, plus the day as a bar</h2>
+  <div class="panel clockbox">
+    <svg class="clock" viewBox="0 0 150 150" role="img" aria-label="Animated kopitiam wall clock">
+      <circle cx="75" cy="75" r="70" fill="#8a5a2b" />
+      <circle cx="75" cy="75" r="62" fill="#fffaf0" stroke="#3a2e2a" stroke-width="2" />
+      <g id="ticks"></g>
+      <rect class="hand-h" x="72" y="38" width="6" height="40" rx="3" fill="#2b2420" />
+      <rect class="hand-m" x="73.5" y="22" width="3" height="56" rx="1.5" fill="#c8402c" />
+      <circle cx="75" cy="75" r="5" fill="#2b2420" />
+    </svg>
+    <div class="daybar">
+      <p>The hour hand sweeps from 7am to 7pm across the 90-second day; the minute hand spins so time visibly moves. Under it, the day as a bar with labelled periods. The marker crawls along it, and the clock rings a bell at last orders.</p>
+      <div class="periods" aria-label="Day periods"><span class="p1">Morning</span><span class="p2">Lunch rush</span><span class="p3">Teatime</span><span class="p4">Closing</span><i class="now"></i></div>
+      <div class="ticks"><span>7am open</span><span>11am</span><span>2pm</span><span><span>5pm</span><span>7pm</span></span></div>
+      <p class="small muted">Periods can mean something later (more office workers at lunch, kids after school, Ah Gong in the morning), but for now they're labels only.</p>
+    </div>
+  </div>
+</section>
+
+<section id="catalogue">
+  <div class="eyebrow">Night shop · catalogue</div>
+  <div class="cat-head"><h2>Uncle Tan's Supplier Catalogue</h2><span class="small muted">Prices assume ~$20–35 earned a day in month 1</span></div>
+  <p class="muted">Four aisles. <b>Machines</b> unlock drinks. <b>Tools</b> make pouring easier or faster. <b>Comfort</b> makes customers patient or generous. <b>Decor</b> adds fame every day. Tiers open at fame 0 / 25 / 50 / 75. A month's earnings buy about two-thirds of it, so the choices matter.</p>
+  <div id="catalogue-list" style="display:grid; gap:18px"></div>
+</section>
+
+<section id="art">
+  <div class="eyebrow">Art I need from you</div>
+  <h2>Sprite shopping list</h2>
+  <p class="muted">Same style rules and pipeline as before (ART_BIBLE): plain white background, no text, no logos, one item per cell. Groups of 4–6 on one sheet cut cleanly. P1 is needed for the next build; P2 for the shop; P3 can wait.</p>
+  <div class="sprites" id="sprite-list"></div>
+</section>
+
+<section id="phases">
+  <div class="eyebrow">Build order</div>
+  <h2>Four steps, each playable on its own</h2>
+  <div class="phases">
+    <div class="phase"><div class="ph">A</div><div><b>Feel better to make drinks</b><ul><li>Horizontal pour bar under the HUD, with labelled zones per ingredient</li><li>HD liquid layers (my stand-in first, your art later)</li><li>Condensed-milk sweetness rule, and Teh O added to the menu</li><li>Wall clock + day-period bar in a taller HUD</li></ul></div></div>
+    <div class="phase"><div class="ph">B</div><div><b>Order tickets</b> (the existing spec)<ul><li>Tap a customer to take the order; the cup gets a ticket</li><li>The pour bar outlines that ticket's target zone</li><li>Richer day summary with Uncle Tan's tip</li></ul></div></div>
+    <div class="phase"><div class="ph">C</div><div><b>Night shop + menu unlocks</b><ul><li>Catalogue data, shop screen after the summary, saved purchases</li><li>Power-up effects (speed, patience, tips, fame per day)</li><li>Menu unlocks change what customers order; a wall menu board shows them</li></ul></div></div>
+    <div class="phase"><div class="ph">D</div><div><b>New drink mechanics</b><ul><li>Hot water + strength (gao / poh / di lo)</li><li>Tarik pull, halia, limau, layered Teh C Special, cham, butter, ice cream</li><li>Tapau bagging + delivery rider orders</li></ul></div></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// ---------- drink matrix ----------
+const BASES = [
+  { row: 'Kopi O', zh: '咖啡乌', note: 'black + sugar', color: '#3b2416', milk: 'none', base: 'kopi' },
+  { row: 'Kopi C', zh: '咖啡西', note: 'evap + sugar', color: '#8f5f3a', milk: 'evap', base: 'kopi' },
+  { row: 'Kopi', zh: '咖啡', note: 'condensed milk', color: '#a8764a', milk: 'cond', base: 'kopi' },
+  { row: 'Teh O', zh: '茶乌', note: 'black tea + sugar', color: '#8a4e22', milk: 'none', base: 'teh' },
+  { row: 'Teh C', zh: '茶西', note: 'evap + sugar', color: '#c4874f', milk: 'evap', base: 'teh' },
+  { row: 'Teh', zh: '茶', note: 'condensed milk', color: '#d49a62', milk: 'cond', base: 'teh' },
+];
+const SWEET = [
+  { col: 'Kosong', word: 'kosong', zh: '无糖', cubes: 0 },
+  { col: 'Siew dai', word: 'siew dai', zh: '少甜', cubes: 1 },
+  { col: 'Normal', word: '', zh: '', cubes: 2 },
+  { col: 'Ga dai', word: 'ga dai', zh: '加甜', cubes: 3 },
+];
+const cup = (color, cubes = 0, extra = '') =>
+  `<div class="cup${extra}" aria-hidden="true"><div class="liq" style="background:${color}"></div><div class="sug">${'<i></i>'.repeat(cubes)}</div></div>`;
+const tag = (kind) => ({ s: '<span class="tag t-starter">Starter</span>', f: '<span class="tag t-fame">Fame 20</span>' })[kind] ?? '';
+let html = '<thead><tr><th></th>' + SWEET.map((s) => `<th>${s.col}</th>`).join('') + '</tr></thead><tbody>';
+for (const b of BASES) {
+  html += `<tr><th class="row">${b.row}<small>${b.note}</small></th>`;
+  for (const s of SWEET) {
+    const name = [b.row, s.word].filter(Boolean).join(' ');
+    if (b.milk === 'cond' && s.word === 'kosong') {
+      html += `<td><div class="cell off"><span></span><div class="name">not ordered<span class="zh">say "${b.base === 'kopi' ? 'Kopi' : 'Teh'} C kosong"</span></div></div></td>`;
+      continue;
+    }
+    const kind = s.word === 'ga dai' ? 'f' : 's';
+    html += `<td><div class="cell">${cup(b.color, s.cubes)}<div class="name">${name}<span class="zh">${b.zh}${s.zh}</span>${tag(kind)}</div></div></td>`;
+  }
+  html += '</tr>';
+}
+document.getElementById('matrix').innerHTML = html + '</tbody>';
+
+// ---------- specials ----------
+const SPECIALS = [
+  { n: 'Milo / Milo Peng', zh: '美禄', c: '#6b4a32', d: 'Hot or iced chocolate malt.', u: 'Starter', k: 's' },
+  { n: 'Milo Dinosaur', zh: '美禄恐龙', c: '#6b4a32', d: 'Iced Milo with a mountain of powder on top.', u: 'Starter', k: 's' },
+  { n: 'Milo Godzilla', zh: '美禄哥斯拉', c: '#6b4a32', d: 'Dinosaur + a scoop of vanilla ice cream.', u: 'Mini Freezer', k: 'm' },
+  { n: 'Cham / Yuan Yang', zh: '鸳鸯', c: '#6a3a1e', d: 'Kopi + teh in one cup (O and C versions too). Today it\'s a mistake; with the stand it\'s a menu item.', u: 'Twin Sock Stand', k: 'm' },
+  { n: 'Teh Tarik / Kopi Tarik', zh: '拉茶', c: '#d9a46f', d: 'Pulled between two mugs from height until frothy. A drag-up-and-down pull.', u: 'Tarik Mugs', k: 'm' },
+  { n: 'Teh Halia', zh: '姜茶', c: '#c98f55', d: 'Ginger tea; Teh Halia Tarik with both machines.', u: 'Halia Pot', k: 'm' },
+  { n: 'Teh O Limau', zh: '酸柑茶', c: '#a5652a', d: 'Black tea with calamansi lime. Hot, or "Teh O Ice Limau".', u: 'Limau Squeezer', k: 'm' },
+  { n: 'Teh C Special', zh: '三层茶', c: '', d: 'Three layers: gula melaka, evaporated milk, tea. Pour slowly, don\'t stir!', u: 'Gula Melaka Station', k: 'm', layered: true },
+  { n: 'Kopi Gu You', zh: '牛油咖啡', c: '#3b2416', d: 'Kopi O with a cube of butter melting on top. Old-school Hainanese.', u: 'Butter Dish', k: 'm' },
+  { n: 'Malt / Malt Peng / Malt Dinosaur', zh: '麦芽', c: '#b88a5a', d: 'The Horlicks family under a safe name.', u: 'Malt Shelf', k: 'm' },
+  { n: 'Kopi Di Lo / Gao / Poh', zh: '浓 / 淡', c: '#2a170c', d: 'Strength by water: none, less, or more.', u: 'Big Brass Kettle', k: 'm' },
+  { n: 'Tapau anything', zh: '打包', c: '#c4874f', d: 'Takeaway in a plastic bag with a string handle. Brings delivery-rider bulk orders.', u: 'Tapau Station', k: 'm' },
+];
+document.getElementById('specials-grid').innerHTML = SPECIALS.map((s) => `
+  <article class="drink">${s.layered ? '<div class="cup layered" aria-hidden="true"><div class="liq"></div></div>' : cup(s.c, 0)}
+    <div><h3>${s.n}</h3><div class="zh">${s.zh}</div><p>${s.d}</p>
+    <div class="meta">${s.k === 's' ? '<span class="tag t-starter">Starter</span>' : `<span class="tag t-machine">${s.u}</span>`}</div></div></article>`).join('');
+
+// ---------- catalogue ----------
+const CAT = [
+  { aisle: 'Machines', sub: 'unlock new drinks', items: [
+    ['Big Brass Kettle', '大铜壶', 45, 0, 'Hot water tool. Pour water to set strength.', 'Gao · Poh · Di Lo'],
+    ['Tarik Mugs', '拉茶杯', 40, 25, 'Two long-handled mugs for pulling froth.', 'Teh / Kopi Tarik'],
+    ['Halia Pot', '姜茶壶', 35, 25, 'Ginger steeping pot.', 'Teh Halia (+ Tarik)'],
+    ['Limau Squeezer', '酸柑榨汁器', 30, 0, 'Calamansi basket + squeezer.', 'Teh O Limau, hot or ice'],
+    ['Twin Sock Stand', '双咖啡袋架', 55, 25, 'Brew kopi and teh side by side.', 'Cham / Yuan Yang'],
+    ['Malt Shelf', '麦芽架', 35, 0, 'A tin of malt powder.', 'Malt, Malt Peng, Malt Dinosaur'],
+    ['Mini Freezer', '小冰柜', 70, 50, 'Ice cream for the kids (and Marcus).', 'Milo Godzilla'],
+    ['Gula Melaka Station', '椰糖站', 50, 50, 'Palm sugar syrup for layered drinks.', 'Teh C Special'],
+    ['Butter Dish', '牛油碟', 20, 25, 'For the Hainanese old-timers.', 'Kopi Gu You'],
+    ['Tapau Station', '打包站', 40, 50, 'Bags, strings and takeaway cups.', 'Tapau orders + delivery riders'],
+    ['Ice Machine', '制冰机', 60, 25, 'Upgrades the ice bucket. Iced drinks +20¢.', 'faster peng'],
+    ['Fourth Tray Plate', '第四个杯位', 65, 50, 'Make 4 cups at once.', '+1 cup slot'],
+  ]},
+  { aisle: 'Tools', sub: 'pour faster, pour truer', items: [
+    ['Long-Spout Pot', '长嘴壶', 25, 0, 'Kopi / teh pour 25% faster.'],
+    ['Sugar Scoop', '糖匙', 15, 0, 'Sugar drops in scoops: 1 = siew dai, 2 = normal. No more guessing.'],
+    ['Milk Pump', '炼奶泵', 20, 25, 'Condensed / evap pour in fixed doses.'],
+    ['Brass Spoon', '铜汤匙', 12, 0, 'Stirred in 4 wiggles instead of 6.'],
+    ['Marked Glasses', '刻度杯', 10, 0, 'A ¾ line on every glass for peng.'],
+    ['Cup Rack Pro', '自动杯架', 18, 25, 'A fresh cup drops onto the tray after each serve.'],
+    ['Big Ice Scoop', '大冰勺', 10, 0, 'Ice adds the exact peng amount.'],
+    ['Uncle Tan\'s Towel', '陈伯毛巾', 0, 0, 'Story reward (Day 21). Wipe away one spill a day.'],
+  ]},
+  { aisle: 'Comfort', sub: 'happier, more patient customers', items: [
+    ['Standing Fan', '风扇', 30, 0, 'Customers wait 15% longer (life-saver at teatime).'],
+    ['Radio', '收音机', 25, 0, 'Table guests linger and tip; +0.5 fame a day.'],
+    ['Cup Warmer', '暖杯器', 35, 25, 'Hot drinks +10¢ tip.'],
+    ['Bigger Tip Jar', '小费罐', 12, 0, 'Tips +20%.'],
+    ['Queue Bell', '铃铛', 10, 0, 'One more queue spot; queued customers wait calmly.'],
+    ['Oyen\'s Cat Bed', '猫床', 15, 0, 'Oyen stops knocking cups off. +1 fame a day (cute tax).'],
+    ['Second Table', '第二张桌子', 60, 50, 'A second sit-down guest like Ah Gong.'],
+    ['Tissue Packets', '纸巾包', 8, 0, 'Free chope packets for regulars: +2 fame, once a week.'],
+  ]},
+  { aisle: 'Decor', sub: 'fame every day', items: [
+    ['Hand-Painted Signboard', '手绘招牌', 50, 25, '+1 fame a day. Your stall name in red letters.'],
+    ['Wall Menu Board', '菜单板', 20, 0, 'Shows unlocked drinks; doubles as a recipe cheat sheet.'],
+    ['Potted Plants', '盆栽', 12, 0, '+0.3 fame a day.'],
+    ['Red Lanterns', '红灯笼', 25, 25, '+0.5 fame a day.'],
+    ['Neon "KOPI" Sign', '霓虹灯招牌', 45, 75, '+1 fame a day; +1 customer in the evening.'],
+    ['Fairy Lights', '彩灯', 18, 50, '+0.4 fame a day.'],
+  ]},
+];
+document.getElementById('catalogue-list').innerHTML = CAT.map((a) => `
+  <div style="display:grid; gap:10px">
+    <div class="cat-head"><h3 style="font-size:19px">${a.aisle}</h3><span class="small muted">${a.sub} · ${a.items.length} items</span></div>
+    <div class="grid3">${a.items.map(([n, zh, p, t, d, u]) => `
+      <article class="item"><div class="top"><h3>${n}</h3><span class="price">${p ? '$' + p : 'gift'}</span></div>
+        <div class="zh">${zh}</div><p>${d}</p>
+        ${u ? `<div class="unl">Unlocks: ${u}</div>` : ''}
+        <div class="tier">${t ? 'Fame ' + t + '+' : 'From the start'}</div></article>`).join('')}</div></div>`).join('');
+
+// ---------- sprite shopping list ----------
+const ART = [
+  { g: 'Drink layers: fixes the blurry filling', p: 1, note: 'Grey / white so code can tint any drink colour. I make an HD stand-in first if these take a while.', items: [
+    ['Liquid body for the glass', 'shaded greyscale liquid shape that fills the inside of our glass, full height'],
+    ['Liquid surface', 'the oval top of the drink with a highlight (crema / tea surface)'],
+    ['Ice cubes', '3 clear cubes in a cluster, for peng'],
+    ['Milk cloud', 'white swirl of unstirred milk, for "needs stirring"'],
+    ['Condensation drops', 'droplets on the glass, for iced drinks'],
+    ['Steam wisps', '2–3 soft curls rising, for hot drinks'],
+    ['Spill puddle', 'small puddle on the saucer'],
+    ['Glass shine', 'front highlight overlay for the glass'],
+    ['Saucer', 'white kopitiam saucer, front view'],
+  ], have: 'Have already: glass mug, ceramic cup (cut from your mockup), Milo powder can.' },
+  { g: 'Wall clock + day bar', p: 1, note: 'The bar itself is drawn in code.', items: [
+    ['Kopitiam wall clock face', 'round, wood rim, cream face, 12 numbers, no hands, no brand'],
+    ['Hour hand + minute hand', 'separate, pointing straight up'],
+    ['Period icons ×4', 'morning sun, lunch bowl, teacup (teatime), shutter half-down (closing)'],
+    ['Little bell', 'brass bell for last orders'],
+  ]},
+  { g: 'Pour bar icons', p: 1, note: 'I can crop these from the tool art we already have.', items: [
+    ['Icons for kopi, teh, sugar, condensed, evap, milo, ice, water', 'reuse tool sprites'],
+  ], have: 'No new art needed.' },
+  { g: 'Night shop screen', p: 2, items: [
+    ['Night stall background', 'our stall at night: shutter half down, one warm bulb, empty stools'],
+    ['Catalogue book', 'open supplier catalogue / order book, blank pages'],
+    ['Price tag', 'blank paper price tag with string'],
+    ['"SOLD" stamp', 'red rubber-stamp shape (I add the text)'],
+    ['Padlock', 'small padlock for fame-locked items'],
+    ['Coin + note', 'generic coin and banknote, no real currency design'],
+  ]},
+  { g: 'Catalogue items', p: 2, note: 'One sprite each, used as the shop picture and placed on the stall once bought. 6 per sheet.', items: [
+    ['Machines ×12', 'brass kettle, tarik mugs, halia pot, limau squeezer + calamansi, twin coffee-sock stand, malt tin (no logo), mini freezer, gula melaka bottle, butter dish, tapau bags + strings, ice machine, extra tray plate'],
+    ['Tools ×7', 'long-spout pot, sugar scoop, milk pump, brass spoon, marked glass, cup rack, big ice scoop'],
+    ['Comfort ×8', 'standing fan, retro radio, cup warmer, tip jar, bell, cat bed (Oyen-sized), second marble table + stools, tissue packets'],
+    ['Decor ×6', 'hand-painted signboard (blank, I add the name), wall menu board (blank), potted plants, red lanterns, neon sign "KOPI", fairy lights'],
+  ]},
+  { g: 'New drink toppings', p: 3, items: [
+    ['Ginger slices, calamansi half, butter cube, ice cream scoop', 'small, top-down-ish, to sit on a drink'],
+    ['Tarik froth top, gula melaka layer, malt powder mound', 'tintable where possible'],
+    ['Takeaway bag', 'clear plastic bag with drink + red string handle'],
+  ]},
+  { g: 'Characters', p: 3, items: [
+    ['Walk cycles', '4-frame walk sheets per counter customer (prompt in ART_BIBLE)'],
+    ['Sophie, fixed', 'tote bag without the flag keychain / Merlion print (still blocked)'],
+    ['Delivery rider (no logo)', 'for tapau bulk orders'],
+  ]},
+];
+document.getElementById('sprite-list').innerHTML = ART.map((g) => `
+  <div class="sgroup"><header><h3>${g.g}</h3><span class="prio p-${g.p}">P${g.p}</span></header>
+    ${g.note ? `<p class="small muted">${g.note}</p>` : ''}
+    <ol>${g.items.map(([n, d]) => `<li><b>${n}</b> <span>· ${d}</span></li>`).join('')}</ol>
+    ${g.have ? `<div class="have">${g.have}</div>` : ''}</div>`).join('');
+
+// ---------- clock ticks ----------
+const ticks = document.getElementById('ticks');
+for (let i = 1; i <= 12; i++) {
+  const a = (i / 12) * Math.PI * 2;
+  const x = 75 + Math.sin(a) * 50, y = 75 - Math.cos(a) * 50;
+  const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t.setAttribute('x', x); t.setAttribute('y', y + 4); t.setAttribute('text-anchor', 'middle');
+  t.setAttribute('font-size', '11'); t.setAttribute('font-weight', '700'); t.setAttribute('fill', '#3a2e2a');
+  t.setAttribute('font-family', 'Archivo, system-ui, sans-serif'); t.textContent = i;
+  ticks.appendChild(t);
+}
+</script>

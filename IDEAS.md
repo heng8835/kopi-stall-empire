@@ -6,3 +6,4 @@
 - Story characters (taxi uncle, makcik, Kai, inspector, exercise aunties) becoming regular customers after their episode.
 - Fix art: delivery rider Grab logo; expat SG flags + Merlion; lottery uncle "T" cap. (Kenneth's monogram: done.)
 - Queue readability: queued customers stand behind the counter crowd and are partly hidden; maybe a "+2 waiting" chip or a roomier spot.
+- UPGRADES (user wants this next, 2026-10-23): night shop with machines / tools / comfort / decor that unlock menu items and power-ups. Full catalogue + drink list: docs/specs/next-phase-plan.md (draft, awaiting approval).
