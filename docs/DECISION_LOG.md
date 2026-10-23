@@ -16,3 +16,5 @@
 | 2026-10-23 | 90-second days; ♥ happiness replaced by Fame 名气 (0-100), which sets arrivals per day (8 + fame/12, 8-16) | User: days too long, customer volume should grow with reputation |
 | 2026-10-23 | Customers walk in from the left street opening and queue (FIFO, max 3) behind the counter; walk = waddle on the still until `<key>-walk` frames exist | User wants walking + queue; no image/video generation route on this PC yet |
 | 2026-10-23 | Episodes play in a separate DramaScene over the paused stall (scene.pause/launch) | Pausing tweens globally would freeze the overlay's own animation |
+| 2026-10-23 | Chill pacing: 3-minute days, 6 customers on Day 1 (+1 per 15 fame, max 12), patience x2.2; closing time waits for counter customers (max 60 s) | Playtest: served under half the customers; day cut orders off |
+| 2026-10-23 | Owner 'coach' thought bubble shows the next step for the cup being worked on | Playtest: hard to remember what each order needs |
