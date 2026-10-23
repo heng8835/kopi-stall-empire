@@ -4,8 +4,8 @@ import { addText } from './text.js';
 import { makeButton } from './ui.js';
 import { save } from './save.js';
 
-const CARD = { x: 6, w: 348, top: 32 }; // full width, under the HUD, sized to its text
-const DEPTH = 40;
+const CARD = { x: 6, w: 348, top: 44 }; // full width, under the HUD (40 tall), sized to its text
+const DEPTH = 47; // above the recipe-book / sound buttons
 
 // Drives the Day-1 tutorial inside StallScene: spawns scripted customers one by one, shows
 // Uncle Tan's note card, pulses the relevant tools. While active, StallScene pauses the
@@ -81,7 +81,7 @@ export class Tutorial {
     const zh = addText(s, x + 8, 0, note.zh, { size: 11, color: '#6b5a50', wrap: w - 16 }).setDepth(DEPTH + 1);
     this.status = addText(s, x + 120, 0, '', { size: 11, bold: true, color: '#c8562e' }).setDepth(DEPTH + 1);
     // Notes are written to fit 2 English lines + 1 Chinese line, so the card stays below SERVE.
-    const h = 6 + 16 + en.height + 3 + zh.height + 6;
+    const h = 6 + 16 + en.height + 3 + zh.height + 6 + (onNext ? 28 : 0);
     const y = CARD.top;
     title.setY(y + 6);
     this.status.setY(y + 6);
@@ -91,7 +91,7 @@ export class Tutorial {
     const card = s.add.rectangle(x, y, w, h, 0xfff1a8).setOrigin(0).setStrokeStyle(2, 0xd9b44a).setDepth(DEPTH);
     this.objs = [card, title, en, zh, this.status];
     if (onNext) {
-      const next = makeButton(s, x + w - 112, y + h - 4, 64, 22, TUTORIAL_TEXT.next, onNext, { size: 11, bold: true, fill: 0xbfe3c0 });
+      const next = makeButton(s, x + w - 78, y + h - 28, 70, 22, TUTORIAL_TEXT.next, onNext, { size: 11, bold: true, fill: 0xbfe3c0 });
       next.bg.setDepth(DEPTH + 1);
       next.txt.setDepth(DEPTH + 2);
       this.objs.push(next.bg, next.txt);
