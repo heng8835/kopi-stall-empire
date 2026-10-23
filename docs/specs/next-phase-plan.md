@@ -50,3 +50,13 @@ Welcome (walk-in, bubble, patience) -> make Kopi (cup, pot to FULL, condensed to
 
 ## Art done
 Ice cubes, code-drawn (no image model): art/code/make_ice_specs.py -> ice_cluster.png / ice_cube.png (review: docs/plan/ice-review.png).
+
+## Phase A tasks (approved 2026-10-23, building)
+- [ ] A1 Rules: condensed milk = sweetness for Kopi/Teh (sugar can only for O/C); add ga dai (more) zone; Teh O on the menu; tests
+- [ ] A2 Recipe calendar (src/data/recipes.js + systems/menu.js): unlock days, customer orders filtered to unlocked words, teaching customer + "new recipe" card, recipe book (HUD); tests
+- [ ] A3 Drinks look: port the approved preview (docs/plan/pour-prototype.src.html) into the stall: liquid in mug perspective, streams, milk clouds, sugar, splash, steam, condensation, pixel ice; clean the glass fringe
+- [ ] A4 Pour bar: horizontal, labelled zones per ingredient, docked under the HUD above the bubbles; the meter beside the cup is removed
+- [ ] A5 Clock + day bar in a taller HUD (code-drawn until the art arrives)
+- [ ] A6 Day 1 tutorial rework: welcome, Kopi, Teh, Kopi O, recipe book, fame, day bar
+- [ ] A7 npm test, npm run build, browser check at 375x812, commit
+Asset list for the user: docs/art/ASSET_LIST.md

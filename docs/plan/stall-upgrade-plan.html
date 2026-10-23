@@ -355,7 +355,7 @@ code { font-size: 12.5px; background: var(--chip); padding: 1px 5px; border-radi
 <section id="art">
   <div class="eyebrow">Art I need from you</div>
   <h2>Sprite shopping list</h2>
-  <p class="muted">Same style rules and pipeline as before (ART_BIBLE): plain white background, no text, no logos, one item per cell. Groups of 4–6 on one sheet cut cleanly. P1 is needed for the next build; P2 for the shop; P3 can wait.</p>
+  <p class="muted">Same style rules and pipeline as before (ART_BIBLE): plain white background, no text, no logos, one item per cell, 4–6 per sheet. Animation frames in one row, same size and feet line. Drop files in art/source/ and tell me the names. Full table: docs/art/ASSET_LIST.md.</p>
   <div class="sprites" id="sprite-list"></div>
 </section>
 
@@ -483,49 +483,45 @@ document.getElementById('catalogue-list').innerHTML = CAT.map((a) => `
 
 // ---------- sprite shopping list ----------
 const ART = [
-  { g: 'Drink layers: fixes the blurry filling', p: 1, note: 'Grey / white so code can tint any drink colour. I make an HD stand-in first if these take a while.', items: [
-    ['Liquid body for the glass', 'shaded greyscale liquid shape that fills the inside of our glass, full height'],
-    ['Liquid surface', 'the oval top of the drink with a highlight (crema / tea surface)'],
-    ['Ice cubes', 'DONE, code-drawn: see the Ice section'],
-    ['Milk cloud', 'white swirl of unstirred milk, for "needs stirring"'],
-    ['Condensation drops', 'droplets on the glass, for iced drinks'],
-    ['Steam wisps', '2–3 soft curls rising, for hot drinks'],
-    ['Spill puddle', 'small puddle on the saucer'],
-    ['Glass shine', 'front highlight overlay for the glass'],
-    ['Saucer', 'white kopitiam saucer, front view'],
-  ], have: 'Have already: glass mug, ceramic cup (cut from your mockup), Milo powder can.' },
-  { g: 'Wall clock + day bar', p: 1, note: 'The bar itself is drawn in code.', items: [
-    ['Kopitiam wall clock face', 'round, wood rim, cream face, 12 numbers, no hands, no brand'],
-    ['Hour hand + minute hand', 'separate, pointing straight up'],
-    ['Period icons ×4', 'morning sun, lunch bowl, teacup (teatime), shutter half-down (closing)'],
-    ['Little bell', 'brass bell for last orders'],
+  { g: 'Phase A needs only these', p: 1, note: 'Everything else can wait. I build with code stand-ins now and swap each in as it arrives.', items: [
+    ['Pour poses ×7', 'each pouring tool tilted ~40°, spout down-left, mid-pour: kopi pot, teh pot, condensed can, evap can, sugar can, Milo tin, Horlicks tin (no logo)'],
+    ['Spoon stirring ×3', 'spoon in a cup at three angles: left, upright, right'],
+    ['Taxi Uncle standing, no taxi', 'he teaches "ga dai" at the counter on Day 8'],
+    ['Makcik standing, no stall', 'she teaches "peng" on Day 5'],
+    ['Wall clock face + hour hand + minute hand', 'round, wood rim, cream face, 12 numbers, no brand; hands separate, pointing up'],
+    ['Period icons ×4', 'sunrise, lunch bowl + sun, teacup + afternoon sun, shutter half down + moon'],
+    ['Fame badge', 'small round red rosette for 名气, no text'],
+    ['Recipe book ×2', "Uncle Tan's worn notebook (HUD icon) + a blank open notebook spread"],
+    ['Recipe card', 'blank cream index card with tape on top'],
   ]},
-  { g: 'Pour bar icons', p: 1, note: 'I can crop these from the tool art we already have.', items: [
-    ['Icons for kopi, teh, sugar, condensed, evap, milo, ice, water', 'reuse tool sprites'],
-  ], have: 'No new art needed.' },
-  { g: 'Night shop screen', p: 2, items: [
-    ['Night stall background', 'our stall at night: shutter half down, one warm bulb, empty stools'],
-    ['Catalogue book', 'open supplier catalogue / order book, blank pages'],
-    ['Price tag', 'blank paper price tag with string'],
-    ['"SOLD" stamp', 'red rubber-stamp shape (I add the text)'],
-    ['Padlock', 'small padlock for fame-locked items'],
-    ['Coin + note', 'generic coin and banknote, no real currency design'],
+  { g: 'Drink making extras', p: 2, items: [
+    ['Clean glass mug', 'same mug without the white speckled edge (or I clean it)'],
+    ['Ceramic kopi cup + saucer', 'thick white cup with a coloured rim line, for hot drinks (optional)'],
+    ['Milo powder mountain', 'a heap of powder to sit on a glass (optional; code draws one)'],
+    ['Bin, lid open / closed', 'the bin is still a grey box'],
+  ], have: 'Done in code: liquid, surface, milk clouds, sugar, splashes, steam, condensation, ice.' },
+  { g: 'Customers feel alive', p: 2, items: [
+    ['Reaction faces ×12', 'happy + sad versions of Aunty Lim, Marcus, Darren, Wei Ling, Hafiz, Jia Hui; same pose, face only'],
+    ['Walk cycles ×24 frames', '4-frame side-view walk for the same 6 (prompt in ART_BIBLE)'],
+    ['Ah Gong page-turn (2), Oyen idle + paw swipe (3)', 'little idle loops'],
   ]},
-  { g: 'Catalogue items', p: 2, note: 'One sprite each, used as the shop picture and placed on the stall once bought. 6 per sheet.', items: [
-    ['Machines ×12', 'brass kettle, tarik mugs, halia pot, limau squeezer + calamansi, twin coffee-sock stand, malt tin (no logo), mini freezer, gula melaka bottle, butter dish, tapau bags + strings, ice machine, extra tray plate'],
-    ['Tools ×7', 'long-spout pot, sugar scoop, milk pump, brass spoon, marked glass, cup rack, big ice scoop'],
-    ['Comfort ×8', 'standing fan, retro radio, cup warmer, tip jar, bell, cat bed (Oyen-sized), second marble table + stools, tissue packets'],
-    ['Decor ×6', 'hand-painted signboard (blank, I add the name), wall menu board (blank), potted plants, red lanterns, neon sign "KOPI", fairy lights'],
+  { g: 'HUD + tutorial extras', p: 2, items: [
+    ['Last-orders bell ×2', 'brass hand bell, still + tilted'],
+    ['Coin icon', 'generic gold coin'],
+    ['Uncle Tan standing, pointing, with towel', 'tutorial host (the rain uncle art works for now)'],
+    ['Pointing hand ×2', 'normal + pressed, to show drags'],
+    ['"NEW!" burst', 'star-burst shape, no text'],
   ]},
-  { g: 'New drink toppings', p: 3, items: [
-    ['Ginger slices, calamansi half, butter cube, ice cream scoop', 'small, top-down-ish, to sit on a drink'],
-    ['Tarik froth top, gula melaka layer, malt powder mound', 'tintable where possible'],
-    ['Takeaway bag', 'clear plastic bag with drink + red string handle'],
+  { g: 'Night shop', p: 2, items: [
+    ['Night stall background', 'a ChatGPT edit of the day stall: shutter half down, one warm bulb'],
+    ['Catalogue book, price tag, SOLD stamp, padlock', 'blank shapes, no text'],
+    ['Machines ×12, tools ×7, comfort ×8, decor ×6', 'the catalogue items, 6 per sheet'],
   ]},
-  { g: 'Characters', p: 3, items: [
-    ['Walk cycles', '4-frame walk sheets per counter customer (prompt in ART_BIBLE)'],
-    ['Sophie, fixed', 'tote bag without the flag keychain / Merlion print (still blocked)'],
-    ['Delivery rider (no logo)', 'for tapau bulk orders'],
+  { g: 'Later', p: 3, items: [
+    ['New drink toppings', 'ginger, calamansi, butter cube, ice cream scoop, gula melaka layer, tarik froth, Horlicks heap'],
+    ['Takeaway bag + tarik mugs (2 frames)', 'for tapau and tarik'],
+    ['Sophie fixed, delivery rider (no logo)', 'still blocked / new customer'],
+    ['Twist expressions', 'shocked / crying / laughing for Aunty Lim, Kenneth, Uncle Tan, Marcus'],
   ]},
 ];
 document.getElementById('sprite-list').innerHTML = ART.map((g) => `
