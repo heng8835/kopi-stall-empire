@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseOrder } from '../src/systems/order.js';
-import { createDayState, applyServe, applyTimeout, priceOf, formatMoney } from '../src/systems/economy.js';
+import { createDayState, applyServe, applyTimeout, priceOf, formatMoney, customersForFame } from '../src/systems/economy.js';
 
 const p = parseOrder;
 
@@ -11,15 +11,33 @@ describe('economy', () => {
     expect(priceOf(p('Milo Dinosaur'))).toBe(280);
   });
 
-  it('always pays, tips on perfect, gentle happiness', () => {
+  it('always pays, tips on perfect, gentle fame', () => {
     const s = createDayState();
+    expect(s.fame).toBe(10);
     applyServe(s, 'perfect', p('Kopi'));
     applyServe(s, 'oops', p('Kopi'));
     expect(s.money).toBe(140 + 30 + 140);
-    expect(s.happiness).toBe(51);
+    expect(s.fame).toBe(10.25);
     applyTimeout(s);
-    expect(s.happiness).toBe(50);
+    expect(s.fame).toBe(9.25);
     expect(s.walkedOut).toBe(1);
+  });
+
+  it('carries fame and clamps it to 0-100', () => {
+    const s = createDayState({ fame: 99.9, money: 500 });
+    applyServe(s, 'perfect', p('Kopi'));
+    expect(s.fame).toBe(100);
+    expect(s.money).toBe(500 + 170);
+    expect(createDayState({ fame: 0.5 }).fameStart).toBe(0.5);
+  });
+
+  it('more fame brings more customers, 8 to 16', () => {
+    expect(customersForFame(0)).toBe(8);
+    expect(customersForFame(10)).toBe(9); // Day 1: 8-9 arrivals
+    expect(customersForFame(20)).toBe(10);
+    expect(customersForFame(50)).toBe(12);
+    expect(customersForFame(96)).toBe(16);
+    expect(customersForFame(100)).toBe(16);
   });
 
   it('formats money', () => expect(formatMoney(310)).toBe('$3.10'));

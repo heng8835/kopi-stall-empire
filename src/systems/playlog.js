@@ -15,7 +15,7 @@ export function logEvent(entry, type, data = {}, tMs = 0) {
 }
 
 export function finishDay(entry, econ) {
-  entry.result = { served: econ.served, perfect: econ.perfect, walkedOut: econ.walkedOut, earned: econ.earnedToday, happiness: econ.happiness };
+  entry.result = { served: econ.served, perfect: econ.perfect, walkedOut: econ.walkedOut, earned: econ.earnedToday, fame: econ.fame };
   const all = [...load(KEY, []), entry].slice(-MAX_DAYS);
   save(KEY, all);
   return entry;
@@ -42,7 +42,7 @@ export function summarize(entry) {
   const lines = [
     `Kopi Stall playtest — day ${entry.day} as ${entry.owner} (${new Date(entry.startedAt).toLocaleString()})`,
     entry.result
-      ? `served ${entry.result.served} (perfect ${entry.result.perfect}), walked out ${entry.result.walkedOut}, earned $${(entry.result.earned / 100).toFixed(2)}, happiness ${entry.result.happiness}`
+      ? `served ${entry.result.served} (perfect ${entry.result.perfect}), walked out ${entry.result.walkedOut}, earned $${(entry.result.earned / 100).toFixed(2)}, fame ${entry.result.fame}`
       : 'day not finished',
     ...Object.entries(byWho).map(
       ([who, w]) => `- ${who}: perfect ${w.perfect}, close ${w.close}, oops ${w.oops}, timeout ${w.timeout}, avg wait ${avg(w.waits)}s`,

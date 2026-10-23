@@ -6,6 +6,7 @@ import { addSprite } from '../systems/sprites.js';
 import { makeButton, addMuteToggle } from '../systems/ui.js';
 import { load, save } from '../systems/save.js';
 import { OWNERS } from '../data/owners.js';
+import { newRun, loadRun, saveRun, monthOver, runFromQuery } from '../systems/run.js';
 
 export default class TitleScene extends Phaser.Scene {
   constructor() {
@@ -38,11 +39,19 @@ export default class TitleScene extends Phaser.Scene {
     });
     this.choose(this.owner);
 
-    makeButton(this, cx - 110, 512, 220, 58, 'Open stall  开档!', () => this.start(), { size: 20, bold: true, fill: 0xbfe3c0 });
+    // Continue the month, or start a new one (a finished month can only start again).
+    const run = loadRun();
+    if (run && !monthOver(run)) {
+      makeButton(this, cx - 110, 500, 220, 54, `Continue  ·  Day ${run.day}`, () => this.start(run), { size: 19, bold: true, fill: 0xbfe3c0 });
+      makeButton(this, cx - 80, 560, 160, 32, 'New month (restart)', () => this.start(newRun()), { size: 12 });
+    } else {
+      if (run) addText(this, cx, 484, 'Month 1 complete ✓  完', { size: 13, bold: true, color: '#2f7a3a', origin: 0.5 });
+      makeButton(this, cx - 110, 500, 220, 58, 'Open stall  开档!', () => this.start(newRun()), { size: 20, bold: true, fill: 0xbfe3c0 });
+    }
 
     // Returning players can replay Uncle Tan's Day-1 notes.
     if (load('tutorialDone', false)) {
-      const replay = addText(this, cx, 590, "Replay tutorial (Uncle Tan's notes)", { size: 13, color: '#8a5a1e', origin: 0.5 });
+      const replay = addText(this, cx, 612, "Replay tutorial (Uncle Tan's notes)", { size: 13, color: '#8a5a1e', origin: 0.5 });
       replay.setInteractive({ useHandCursor: true }).once('pointerdown', () => {
         save('tutorialDone', false);
         replay.setText('Tutorial will play on Day 1 ✓');
@@ -58,9 +67,13 @@ export default class TitleScene extends Phaser.Scene {
     }
   }
 
-  start() {
+  start(run) {
     save('owner', this.owner);
     this.registry.set('owner', this.owner);
-    this.scene.start('Day', { day: 1 });
+    // Testing shortcut: ?day=14&fame=60&flags=kidsOwe starts straight on that day.
+    const jump = runFromQuery(window.location.search);
+    const today = jump ?? run;
+    saveRun(today);
+    this.scene.start('Day', { run: today });
   }
 }

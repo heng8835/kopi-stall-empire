@@ -2,11 +2,23 @@
 
 export const TUNING = {
   // Day pacing
-  dayMs: 120_000, // ~2 real minutes, 7am -> 7pm
+  dayMs: 90_000, // 90 real seconds, 7am -> 7pm
   firstSpawnMs: 2000,
-  spawnMinMs: 7000,
-  spawnMaxMs: 12000,
   lastSpawnBeforeEndMs: 12_000,
+  spawnJitter: 0.35, // each arrival lands within +-35% of its even share of the day
+  queueRetryMs: 3000, // queue full: try that arrival again this much later
+
+  // Fame (名气, 0-100) decides how many arrivals a day brings (a group counts as one).
+  fameStart: 10,
+  fameDelta: { perfect: 0.25, close: 0.1, oops: 0, timeout: -1 },
+  customersMin: 8,
+  customersMax: 16,
+  famePerExtraCustomer: 12, // 8 + fame/12, so fame 10 -> 8, 20 -> 9, 96 -> 16
+
+  // Walking in from the street opening on the left, and the queue by the rope posts.
+  queueMax: 3,
+  walkSpeed: 70, // logical px per second
+  walkFarScale: 0.62, // size at the door (far away) vs 1 at the counter
   patienceScale: 1.5, // customer.patience (seconds) x this; drinks take ~10 s to make now
   groupCupBonusMs: 8000, // patience given back after each cup of a group order
 

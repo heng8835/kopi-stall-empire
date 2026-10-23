@@ -12,8 +12,12 @@ import { makeButton, layoutLine, showGlossary, addMuteToggle } from '../systems/
 import { play } from '../systems/sfx.js';
 import { parseOrder } from '../systems/order.js';
 import { newCup, pour, addIce, addPowder, stirStep, gradeCup, formatCup, liquidColor, needsStir } from '../systems/cup.js';
-import { createDayState, applyServe, applyTimeout, formatMoney } from '../systems/economy.js';
-import { weightedPick, randBetween } from '../systems/random.js';
+import { createDayState, applyServe, applyTimeout, formatMoney, customersForFame, clampFame } from '../systems/economy.js';
+import { weightedPick } from '../systems/random.js';
+import { placeArrival, frontCanTake, arrivalSchedule } from '../systems/queue.js';
+import { newRun, nextDay, loadRun, saveRun, auntyRating, monthOver, MONTH_DAYS } from '../systems/run.js';
+import { eventsFor, applyChoice } from '../systems/story.js';
+import { EVENTS } from '../data/events.js';
 import { startDay, logEvent, finishDay, summarize } from '../systems/playlog.js';
 import { Tutorial } from '../systems/tutorial.js';
 import { TUTORIAL_STEPS, TOOL_IDS } from '../data/tutorial.js';
@@ -44,6 +48,12 @@ const METER_H = 58;
 const METER_MAX = 1.6;
 const TABLE_LINGER_MS = 3500;
 const BG_SCALE = 901 / GAME_W; // background art pixels per logical px
+// Customers walk in from the street opening on the left (small = far away) and, when the
+// counter is full, wait in a line behind it, front first.
+const ENTRY = { x: -40, feetY: 236 };
+const QUEUE_POS = [{ x: 126, feetY: 270 }, { x: 88, feetY: 262 }, { x: 50, feetY: 254 }];
+const MID_STORY_AT = 0.4; // a 'mid' episode plays this far into the day
+const DRAG_WAIT_MS = 3000; // ...once the player lets go of a cup/tool (or after this long at most)
 
 export default class StallScene extends Phaser.Scene {
   constructor() {
@@ -52,13 +62,21 @@ export default class StallScene extends Phaser.Scene {
 
   create(data) {
     fitCamera(this);
-    this.day = data?.day ?? 1;
-    this.owner = OWNERS[this.registry.get('owner')] ?? OWNERS.mei;
-    this.econ = createDayState(data?.carry);
+    this.run = data?.run ?? loadRun() ?? newRun();
+    this.day = this.run.day;
+    this.flags = [...this.run.flags];
+    this.owner = OWNERS[this.registry.get('owner') ?? load('owner', 'mei')] ?? OWNERS.mei;
+    this.econ = createDayState({ money: this.run.money, fame: this.run.fame });
     this.clockMs = 0;
-    this.spawnInMs = TUNING.firstSpawnMs;
+    // Today's arrival times: more fame, more customers (a group counts as one arrival).
+    this.arrivals = arrivalSchedule(customersForFame(this.econ.fame), TUNING.firstSpawnMs, TUNING.dayMs - TUNING.lastSpawnBeforeEndMs, TUNING.spawnJitter);
     this.spots = [null, null, null]; // counter customers by spot
+    this.queue = []; // customers waiting behind the counter, front first
     this.tableGuest = null;
+    this.storyDone = new Set(); // 'start' / 'mid' / 'end' already played today
+    this.midWaitMs = 0;
+    this.dragging = 0;
+    this.ending = null;
     this.paused = false;
     this.ended = false;
     this.pouring = null; // { tool, slot }
@@ -75,6 +93,7 @@ export default class StallScene extends Phaser.Scene {
 
     this.tutorial = new Tutorial(this, TUTORIAL_STEPS);
     if (this.day === 1 && !load('tutorialDone', false)) this.tutorial.start();
+    else this.time.delayedCall(500, () => this.playStory('start'));
 
     if (import.meta.env.DEV) window.__stall = this;
   }
@@ -92,8 +111,8 @@ export default class StallScene extends Phaser.Scene {
     this.add.rectangle(0, 0, GAME_W, HUD_H, 0x2e5e63).setOrigin(0).setDepth(50);
     const opts = { size: 14, bold: true, color: '#ffffff' };
     this.hudClock = addText(this, 8, 6, '', opts).setDepth(51);
-    addMuteToggle(this, 156, 7, { color: '#ffffff', size: 12 }).setDepth(51);
-    this.hudHappy = addText(this, GAME_W / 2 + 28, 6, '', { ...opts, origin: [0.5, 0] }).setDepth(51);
+    addMuteToggle(this, 166, 7, { color: '#ffffff', size: 12 }).setDepth(51);
+    this.hudFame = addText(this, GAME_W / 2 + 44, 6, '', { ...opts, origin: [0.5, 0] }).setDepth(51);
     this.hudMoney = addText(this, GAME_W - 8, 6, '', { ...opts, origin: [1, 0] }).setDepth(51);
     this.refreshHud();
   }
@@ -254,6 +273,7 @@ export default class StallScene extends Phaser.Scene {
   }
 
   onCupDragStart(slot) {
+    this.dragging += 1;
     if (!slot.cup) return;
     play('pickup');
     slot.container.setDepth(45);
@@ -267,6 +287,7 @@ export default class StallScene extends Phaser.Scene {
   }
 
   onCupDragEnd(slot, p) {
+    this.dragging = Math.max(0, this.dragging - 1);
     this.highlightCustomer(null);
     const back = () => {
       slot.container.setDepth(14);
@@ -292,6 +313,7 @@ export default class StallScene extends Phaser.Scene {
   // ---------- tools ----------
 
   onToolDragStart(tool) {
+    this.dragging += 1;
     play('pickup');
     tool.setDepth(46);
     this.tweens.add({ targets: tool, scale: 1.08, duration: 80 });
@@ -321,6 +343,7 @@ export default class StallScene extends Phaser.Scene {
   }
 
   onToolDragEnd(tool, p) {
+    this.dragging = Math.max(0, this.dragging - 1);
     const t = tool.tool;
     const slot = this.slotAt(p.worldX, p.worldY - LIFT + t.h / 2);
     if (t.kind === 'drop' && slot?.cup) this.dropOnCup(slot, t.apply);
@@ -373,22 +396,32 @@ export default class StallScene extends Phaser.Scene {
     return [...new Set([...this.spots, this.tableGuest])].filter(Boolean);
   }
 
-  // forcedId / forcedOrder let the tutorial (and tests) bring in a specific character + order.
+  freeSpots() {
+    return this.spots.map((c, i) => (c ? -1 : i)).filter((i) => i >= 0);
+  }
+
+  // Where this customer would go right now: 'table', 'counter', 'queue' or null (no room).
+  placeFor(def) {
+    if (def.slot === 'table') return this.tableGuest ? null : 'table';
+    const group = def.groupSize > 1;
+    return placeArrival({ freeSpots: this.freeSpots().length, totalSpots: this.spots.length, lineLength: this.queue.length, max: TUNING.queueMax, group });
+  }
+
+  // forcedId / forcedOrder let the tutorial, the story (and tests) bring in a specific character + order.
   spawnCustomer(forcedId = null, forcedOrder = null) {
-    const freeSpots = this.spots.map((c, i) => (c ? -1 : i)).filter((i) => i >= 0);
-    const fits = (d) => (d.slot === 'table' ? !this.tableGuest : d.groupSize > 1 ? freeSpots.length === 3 : freeSpots.length > 0);
+    if (this.ended) return null;
     const forced = forcedId && CUSTOMERS.find((c) => c.id === forcedId);
-    const pool = CUSTOMERS.filter((c) => c.enabled && c.sprite && fits(c));
-    const def = forcedId ? (forced && fits(forced) ? forced : null) : pool.length ? weightedPick(pool) : null;
+    const here = new Set([...this.allCustomers(), ...this.queue].map((c) => c.def.id)); // one of each character at a time
+    const pool = CUSTOMERS.filter((c) => c.enabled && c.sprite && !here.has(c.id) && this.placeFor(c));
+    const def = forcedId ? (forced && this.placeFor(forced) ? forced : null) : pool.length ? weightedPick(pool) : null;
     if (!def) return null;
 
+    const place = this.placeFor(def);
     const orderText = forcedOrder ?? weightedPick(def.orders).text;
     const n = def.groupSize;
-    const atTable = def.slot === 'table';
-    const spot = atTable ? 'table' : n > 1 ? 'all' : Phaser.Utils.Array.GetRandom(freeSpots);
     const c = {
       def,
-      spot,
+      spot: null,
       orderText,
       spec: parseOrder(orderText),
       n,
@@ -400,25 +433,91 @@ export default class StallScene extends Phaser.Scene {
     };
     c.orderLine = pickLine(def.lines, 'order', this.lineVars({ order: orderText, n }));
 
-    if (atTable) {
+    if (place === 'table') {
+      c.spot = 'table';
       this.tableGuest = c;
       c.sprites = [addSprite(this, def.sprite, TABLE.x, TABLE.feetY, TABLE.h).setDepth(2).setAlpha(0)];
       this.tweens.add({ targets: c.sprites, alpha: 1, duration: 500, onComplete: () => this.arrive(c) });
-    } else {
-      const keys = n > 1 ? (def.sprites ?? Array(n).fill(def.sprite)).slice(0, n) : [def.sprite];
-      const xs = n > 1 ? GROUP_X.slice(0, n) : [SPOT_X[spot]];
-      if (n > 1) this.spots = [c, c, c];
-      else this.spots[spot] = c;
-      const fromX = (n > 1 ? -1 : spot <= 1 ? -1 : 1) * 80 + (n > 1 || spot <= 1 ? 0 : GAME_W);
-      c.sprites = keys.map((key, i) => addSprite(this, key, fromX + (xs[i] - xs[0]), FEET_Y - (i % 2) * 4).setDepth(3 + (i % 2 ? 0 : 0.5)).setData('homeX', xs[i]));
-      const duration = 700;
-      c.sprites.forEach((s, i) => {
-        this.tweens.add({ targets: s, x: s.getData('homeX'), duration, ease: 'Quad.out' });
-        this.tweens.add({ targets: s, y: s.y - 4, duration: 110, yoyo: true, repeat: 2, delay: i * 40 });
-      });
-      this.time.delayedCall(duration + 40, () => this.arrive(c));
+      return c;
+    }
+    const keys = n > 1 ? (def.sprites ?? Array(n).fill(def.sprite)).slice(0, n) : [def.sprite];
+    c.sprites = keys.map((key, i) => {
+      const s = addSprite(this, key, ENTRY.x - i * 18, ENTRY.feetY - (i % 2) * 3).setDepth(2);
+      return s.setScale(s.baseScale * this.scaleAt(s.y));
+    });
+    if (place === 'counter') this.takeSpot(c);
+    else {
+      c.state = 'queued';
+      this.queue.push(c);
+      this.walkToQueue(c, this.queue.length - 1);
     }
     return c;
+  }
+
+  // Send a customer (walking in, or the front of the queue) to a free counter spot.
+  takeSpot(c) {
+    c.spot = c.n > 1 ? 'all' : Phaser.Utils.Array.GetRandom(this.freeSpots());
+    if (c.n > 1) this.spots = this.spots.map(() => c);
+    else this.spots[c.spot] = c;
+    c.state = 'walking';
+    const xs = c.n > 1 ? GROUP_X.slice(0, c.n) : [SPOT_X[c.spot]];
+    let walking = c.sprites.length;
+    c.sprites.forEach((s, i) => {
+      s.setDepth(3 + (i % 2 ? 0 : 0.5));
+      this.walk(s, xs[i], FEET_Y - (i % 2) * 4, i * 120, () => --walking === 0 && this.arrive(c));
+    });
+  }
+
+  walkToQueue(c, idx) {
+    const p = QUEUE_POS[Math.min(idx, QUEUE_POS.length - 1)];
+    c.sprites.forEach((s, i) => this.walk(s, p.x - i * 14, p.feetY - (i % 2) * 3, i * 120));
+  }
+
+  // A spot freed up: the front of the line walks up (a group waits for the whole counter).
+  advanceQueue() {
+    for (let front; !this.ended && (front = frontCanTake(this.queue, this.freeSpots().length, this.spots.length)); ) {
+      this.queue.shift();
+      this.takeSpot(front);
+    }
+    this.queue.forEach((c, i) => this.walkToQueue(c, i));
+  }
+
+  // Size by distance: small at the street opening, full size at the counter.
+  scaleAt(feetY) {
+    const t = Phaser.Math.Clamp((feetY - ENTRY.feetY) / (FEET_Y - ENTRY.feetY), 0, 1);
+    return TUNING.walkFarScale + (1 - TUNING.walkFarScale) * t;
+  }
+
+  // Walk a sprite to (x, y). Plays the `<key>-walk` animation when that character has walk
+  // frames; otherwise waddles the still (a step bob + a little side-to-side tilt).
+  walk(s, x, y, delay = 0, done = null) {
+    s.walkTween?.stop();
+    const key = (s.homeKey ??= s.texture.key);
+    const anim = `${key}-walk`;
+    const frames = this.anims.exists(anim);
+    const from = { x: s.x, y: s.y + (s.bob ?? 0) };
+    const duration = Math.max(250, (Phaser.Math.Distance.Between(from.x, from.y, x, y) / TUNING.walkSpeed) * 1000);
+    const steps = duration / 280;
+    const p = { t: 0 };
+    if (frames) s.play(anim);
+    s.walkTween = this.tweens.add({
+      targets: p, t: 1, duration, delay, ease: 'Sine.inOut',
+      onUpdate: () => {
+        const gy = Phaser.Math.Linear(from.y, y, p.t);
+        const phase = p.t * steps * Math.PI;
+        s.bob = frames ? 0 : Math.abs(Math.sin(phase)) * 4;
+        s.setPosition(Phaser.Math.Linear(from.x, x, p.t), gy - s.bob);
+        s.setAngle(frames ? 0 : Math.sin(phase) * 4);
+        s.setScale(s.baseScale * this.scaleAt(gy));
+      },
+      onComplete: () => {
+        s.bob = 0;
+        s.walkTween = null;
+        s.setPosition(x, y).setAngle(0).setScale(s.baseScale * this.scaleAt(y));
+        if (frames) s.stop().setTexture(key);
+        done?.();
+      },
+    });
   }
 
   lineVars(extra = {}) {
@@ -429,6 +528,13 @@ export default class StallScene extends Phaser.Scene {
     if (c.state === 'gone') return;
     c.state = 'waiting';
     this.showBubble(c, c.orderLine, 'order');
+    if (c.episode) {
+      this.time.delayedCall(400, () => {
+        if (this.ended) return; // closing time plays it instead
+        this.guestEpisode = null;
+        this.playEpisode(c.episode);
+      });
+    }
   }
 
   centerX(c) {
@@ -522,7 +628,7 @@ export default class StallScene extends Phaser.Scene {
     if (tier === 'perfect') this.happyHop(c);
     const label = { perfect: 'Perfect!', close: 'Close', oops: 'Oops' }[tier];
     const why = reasons.length ? ` — ${reasons.slice(0, 2).join(', ')}` : '';
-    this.setFeedback(`${label}${why}  +${formatMoney(res.paid + res.tip)}  ♥${res.happy > 0 ? '+' : ''}${res.happy}`);
+    this.setFeedback(`${label}${why}  +${formatMoney(res.paid + res.tip)}`);
     this.refreshHud();
 
     if (c.served < c.n) {
@@ -547,7 +653,7 @@ export default class StallScene extends Phaser.Scene {
     logEvent(this.log, 'timeout', { who: c.def.id }, this.clockMs);
     play('walkout');
     this.showBubble(c, pickLine(c.def.lines, 'timeout', this.lineVars()), 'reaction');
-    this.setFeedback('They wandered off... ♥-1');
+    this.setFeedback('They wandered off... 名气 -1');
     this.refreshHud();
     this.time.delayedCall(1600, () => this.leave(c));
   }
@@ -559,6 +665,7 @@ export default class StallScene extends Phaser.Scene {
     if (c === this.tableGuest) this.tableGuest = null;
     this.spots = this.spots.map((s) => (s === c ? null : s));
     c.sprites.forEach((s) => this.tweens.add({ targets: s, alpha: 0, y: s.y - 12, duration: 450, onComplete: () => s.destroy() }));
+    this.time.delayedCall(350, () => this.advanceQueue());
   }
 
   // ---------- juice / feedback ----------
@@ -612,8 +719,8 @@ export default class StallScene extends Phaser.Scene {
     const h24 = Math.floor(mins / 60);
     const mm = String(Math.floor((mins % 60) / 15) * 15).padStart(2, '0');
     const h12 = ((h24 + 11) % 12) + 1;
-    this.hudClock.setText(`Day ${this.day}  ${h12}:${mm}${h24 < 12 ? 'am' : 'pm'}`);
-    this.hudHappy.setText(`♥ ${this.econ.happiness}`);
+    this.hudClock.setText(`Day ${this.day}/${MONTH_DAYS}  ${h12}:${mm}${h24 < 12 ? 'am' : 'pm'}`);
+    this.hudFame.setText(`名气 ${Math.floor(this.econ.fame)}`);
     this.hudMoney.setText(formatMoney(this.econ.money));
   }
 
@@ -640,11 +747,9 @@ export default class StallScene extends Phaser.Scene {
     this.refreshHud();
     if (this.clockMs >= TUNING.dayMs) return this.endDay();
 
-    if (!teaching) this.spawnInMs -= delta;
-    if (this.spawnInMs <= 0) {
-      const late = this.clockMs > TUNING.dayMs - TUNING.lastSpawnBeforeEndMs;
-      if (!late && this.spawnCustomer()) this.spawnInMs = randBetween(TUNING.spawnMinMs, TUNING.spawnMaxMs);
-      else this.spawnInMs = 1500;
+    if (!teaching) {
+      this.runArrivals();
+      this.maybeMidStory(delta);
     }
 
     for (const c of this.waitingCustomers()) {
@@ -655,43 +760,152 @@ export default class StallScene extends Phaser.Scene {
     }
   }
 
+  // Bring in whoever is due by now. No room (queue full)? They try again a bit later.
+  runArrivals() {
+    while (this.arrivals.length && this.arrivals[0] <= this.clockMs) {
+      if (this.clockMs > TUNING.dayMs - TUNING.lastSpawnBeforeEndMs) return (this.arrivals = []);
+      if (this.spawnCustomer()) this.arrivals.shift();
+      else {
+        this.arrivals[0] = this.clockMs + TUNING.queueRetryMs;
+        this.arrivals.sort((a, b) => a - b);
+        return;
+      }
+    }
+  }
+
+  // ---------- story episodes ----------
+
+  maybeMidStory(delta) {
+    if (this.storyDone.has('mid') || this.clockMs < TUNING.dayMs * MID_STORY_AT) return;
+    this.midWaitMs += delta;
+    if ((!this.dragging && !this.pouring) || this.midWaitMs > DRAG_WAIT_MS) this.playStory('mid');
+  }
+
+  // Called by the tutorial when it finishes or is skipped.
+  onTutorialDone() {
+    this.time.delayedCall(1200, () => this.playStory('start'));
+  }
+
+  // Play today's episode for this moment (if any), then carry on.
+  playStory(when, then = () => {}) {
+    if (this.storyDone.has(when)) return then();
+    this.storyDone.add(when);
+    const ep = eventsFor(EVENTS, this.day, when)[0];
+    if (!ep) return then();
+    if (ep.guest && when !== 'end') {
+      this.bringGuest(ep);
+      return then();
+    }
+    this.playEpisode(ep, then);
+  }
+
+  // The episode's customer comes in first; it plays when they reach the counter.
+  bringGuest(ep) {
+    if (this.ended) return;
+    this.guestEpisode = ep; // still owed: plays at closing if they never reach the counter
+    const c = this.spawnCustomer(ep.guest.id, ep.guest.order);
+    if (c) c.episode = ep;
+    else this.time.delayedCall(1000, () => this.bringGuest(ep));
+  }
+
+  // Pause the stall and play an episode on top (scenes/DramaScene.js).
+  playEpisode(ep, then = () => {}) {
+    this.pouring = null;
+    this.tweens.killTweensOf(this.feedback);
+    this.feedback.setAlpha(0);
+    this.scene.launch('Drama', {
+      ep,
+      flags: this.flags,
+      fame: this.econ.fame,
+      vars: this.lineVars({ rating: this.rating ?? this.todayRating() }),
+      owner: { name: this.owner.name, sprite: this.owner.sprite },
+      onChoice: (opt) => this.applyStoryChoice(opt),
+      onEnding: (e) => (this.ending = e.id),
+      onDone: () => {
+        this.scene.stop('Drama');
+        this.scene.resume();
+        if (ep.fame) this.econ.fame = clampFame(this.econ.fame + ep.fame);
+        for (let i = 0; i < (ep.rush ?? 0); i++) this.arrivals.push(this.clockMs + 800 + i * 2500);
+        this.arrivals.sort((a, b) => a - b);
+        logEvent(this.log, 'story', { id: ep.id, flags: this.flags.join(',') }, this.clockMs);
+        this.refreshHud();
+        then();
+      },
+    });
+    this.scene.pause();
+  }
+
+  applyStoryChoice(opt) {
+    const s = applyChoice({ flags: this.flags, fame: this.econ.fame, money: this.econ.money }, opt);
+    this.flags = s.flags;
+    this.econ.fame = s.fame;
+    this.econ.earnedToday += s.money - this.econ.money;
+    this.econ.money = s.money;
+  }
+
+  todayRating() {
+    return auntyRating(this.econ.perfect, this.econ.served);
+  }
+
   // ---------- day end ----------
 
   endDay() {
     this.ended = true;
     this.pouring = null;
+    this.arrivals = [];
     finishDay(this.log, this.econ);
     play('dayEnd');
-    for (const c of this.allCustomers()) {
+    for (const c of [...this.allCustomers(), ...this.queue]) {
       c.state = 'gone';
       this.clearBubble(c);
-      c.sprites.forEach((s) => this.tweens.add({ targets: s, alpha: 0, duration: 400, onComplete: () => s.destroy() }));
+      c.sprites.forEach((s) => {
+        s.walkTween?.stop();
+        this.tweens.add({ targets: s, alpha: 0, duration: 400, onComplete: () => s.destroy() });
+      });
     }
     this.spots = [null, null, null];
+    this.queue = [];
     this.tableGuest = null;
     this.setFeedback(UI.closing);
+    this.rating = this.todayRating();
+    const owed = this.guestEpisode;
+    const closing = () => this.playStory('end', () => this.showSummary());
+    this.time.delayedCall(700, () => (owed ? this.playEpisode(owed, closing) : closing()));
+  }
+
+  showSummary() {
+    const e = this.econ;
+    const tomorrow = nextDay(this.run, { money: e.money, fame: e.fame, flags: this.flags, rating: this.rating, ending: this.ending ?? this.run.ending });
+    saveRun(tomorrow);
+    const done = monthOver(tomorrow);
 
     const depth = 70;
     this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000, 0.35).setOrigin(0).setDepth(depth).setInteractive();
     const cx = GAME_W / 2;
     const cardW = 300;
-    const top = 140;
-    this.add.rectangle(cx - cardW / 2, top, cardW, 340, COLORS.paper).setOrigin(0).setStrokeStyle(2, COLORS.inkHex).setDepth(depth + 1);
+    const top = 110;
+    this.add.rectangle(cx - cardW / 2, top, cardW, 410, COLORS.paper).setOrigin(0).setStrokeStyle(2, COLORS.inkHex).setDepth(depth + 1);
     const t = (y, str, o = {}) => addText(this, cx, top + y, str, { size: 16, align: 'center', origin: [0.5, 0], ...o }).setDepth(depth + 2);
     t(20, UI.dayDone.replace('{day}', this.day), { size: 24, bold: true });
     t(56, UI.dayDoneZh, { size: 16 });
-    const e = this.econ;
     t(96, `Cups served: ${e.served}  (perfect ${e.perfect})`);
     t(124, `Earned today: ${formatMoney(e.earnedToday)}`);
-    t(152, `Happiness: ♥ ${e.happiness}`);
-    if (e.walkedOut) t(180, `${e.walkedOut} wandered off — no worries lah`, { size: 12, color: '#8a7a70' });
+    const gain = Math.floor(e.fame) - Math.floor(e.fameStart);
+    t(152, `名气 Fame: ${Math.floor(e.fame)}  (${gain >= 0 ? '+' : ''}${gain})`);
+    t(180, `Aunty Lim's teh score: ${this.rating}/10`, { size: 14, color: '#8a5a1e' });
+    if (e.walkedOut) t(206, `${e.walkedOut} wandered off — no worries lah`, { size: 12, color: '#8a7a70' });
+    if (!done) t(226, `Tomorrow: about ${customersForFame(e.fame)} customers`, { size: 12, color: '#8a7a70' });
 
-    const btn = makeButton(this, cx - 90, top + 224, 180, 52, UI.closeStall, () => this.scene.start('Title'), { size: 18, bold: true, fill: 0xbfe3c0 });
-    btn.bg.setDepth(depth + 2);
-    btn.txt.setDepth(depth + 3);
-    const copy = makeButton(this, cx - 90, top + 286, 180, 36, 'Copy playtest notes', () => this.copyNotes(copy), { size: 13 });
-    copy.bg.setDepth(depth + 2);
-    copy.txt.setDepth(depth + 3);
+    const button = (y, h, label, onTap, o) => {
+      const b = makeButton(this, cx - 110, top + y, 220, h, label, onTap, o);
+      b.bg.setDepth(depth + 2);
+      b.txt.setDepth(depth + 3);
+      return b;
+    };
+    if (done) button(256, 56, 'Month 1 complete  完', () => this.scene.start('Title'), { size: 17, bold: true, fill: 0xbfe3c0 });
+    else button(256, 56, `Next day ▸  Day ${tomorrow.day}`, () => this.scene.start('Day', { run: tomorrow }), { size: 18, bold: true, fill: 0xbfe3c0 });
+    button(322, 34, UI.closeStall, () => this.scene.start('Title'), { size: 13 });
+    const copy = button(364, 32, 'Copy playtest notes', () => this.copyNotes(copy), { size: 12 });
   }
 
   copyNotes(btn) {

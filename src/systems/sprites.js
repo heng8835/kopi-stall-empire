@@ -9,10 +9,12 @@ export function preloadSprites(scene) {
   scene.load.image('stallBg', 'bg/stall.webp'); // full-screen stall background (901x1600)
 }
 
-// Image anchored at its feet (bottom centre), scaled to its manifest display height.
+// Sprite anchored at its feet (bottom centre), scaled to its manifest display height.
+// (A Sprite, not an Image, so walkers can play a `<key>-walk` animation when one exists.)
 export function addSprite(scene, key, x, yFeet, heightOverride) {
-  const img = scene.add.image(x, yFeet, key).setOrigin(0.5, 1);
+  const img = scene.add.sprite(x, yFeet, key).setOrigin(0.5, 1);
   const h = heightOverride ?? displayHeight(key) ?? img.height;
   img.setScale(h / img.height);
+  img.baseScale = img.scaleX;
   return img;
 }

@@ -41,6 +41,17 @@ Uniform for all: white short-sleeve school shirt with a small pocket badge, navy
 - **Hafiz:** "...Character: Hafiz, 14, the funny one. Short dark hair under a backwards navy cap, winking, doing a finger-gun, black backpack, holding an iced Milo Dinosaur."
 - **Jia Hui:** "...Character: Jia Hui, 14, the quiet one. Shoulder-length dark bob with straight fringe, pink backpack with a small bunny keychain, hugging a sketchbook to her chest, shy small smile. Standing (not sitting)."
 
+### Walk cycle (any counter customer): 4-frame sheet
+Customers waddle their still for now. A sheet named `<key>Walk` with a `<key>-walk` animation
+replaces the waddle automatically (StallScene.walk). Same canvas size as the still, feet on the same line.
+> "Same character, same outfit and colours as the reference image. A 4-frame side-view walk cycle,
+> walking to the right, frames left to right in one row, evenly spaced, same size and same feet line
+> in every frame. Plain flat white background, no shadow, no text."
+
+### Kenneth (rival manager): fixed in code 2026-10-23
+The monogram pattern on his briefcase was painted out (plain brown leather) when he was cut out
+(`art/prepped/kenneth.png`). If he is regenerated: plain briefcase, no logo or monogram.
+
 ### Sophie (tourist): edit of the existing image
 > Edit only the tote bag: replace the flag keychain with a small kopi-cup keychain and the
 > Merlion print with a cute coffee-cup doodle. Keep everything else exactly the same.

@@ -8,7 +8,7 @@ describe('playlog', () => {
     logEvent(d, 'serve', { who: 'auntyLim', wanted: 'Teh C siew dai', made: 'Teh C', tier: 'close', waitMs: 6000 }, 9000);
     logEvent(d, 'timeout', { who: 'officeGuy' }, 30000);
     logEvent(d, 'glossary', { key: 'siew dai' }, 2000);
-    finishDay(d, { served: 2, perfect: 1, walkedOut: 1, earnedToday: 330, happiness: 51 }); // storage may be absent: must not throw
+    finishDay(d, { served: 2, perfect: 1, walkedOut: 1, earnedToday: 330, fame: 11 }); // storage may be absent: must not throw
 
     const text = summarize(d);
     expect(text).toContain('day 1 as Mei');

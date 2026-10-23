@@ -1,12 +1,12 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-23
 phase: development
-next: "Build docs/specs/order-tickets-day-summary.md (order tickets on cups, peng 3/4 fill rule, better day summary + 3-day flow)"
+next: "Playtest the 30-day month on a phone; then build docs/specs/order-tickets-day-summary.md (its 3-day flow part is superseded)."
 tier_hint: 1
 blockers: ["Sophie flag/Merlion fix (user)"]
-touched: [src/scenes/StallScene.js, src/systems/cup.js, src/data/tools.js, src/data/stallTuning.js, src/data/tutorial.js, tools/prep_still.py, public/sprites/, public/bg/stall.webp, docs/specs/]
+touched: [src/scenes/StallScene.js, src/scenes/DramaScene.js, src/scenes/TitleScene.js, src/data/events.js, src/data/stallTuning.js, src/data/glossary.js, src/systems/queue.js, src/systems/story.js, src/systems/run.js, src/systems/economy.js, public/sprites/]
 validation: passing
-open_decisions: []
-spec: "docs/specs/order-tickets-day-summary.md"
+open_decisions: ["Walk-frame route: xAI key / Grok CLI / ChatGPT sheets (see IDEAS.md)"]
+spec: "docs/specs/walk-in-fame-story.md"
 board_task: ""
-notes: "Read the spec first. Art pipeline in CLAUDE.md. Pane testing: step game.step + fake Date.now; real drags via MouseEvents on the canvas (see spec Verification)."
+notes: "Jump to any day: ?day=14&fame=60&flags=kidsOwe (title -> Open stall). Pane testing: fake Date.now (tweens use it) + game.step; wait for Title status 5 before starting; screenshots lag, use renderer.snapshotPixel to check pixels."

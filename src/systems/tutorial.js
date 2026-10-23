@@ -54,7 +54,7 @@ export class Tutorial {
     this.clearGlows();
     this.showNote(TUTORIAL_TEXT.done, false);
     this.scene.time.delayedCall(5000, () => this.clearNote());
-    this.scene.spawnInMs = 3000;
+    this.scene.onTutorialDone?.();
   }
 
   skip() {
@@ -63,7 +63,7 @@ export class Tutorial {
     this.clearGlows();
     this.clearNote();
     for (const c of this.scene.allCustomers()) c.tutorial = false;
-    this.scene.spawnInMs = 1500;
+    this.scene.onTutorialDone?.();
   }
 
   showNote(note, withSkip = true) {

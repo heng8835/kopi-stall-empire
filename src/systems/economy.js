@@ -1,15 +1,14 @@
 import { ICED_SURCHARGE, PERFECT_TIP } from '../data/drinks.js';
+import { TUNING } from '../data/stallTuning.js';
 import { findDrink } from './order.js';
 
-// All money is integer cents.
-export const HAPPINESS_START = 50;
-export const HAPPINESS_DELTA = { perfect: 2, close: 1, oops: -1, timeout: -1 };
-
+// All money is integer cents. Fame (名气) is 0-100 and carries over the whole month.
 export function createDayState(carry = {}) {
   return {
     money: carry.money ?? 0,
     earnedToday: 0,
-    happiness: carry.happiness ?? HAPPINESS_START,
+    fame: carry.fame ?? TUNING.fameStart,
+    fameStart: carry.fame ?? TUNING.fameStart,
     served: 0,
     perfect: 0,
     walkedOut: 0,
@@ -23,23 +22,29 @@ export function priceOf(spec) {
   return base + (spec.iced && spec.base !== 'milo' ? ICED_SURCHARGE : 0);
 }
 
-const clampHappy = (h) => Math.max(0, Math.min(100, h));
+export const clampFame = (f) => Math.max(0, Math.min(100, Math.round(f * 100) / 100));
 
-// Apply one served cup. Returns { paid, tip, happy } for floating feedback text.
+// How many arrivals a day brings at this fame (a group counts as one).
+export function customersForFame(fame) {
+  const n = Math.round(TUNING.customersMin + fame / TUNING.famePerExtraCustomer);
+  return Math.max(TUNING.customersMin, Math.min(TUNING.customersMax, n));
+}
+
+// Apply one served cup. Returns { paid, tip, fame } for floating feedback text.
 export function applyServe(state, tier, wantedSpec) {
   const paid = priceOf(wantedSpec);
   const tip = tier === 'perfect' ? PERFECT_TIP : 0;
-  const happy = HAPPINESS_DELTA[tier];
+  const fame = TUNING.fameDelta[tier];
   state.money += paid + tip;
   state.earnedToday += paid + tip;
-  state.happiness = clampHappy(state.happiness + happy);
+  state.fame = clampFame(state.fame + fame);
   state.served += 1;
   if (tier === 'perfect') state.perfect += 1;
-  return { paid, tip, happy };
+  return { paid, tip, fame };
 }
 
 export function applyTimeout(state) {
-  state.happiness = clampHappy(state.happiness + HAPPINESS_DELTA.timeout);
+  state.fame = clampFame(state.fame + TUNING.fameDelta.timeout);
   state.walkedOut += 1;
 }
 

@@ -4,6 +4,7 @@ import * as sfx from './systems/sfx.js';
 import BootScene from './scenes/BootScene.js';
 import TitleScene from './scenes/TitleScene.js';
 import StallScene from './scenes/StallScene.js';
+import DramaScene from './scenes/DramaScene.js';
 
 // Logical world is GAME_W x GAME_H (360x640); the backbuffer is that times the render scale
 // (see view.js). HD sprites use linear filtering.
@@ -19,7 +20,7 @@ const game = new Phaser.Game({
   roundPixels: true,
   mipmapFilter: 'LINEAR_MIPMAP_LINEAR',
   scale: { mode: Phaser.Scale.NONE },
-  scene: [BootScene, TitleScene, StallScene],
+  scene: [BootScene, TitleScene, StallScene, DramaScene],
 });
 
 watchResize(game);
