@@ -14,7 +14,12 @@ import { visibleBeats, endingFor, fill } from '../systems/story.js';
 
 const BOX_Y = 446;
 const BOX_H = 168;
-const PORTRAIT_H = 200;
+const PORTRAIT_H = 190;
+// The speaker stands behind the stall's wooden counter ledge, like a customer: feet hidden,
+// head and body above it. The ledge is redrawn from the background art in front of them.
+const LEDGE = { top: 282, bottom: 318 }; // logical px, matches StallScene COUNTER_Y
+const FEET_Y = 312;
+const BG_SCALE = 901 / GAME_W; // background art pixels per logical px
 const MOODS = { dark: [0x05060f, 0.82], rain: [0x1d3b5c, 0.62], fire: [0x6b1e05, 0.58] };
 
 export default class DramaScene extends Phaser.Scene {
@@ -27,6 +32,7 @@ export default class DramaScene extends Phaser.Scene {
     this.d = data;
     this.flags = new Set(data.flags);
     const [tint, alpha] = MOODS[data.ep.mood] ?? [0x000000, 0.55];
+    this.shade = { tint, alpha };
     this.add.rectangle(0, 0, GAME_W, GAME_H, tint, alpha).setOrigin(0).setInteractive().on('pointerdown', () => this.advance());
     // Phaser reuses this scene object for every episode: reset all per-episode state.
     this.layer = []; // what the current card drew
@@ -110,13 +116,17 @@ export default class DramaScene extends Phaser.Scene {
     const who = this.speaker(beat.who, beat);
     const text = fill(beat.text, this.d.vars);
     if (who?.sprite && this.textures.exists(who.sprite)) {
-      const s = addSprite(this, who.sprite, GAME_W / 2, BOX_Y + 14);
+      const s = addSprite(this, who.sprite, GAME_W / 2, FEET_Y);
       s.setScale(s.scaleX * Math.min(1.5, PORTRAIT_H / s.displayHeight));
       if (s.displayWidth > GAME_W - 20) s.setScale(s.scaleX * ((GAME_W - 20) / s.displayWidth));
       if (who.silhouette) s.setTintFill(0x14110f);
       s.y += 8;
       this.tweens.add({ targets: s, y: s.y - 8, duration: 160, ease: 'Back.out' });
-      this.layer.push(s);
+      // the counter ledge in front of them, shaded like the rest of the stall
+      const top = Math.round(LEDGE.top * BG_SCALE);
+      const ledge = this.add.image(0, 0, 'stallBg').setOrigin(0).setDisplaySize(GAME_W, GAME_H).setCrop(0, top, 901, Math.round(LEDGE.bottom * BG_SCALE) - top);
+      const shade = this.add.rectangle(0, LEDGE.top, GAME_W, LEDGE.bottom - LEDGE.top, this.shade.tint, this.shade.alpha).setOrigin(0);
+      this.layer.push(s, ledge, shade);
     }
 
     const note = beat.who === 'note';
