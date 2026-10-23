@@ -22,7 +22,7 @@ import { SHOP_FROM_DAY, GIFTS } from '../data/shop.js';
 import { MACHINE_LESSONS, BOOK } from '../data/recipes.js';
 import { MALT } from '../systems/order.js';
 import { summarizeDay } from '../systems/daySummary.js';
-import { recipeHint } from '../systems/hints.js';
+import { recipeHint, nextStep } from '../systems/hints.js';
 import { createDayState, applyServe, applyTimeout, formatMoney, customersForFame, clampFame } from '../systems/economy.js';
 import { weightedPick } from '../systems/random.js';
 import { placeArrival, frontCanTake, arrivalSchedule } from '../systems/queue.js';
@@ -61,6 +61,7 @@ const BG_SCALE = 901 / GAME_W; // background art pixels per logical px
 const ENTRY = { x: -40, feetY: 236 };
 const QUEUE_POS = [{ x: 126, feetY: 270 }, { x: 88, feetY: 262 }, { x: 50, feetY: 254 }];
 const MID_STORY_AT = 0.4; // a 'mid' episode plays this far into the day
+const COACH_Y = 414; // the owner's thought bubble, between the tray and the tools
 const TICKET_HINTS = 3; // show "tap to take order" on the first few bubbles of the day
 const LESSON_AT_MS = 5000; // a recipe teacher walks in this far into a lesson day
 // Day periods on the HUD bar, in minutes from opening (7am): morning, lunch rush, teatime, closing.
@@ -116,6 +117,7 @@ export default class StallScene extends Phaser.Scene {
     this.drawBackdrop();
     this.drawHud();
     this.drawTray();
+    this.drawCoach();
     this.drawTools();
     if (this.perks.menuBoard) this.drawMenuBoard();
     if (this.perks.famePerDay) this.time.delayedCall(800, () => this.setFeedback(`Your decor & comforts: 名气 +${this.perks.famePerDay} today`));
@@ -262,6 +264,53 @@ export default class StallScene extends Phaser.Scene {
 
   // ---------- cups on the tray ----------
 
+  // ---------- the coach: the owner thinks out loud about the next step ----------
+
+  drawCoach() {
+    const x = 34;
+    const w = GAME_W - x - 8;
+    this.coachFace = addSprite(this, this.owner.sprite, 17, COACH_Y + 34, 34).setDepth(18);
+    const g = this.add.graphics().setDepth(18);
+    g.fillStyle(0xffffff, 0.95).fillRoundedRect(x, COACH_Y, w, 26, 12).lineStyle(2, 0x3a2e2a, 0.8).strokeRoundedRect(x, COACH_Y, w, 26, 12);
+    g.fillStyle(0xffffff, 0.95).fillCircle(x - 3, COACH_Y + 19, 4).lineStyle(1.5, 0x3a2e2a, 0.8).strokeCircle(x - 3, COACH_Y + 19, 4);
+    this.coachText = addText(this, x + 10, COACH_Y + 13, '', { size: 11, bold: true, color: '#3a2e2a', origin: [0, 0.5] }).setDepth(19);
+    this.coachParts = [this.coachFace, g, this.coachText];
+    this.coachShown = '';
+    this.coachIn = 0;
+    this.setCoach('');
+  }
+
+  setCoach(text, warn = false) {
+    if (text === this.coachShown) return;
+    this.coachShown = text;
+    this.coachParts.forEach((o) => o.setVisible(!!text));
+    if (!text) return;
+    this.coachText.setText(text).setColor(warn ? '#c8402c' : '#3a2e2a');
+    // shrink long hints to fit the bubble
+    this.coachText.setScale(1);
+    const room = GAME_W - 34 - 8 - 20;
+    if (this.coachText.width > room) this.coachText.setScale(room / this.coachText.width);
+    this.tweens.add({ targets: this.coachText, alpha: { from: 0.3, to: 1 }, duration: 200 });
+  }
+
+  // Which cup to coach: the one last worked on, else the first with a live ticket.
+  updateCoach(delta) {
+    this.coachIn -= delta;
+    if (this.coachIn > 0) return;
+    this.coachIn = 200;
+    const live = (sl) => sl?.cup && sl.ticket && !sl.ticket.left;
+    const slot = live(this.focusSlot) ? this.focusSlot : this.slots.find(live);
+    if (slot) {
+      const r = nextStep(slot.cup, slot.ticket.spec, slot.ticket.who);
+      return this.setCoach(`Cup ${slot.i + 1}: ${r.text}`, r.bin);
+    }
+    const owed = this.waitingCustomers().find((c) => this.ticketsOwed(c));
+    if (owed) return this.setCoach(this.freeSlot() ? `Tap ${owed.def.short ?? owed.def.name} to take the order` : 'Tray full: serve or bin a cup first', !this.freeSlot());
+    if (this.closing) return this.setCoach("Closing time. Last customers, then we 收档!");
+    if (!this.allCustomers().length) return this.setCoach('Waiting for customers… 等客人');
+    this.setCoach('');
+  }
+
   freeSlot() {
     return this.slots.find((s) => !s.cup);
   }
@@ -302,6 +351,7 @@ export default class StallScene extends Phaser.Scene {
     c.ticketsTaken = (c.ticketsTaken ?? 0) + 1;
     const cupNo = c.n > 1 ? ` ${c.served + c.ticketsTaken}/${c.n}` : '';
     slot.ticket = { c, spec: c.spec, who: c.def.short ?? c.def.name, text: `${c.orderText}${cupNo}` };
+    this.focusSlot = slot;
     this.drawTicket(slot);
     play('tap');
     logEvent(this.log, 'ticket', { who: c.def.id, order: c.orderText }, this.clockMs);
@@ -426,6 +476,7 @@ export default class StallScene extends Phaser.Scene {
   // Shared by the drag UI, the tutorial and tests (window.__stall in dev).
   pourInto(slot, ingredient, dtMs) {
     if (!slot?.cup) return;
+    this.focusSlot = slot;
     const fast = ['kopi', 'teh', ...MALT].includes(ingredient) ? this.perks.pourMult : 1; // Long-Spout Pot
     pour(slot.cup, ingredient, dtMs * fast);
     this.redrawSlot(slot);
@@ -433,6 +484,7 @@ export default class StallScene extends Phaser.Scene {
   }
 
   dropOnCup(slot, what) {
+    this.focusSlot = slot;
     if (what === 'ice') addIce(slot.cup);
     else addPowder(slot.cup);
     play('ice');
@@ -448,6 +500,7 @@ export default class StallScene extends Phaser.Scene {
     const ms = (TUNING.doseAmount * 1000) / TUNING.pourPerSec[ingredient];
     pour(slot.cup, ingredient, ms);
     slot.art.update(slot.cup, 0, { ingredient });
+    this.focusSlot = slot;
     this.redrawSlot(slot);
     this.pourBar.show(ingredient, slot.cup, slot.i + 1, slot.ticket && !slot.ticket.left ? slot.ticket : null);
     play(ingredient === 'sugar' ? 'sugar' : 'milk');
@@ -459,6 +512,7 @@ export default class StallScene extends Phaser.Scene {
     slot.stirring = true;
     const ms = this.perks.stirMs ?? TUNING.autoStirMs;
     slot.art.startStir(ms);
+    this.focusSlot = slot;
     for (let i = 1; i <= TUNING.stirWigglesNeeded; i++) {
       this.time.delayedCall((ms / TUNING.stirWigglesNeeded) * i, () => slot.cup && slot.cup.stir < 1 && this.stirCup(slot));
     }
@@ -495,7 +549,7 @@ export default class StallScene extends Phaser.Scene {
 
   // forcedId / forcedOrder let the tutorial, the story (and tests) bring in a specific character + order.
   spawnCustomer(forcedId = null, forcedOrder = null) {
-    if (this.ended) return null;
+    if (this.ended || this.closing) return null;
     const forced = forcedId && CUSTOMERS.find((c) => c.id === forcedId);
     const here = new Set([...this.allCustomers(), ...this.queue].map((c) => c.def.id)); // one of each character at a time
     const menu = (d) => ordersFor(d.orders, this.day, this.perks.features, this.freshFeatures);
@@ -880,12 +934,19 @@ export default class StallScene extends Phaser.Scene {
       }
     }
     this.pourBar.update();
+    this.updateCoach(delta);
 
     // The tutorial is a calm intro: the day clock and random spawns wait for it.
     const teaching = this.tutorial?.active;
     if (!teaching) this.clockMs = Math.min(TUNING.dayMs, this.clockMs + delta);
     this.refreshHud();
-    if (this.clockMs >= TUNING.dayMs) return this.endDay();
+    if (this.clockMs >= TUNING.dayMs) {
+      // 7pm: no one new comes in, but the customers already here still get their drinks
+      if (!this.closing) this.startClosing();
+      this.overtimeMs += delta;
+      const empty = !this.allCustomers().length && !this.queue.length;
+      if (empty || this.overtimeMs > TUNING.closingGraceMs) return this.endDay();
+    }
 
     if (!teaching) {
       this.runArrivals();
@@ -1064,8 +1125,46 @@ export default class StallScene extends Phaser.Scene {
 
   // ---------- day end ----------
 
+  startClosing() {
+    this.closing = true;
+    this.overtimeMs = 0;
+    this.arrivals = [];
+    play('dayEnd');
+    // the queue is politely turned away; the counter still gets served
+    const q = this.queue;
+    this.queue = [];
+    q.forEach((c) => this.leave(c));
+    this.setFeedback(q.length ? '7pm! Closing time — sorry, queue. Serving the last customers.' : '7pm! Closing time — serving the last customers.');
+    this.hudDay.setColor('#ffd28a');
+  }
+
+  // A rolling shutter comes down with "收档啦!", then the end-of-day story and the summary.
+  closeShutter(then) {
+    const depth = 66;
+    const h = GAME_H - HUD_H;
+    const shutter = this.add.container(0, -h).setDepth(depth);
+    const g = this.add.graphics();
+    g.fillStyle(0x8a96a2, 1).fillRect(0, HUD_H, GAME_W, h);
+    for (let y = HUD_H + 6; y < GAME_H; y += 12) g.fillStyle(0x6c7782, 1).fillRect(0, y, GAME_W, 3).fillStyle(0xb3bdc6, 1).fillRect(0, y + 3, GAME_W, 1);
+    g.fillStyle(0x4b545c, 1).fillRect(0, GAME_H - 14, GAME_W, 14);
+    g.fillStyle(0x2b2b2b, 1).fillRoundedRect(GAME_W / 2 - 22, GAME_H - 26, 44, 10, 4); // handle
+    shutter.add(g);
+    this.tweens.add({ targets: shutter, y: 0, duration: 950, ease: 'Bounce.out', onComplete: () => play('clink') });
+    const big = addText(this, GAME_W / 2, GAME_H / 2 - 40, '收档啦!', { size: 40, bold: true, color: '#fff6dc', origin: 0.5 }).setDepth(depth + 1).setScale(0);
+    const small = addText(this, GAME_W / 2, GAME_H / 2 + 6, `Stall closed · Day ${this.day} done`, { size: 16, bold: true, color: '#fff6dc', origin: 0.5 }).setDepth(depth + 1).setAlpha(0);
+    big.setStroke('#3a2414', 6);
+    small.setStroke('#3a2414', 4);
+    this.tweens.add({ targets: big, scale: 1, duration: 420, delay: 850, ease: 'Back.out' });
+    this.tweens.add({ targets: small, alpha: 1, duration: 300, delay: 1100 });
+    this.time.delayedCall(2000, () => {
+      this.tweens.add({ targets: [big, small], alpha: 0, duration: 250 });
+      then();
+    });
+  }
+
   endDay() {
     this.ended = true;
+    this.setCoach('');
     this.pouring = null;
     this.arrivals = [];
     finishDay(this.log, this.econ);
@@ -1085,7 +1184,7 @@ export default class StallScene extends Phaser.Scene {
     this.rating = this.todayRating();
     const owed = this.guestEpisode;
     const closing = () => this.playStory('end', () => this.showSummary());
-    this.time.delayedCall(700, () => (owed ? this.playEpisode(owed, closing) : closing()));
+    this.closeShutter(() => (owed ? this.playEpisode(owed, closing) : closing()));
   }
 
   showSummary() {
@@ -1141,10 +1240,18 @@ export default class StallScene extends Phaser.Scene {
       return b;
     };
     if (done) button(54, 'Month 1 complete  完', () => this.scene.start('Title'), { size: 17, bold: true, fill: 0xbfe3c0 });
-    else if (this.day >= SHOP_FROM_DAY) button(54, 'Night shop ▸  供应商', () => this.scene.start('Shop', { run: tomorrow }), { size: 17, bold: true, fill: 0xbfe3c0 });
+    else if (this.day >= SHOP_FROM_DAY) button(54, 'Night shop ▸  供应商', () => this.toNight(tomorrow), { size: 17, bold: true, fill: 0xbfe3c0 });
     else button(54, `Next day ▸  Day ${tomorrow.day}`, () => this.scene.start('Day', { run: tomorrow }), { size: 18, bold: true, fill: 0xbfe3c0 });
     button(30, UI.closeStall, () => this.scene.start('Title'), { size: 13 });
     const copy = button(28, 'Copy playtest notes', () => this.copyNotes(copy), { size: 12 });
+  }
+
+  // Night falls (a fade to deep blue), then the night shop opens.
+  toNight(run) {
+    if (this.leaving) return;
+    this.leaving = true;
+    this.cameras.main.fadeOut(700, 11, 20, 48);
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Shop', { run }));
   }
 
   copyNotes(btn) {

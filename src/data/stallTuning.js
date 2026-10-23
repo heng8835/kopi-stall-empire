@@ -2,29 +2,33 @@
 
 export const TUNING = {
   // Day pacing
-  dayMs: 90_000, // 90 real seconds, 7am -> 7pm
-  firstSpawnMs: 2000,
-  lastSpawnBeforeEndMs: 12_000,
+  // Chill pacing (playtest 2026-10-23): ~3 real minutes, then closing time waits for the
+  // customers already at the counter (closingGraceMs at most).
+  dayMs: 180_000, // 3 real minutes, 7am -> 7pm
+  closingGraceMs: 60_000,
+  firstSpawnMs: 3000,
+  lastSpawnBeforeEndMs: 25_000,
   spawnJitter: 0.35, // each arrival lands within +-35% of its even share of the day
   queueRetryMs: 3000, // queue full: try that arrival again this much later
 
   // Fame (名气, 0-100) decides how many arrivals a day brings (a group counts as one).
   fameStart: 10,
   fameDelta: { perfect: 0.25, close: 0.1, oops: 0, timeout: -1 },
-  customersMin: 8,
-  customersMax: 16,
-  famePerExtraCustomer: 12, // 8 + fame/12, so fame 10 -> 8, 20 -> 9, 96 -> 16
+  // Few customers at first; upgrades make you faster before the crowd grows.
+  customersMin: 6,
+  customersMax: 13,
+  famePerExtraCustomer: 15, // 6 + floor(fame/15): fame 10 -> 6, 30 -> 8, 60 -> 10, 100 -> 12
 
   // Walking in from the street opening on the left, and the queue by the rope posts.
   queueMax: 3,
   walkSpeed: 70, // logical px per second
   walkFarScale: 0.62, // size at the door (far away) vs 1 at the counter
-  patienceScale: 1.5, // customer.patience (seconds) x this; drinks take ~10 s to make now
+  patienceScale: 2.2, // customer.patience (seconds) x this: chill, nobody rushes you
   groupCupBonusMs: 8000, // patience given back after each cup of a group order
 
   // Pour speeds, in "units per second" while holding a tool over a cup.
   // 1.0 = a full cup of base / a normal amount of sugar or milk.
-  pourPerSec: { kopi: 0.8, teh: 0.8, milo: 0.8, horlicks: 0.8, sugar: 1.0, condensed: 1.0, evap: 1.0 },
+  pourPerSec: { kopi: 0.9, teh: 0.9, milo: 0.9, horlicks: 0.9, sugar: 1.0, condensed: 1.0, evap: 1.0 },
 
   stirWigglesNeeded: 6,
   autoStirMs: 1000, // dropping the spoon on a cup stirs it in this long

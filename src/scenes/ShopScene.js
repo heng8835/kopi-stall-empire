@@ -32,6 +32,14 @@ export default class ShopScene extends Phaser.Scene {
     this.add.rectangle(0, 0, GAME_W, GAME_H, 0x0b1430, 0.62).setOrigin(0);
     const glow = this.add.graphics();
     for (let r = 120; r > 0; r -= 12) glow.fillStyle(0xffd28a, 0.02).fillCircle(GAME_W / 2, 40, r);
+    // night falls: a moon and a few twinkling stars, faded in from the day
+    this.cameras.main.fadeIn(700, 11, 20, 48);
+    const sky = this.add.graphics();
+    sky.fillStyle(0xfff3c4, 1).fillCircle(GAME_W - 34, 118, 13).fillStyle(0x0b1430, 1).fillCircle(GAME_W - 28, 113, 11); // crescent
+    for (let i = 0; i < 9; i++) {
+      const star = this.add.circle(14 + ((i * 97) % (GAME_W - 28)), 98 + ((i * 53) % 40), 1.4, 0xfff6dc);
+      this.tweens.add({ targets: star, alpha: { from: 1, to: 0.2 }, duration: 700 + i * 90, yoyo: true, repeat: -1 });
+    }
 
     addText(this, GAME_W / 2, 14, "Uncle Tan's Supplier Catalogue", { size: 17, bold: true, color: '#fff6dc', origin: [0.5, 0] });
     addText(this, GAME_W / 2, 36, '供应商目录 · the stall is closed, time to shop', { size: 11, color: '#d8cbb5', origin: [0.5, 0] });

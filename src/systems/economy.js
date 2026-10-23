@@ -27,7 +27,7 @@ export const clampFame = (f) => Math.max(0, Math.min(100, Math.round(f * 100) / 
 
 // How many arrivals a day brings at this fame (a group counts as one).
 export function customersForFame(fame) {
-  const n = Math.round(TUNING.customersMin + fame / TUNING.famePerExtraCustomer);
+  const n = TUNING.customersMin + Math.floor(fame / TUNING.famePerExtraCustomer);
   return Math.max(TUNING.customersMin, Math.min(TUNING.customersMax, n));
 }
 
