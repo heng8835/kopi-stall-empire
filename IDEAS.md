@@ -7,8 +7,7 @@
 - Fix art: delivery rider Grab logo; expat SG flags + Merlion; lottery uncle "T" cap. (Kenneth's monogram: done.)
 - Queue readability: queued customers stand behind the counter crowd and are partly hidden; maybe a "+2 waiting" chip or a roomier spot.
 - UPGRADES (user wants this next, 2026-10-23): night shop with machines / tools / comfort / decor that unlock menu items and power-ups. Full catalogue + drink list: docs/specs/next-phase-plan.md (draft, awaiting approval).
-- NEXT SESSION (user, 2026-10-23): regulars vs random walk-ins. Most customers are random people with random orders
-  and their own sprites; the story cast come every day with their usual orders (their preference). Notes:
-  docs/specs/regulars-and-walk-ins.md
+- Regulars (built 2026-10-23, docs/specs/regulars-and-walk-ins.md) follow-ups: a small friendship meter for serving a
+  regular perfectly (story callbacks); NSF + tourist walk-ins; walk-ins as small groups (office colleagues).
 - Phase D (still to do): new drink mechanics for the coming-soon machines (kettle/strength, tarik pull, halia, limau,
   freezer/Milo Godzilla, gula melaka layers, butter, tapau bags + delivery rider, 4th tray plate, second table).

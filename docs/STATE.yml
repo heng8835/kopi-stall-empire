@@ -1,12 +1,12 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-23
 phase: development
-next: "NEW SESSION: regulars vs random walk-ins (docs/specs/regulars-and-walk-ins.md). After that: phase D drink mechanics (IDEAS.md)."
+next: "Phase D drink mechanics (IDEAS.md). Playtest regulars + walk-ins; walk-in art pending (ASSET_LIST 2.7)."
 tier_hint: 1
 blockers: ["Sophie flag/Merlion fix (user)"]
-touched: [src/scenes/StallScene.js, docs/specs/regulars-and-walk-ins.md, IDEAS.md]
+touched: [src/data/customers.js, src/systems/queue.js, src/systems/menu.js, src/scenes/StallScene.js, src/i18n/lines.js, tests/regulars.test.js]
 validation: passing
-open_decisions: ["Walk-frame route (IDEAS.md)", "Regulars vs walk-ins questions (docs/specs/regulars-and-walk-ins.md)"]
-spec: "docs/specs/regulars-and-walk-ins.md"
+open_decisions: ["Walk-frame route (IDEAS.md)"]
+spec: ""
 board_task: ""
-notes: "StallScene is reused by Phaser every day: reset per-day state in create (closing, towelUsed…). Jump to a day: ?day=N&fame=F&money=CENTS&flags=a,b. Pane testing: fake Date.now + game.step; renderer.snapshot for screenshots."
+notes: "StallScene is reused by Phaser every day: reset per-day state in create (closing, towelUsed…). Jump to a day: ?day=N&fame=F&money=CENTS&flags=a,b. Pane testing: another project's vite may own localhost:5174, use 127.0.0.1; fake Date.now + game.step; renderer.snapshot for screenshots."

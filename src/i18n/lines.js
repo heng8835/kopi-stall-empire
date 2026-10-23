@@ -44,6 +44,35 @@ export const LINES = {
     oops: ['Ah? 这个不是我的...算了.'],
     timeout: ['我去看报纸先.'],
   },
+  // Random walk-ins (src/data/customers.js WALK_INS): short, generic, still local.
+  officeWorker: {
+    order: ['Boss, {order} please. Takeaway… no wait, here.', 'Morning! {order}, thanks boss.', '{order} one, boss. Need to wake up.'],
+    perfect: ['Wah, power. Can survive the meeting now.', 'Nice, thanks boss!'],
+    close: ['Okay lah, can drink.'],
+    oops: ['Eh, not my order leh… never mind, I drink.'],
+    timeout: ['Aiyo, boss call me already. Next time!'],
+  },
+  uncle: {
+    order: ['老板, {order}.', 'Boss, {order} one. 慢慢来.', '{order} ah, boss.'],
+    perfect: ['好! Shiok.', 'Wah, this one got standard.'],
+    close: ['可以啦.'],
+    oops: ['Ah? 不是这个… never mind lah.'],
+    timeout: ['算了, I go other stall.'],
+  },
+  student: {
+    order: ['Uh, hi boss, {order} can?', 'Boss, {order} please! 谢谢!', '{order}! Paiseh, got exam later.'],
+    perfect: ['Shiok! Thank you boss!', 'Wah, so nice!'],
+    close: ['Can lah, still nice.'],
+    oops: ['Eh… this one not mine leh. Okay lah, I try.'],
+    timeout: ['Aiyo, tuition start already! Bye boss!'],
+  },
+  auntie: {
+    order: ['{owner}, {order} one ah. 谢谢.', 'Boss, {order}. 不要太甜 hor.', '{order} lah, {owner}. Hot day ah.'],
+    perfect: ['刚刚好! Good {owner}.', 'Wah, shiok. I tell my friends.'],
+    close: ['Can lah, can drink.'],
+    oops: ['Aiyo, wrong one leh. Never mind, I drink.'],
+    timeout: ['So long ah… I go market first.'],
+  },
   tourist: {
     order: ['Hi! Could I get a coffee, no milk, no sugar, please?'],
     perfect: ['Oh wow, that is strong! Love it, thank you!'],

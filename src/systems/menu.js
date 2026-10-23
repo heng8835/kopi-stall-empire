@@ -1,6 +1,7 @@
 // Which orders the stall can take on a given day (the recipe calendar). Pure, no Phaser.
 import { STARTER, LESSONS } from '../data/recipes.js';
 import { parseOrder } from './order.js';
+import { weightedPick } from './random.js';
 
 // The building blocks an order needs, e.g. "Teh C siew dai peng" -> teh, C, siewDai, peng.
 export function featuresOf(spec) {
@@ -39,3 +40,12 @@ export function ordersFor(orders, day, extra = [], freshExtra = []) {
 
 // Lessons taught so far (for the recipe book), oldest first.
 export const lessonsUpTo = (day) => LESSONS.filter((l) => l.day <= day);
+
+// A regular's order today: mostly their usual (the newest one on `usual` that can be made today),
+// now and then something else off their list. `available` = ordersFor(...). null = nothing to order.
+export function regularOrder(usual = [], available, variety = 0.25, rand = Math.random) {
+  if (!available.length) return null;
+  const can = new Set(available.map((o) => o.text));
+  const mine = [...usual].reverse().find((t) => can.has(t));
+  return mine && rand() >= variety ? mine : weightedPick(available, rand).text;
+}

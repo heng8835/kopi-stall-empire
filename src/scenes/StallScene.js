@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../config.js';
-import { CUSTOMERS } from '../data/customers.js';
+import { CUSTOMERS, WALK_INS } from '../data/customers.js';
 import { OWNERS } from '../data/owners.js';
 import { TOOLS, SLOT_X, SPOT_X, MACHINE_TOOLS } from '../data/tools.js';
 import { TUNING } from '../data/stallTuning.js';
@@ -16,7 +16,7 @@ import { DRINKS } from '../data/drinks.js';
 import { DrinkArt, ART_ORIGIN } from '../systems/drinkArt.js';
 import { PourBar } from '../systems/pourBar.js';
 import { showRecipeCard, showRecipeBook } from '../systems/cards.js';
-import { ordersFor, lessonFor, unlockedFeatures } from '../systems/menu.js';
+import { ordersFor, lessonFor, unlockedFeatures, regularOrder } from '../systems/menu.js';
 import { perks, gift } from '../systems/shop.js';
 import { SHOP_FROM_DAY, GIFTS } from '../data/shop.js';
 import { MACHINE_LESSONS, BOOK } from '../data/recipes.js';
@@ -26,7 +26,7 @@ import { recipeHint, nextStep } from '../systems/hints.js';
 import { pickFor, fitScore } from '../systems/assign.js';
 import { createDayState, applyServe, applyTimeout, formatMoney, customersForFame, clampFame } from '../systems/economy.js';
 import { weightedPick } from '../systems/random.js';
-import { placeArrival, frontCanTake, arrivalSchedule } from '../systems/queue.js';
+import { placeArrival, frontCanTake, daySchedule } from '../systems/queue.js';
 import { newRun, nextDay, loadRun, saveRun, auntyRating, monthOver, MONTH_DAYS } from '../systems/run.js';
 import { eventsFor, applyChoice } from '../systems/story.js';
 import { EVENTS } from '../data/events.js';
@@ -85,8 +85,6 @@ export default class StallScene extends Phaser.Scene {
     this.queueMax = TUNING.queueMax + this.perks.queueBonus;
     if (this.perks.famePerDay) this.econ.fame = Math.min(100, this.econ.fame + this.perks.famePerDay);
     this.clockMs = 0;
-    // Today's arrival times: more fame, more customers (a group counts as one arrival).
-    this.arrivals = arrivalSchedule(customersForFame(this.econ.fame) + this.perks.extraCustomers, TUNING.firstSpawnMs, TUNING.dayMs - TUNING.lastSpawnBeforeEndMs, TUNING.spawnJitter);
     this.spots = [null, null, null]; // counter customers by spot
     this.queue = []; // customers waiting behind the counter, front first
     this.tableGuest = null;
@@ -98,6 +96,18 @@ export default class StallScene extends Phaser.Scene {
     const machineLessons = (this.run.newItems ?? []).map((id) => MACHINE_LESSONS[id] && { ...MACHINE_LESSONS[id], day: this.day }).filter(Boolean);
     this.lessons = [lessonFor(this.day), ...machineLessons].filter(Boolean);
     this.freshFeatures = machineLessons.flatMap((l) => l.features);
+    // Today's arrivals: every regular with something to drink comes once at their usual time, and
+    // random walk-ins fill up the rest. More fame, more customers (a group counts as one arrival).
+    const regulars = CUSTOMERS.filter((c) => c.regular && c.enabled && c.sprite && this.menuOf(c).length);
+    this.arrivals = daySchedule({
+      total: customersForFame(this.econ.fame) + this.perks.extraCustomers,
+      regulars,
+      dayMs: TUNING.dayMs,
+      start: TUNING.firstSpawnMs,
+      end: TUNING.dayMs - TUNING.lastSpawnBeforeEndMs,
+      jitter: TUNING.spawnJitter,
+    });
+    this.cameToday = new Set(); // regulars (and guests) who have already been in today
     this.nextLesson();
     this.paused = false;
     this.ended = false;
@@ -539,18 +549,24 @@ export default class StallScene extends Phaser.Scene {
     return placeArrival({ freeSpots: this.freeSpots().length, totalSpots: this.spots.length, lineLength: this.queue.length, max: this.queueMax, group });
   }
 
-  // forcedId / forcedOrder let the tutorial, the story (and tests) bring in a specific character + order.
+  // What this customer could order today (the recipe calendar + machines bought).
+  menuOf(def) {
+    return ordersFor(def.orders, this.day, this.perks.features, this.freshFeatures);
+  }
+
+  // forcedId / forcedOrder let the schedule (a regular), the tutorial, the story (and tests) bring in a
+  // specific character + order. No id = a random walk-in.
   spawnCustomer(forcedId = null, forcedOrder = null) {
     if (this.ended || this.closing) return null;
     const forced = forcedId && CUSTOMERS.find((c) => c.id === forcedId);
-    const here = new Set([...this.allCustomers(), ...this.queue].map((c) => c.def.id)); // one of each character at a time
-    const menu = (d) => ordersFor(d.orders, this.day, this.perks.features, this.freshFeatures);
-    const pool = CUSTOMERS.filter((c) => c.enabled && c.sprite && !here.has(c.id) && menu(c).length && this.placeFor(c));
+    const pool = WALK_INS.filter((w) => this.menuOf(w).length && this.placeFor(w)); // walk-ins may repeat
     const def = forcedId ? (forced && this.placeFor(forced) ? forced : null) : pool.length ? weightedPick(pool) : null;
     if (!def) return null;
 
     const place = this.placeFor(def);
-    const orderText = forcedOrder ?? weightedPick(menu(def)).text;
+    const orderText = forcedOrder ?? (def.regular ? regularOrder(def.usual, this.menuOf(def), TUNING.regularVariety) : weightedPick(this.menuOf(def)).text);
+    if (!orderText) return null;
+    this.cameToday.add(def.id);
     const n = def.groupSize;
     const c = {
       def,
@@ -573,11 +589,14 @@ export default class StallScene extends Phaser.Scene {
       this.tweens.add({ targets: c.sprites, alpha: 1, duration: 500, onComplete: () => this.arrive(c) });
       return c;
     }
-    const keys = n > 1 ? (def.sprites ?? Array(n).fill(def.sprite)).slice(0, n) : [def.sprite];
+    const keys = n > 1 ? (def.sprites ?? Array(n).fill(def.sprite)).slice(0, n) : [this.spriteFor(def)];
+    const tint = def.tints && this.tintFor(def);
     c.sprites = keys.map((key, i) => {
       const s = addSprite(this, key, ENTRY.x - i * 18, ENTRY.feetY - (i % 2) * 3).setDepth(2);
+      if (tint) s.setTint(tint);
       return s.setScale(s.baseScale * this.scaleAt(s.y));
     });
+    c.tint = tint;
     if (place === 'counter') this.takeSpot(c);
     else {
       c.state = 'queued';
@@ -585,6 +604,18 @@ export default class StallScene extends Phaser.Scene {
       this.walkToQueue(c, this.queue.length - 1);
     }
     return c;
+  }
+
+  // A walk-in's own art once it exists (spriteSizes.json), else the stand-in.
+  spriteFor(def) {
+    return this.textures.exists(def.sprite) ? def.sprite : def.standIn ?? def.sprite;
+  }
+
+  // A colour variant not already standing at the stall, so two of a kind never look like twins.
+  tintFor(def) {
+    const used = new Set([...this.allCustomers(), ...this.queue].filter((c) => c.def === def).map((c) => c.tint));
+    const free = def.tints.filter((t) => !used.has(t));
+    return Phaser.Utils.Array.GetRandom(free.length ? free : def.tints);
   }
 
   // Send a customer (walking in, or the front of the queue) to a free counter spot.
@@ -945,14 +976,17 @@ export default class StallScene extends Phaser.Scene {
     }
   }
 
-  // Bring in whoever is due by now. No room (queue full)? They try again a bit later.
+  // Bring in whoever is due by now: a regular (id) or a random walk-in (no id). No room (queue full)?
+  // They try again a bit later. A regular a lesson or story already brought in today doesn't come twice.
   runArrivals() {
-    while (this.arrivals.length && this.arrivals[0] <= this.clockMs) {
+    while (this.arrivals.length && this.arrivals[0].at <= this.clockMs) {
       if (this.clockMs > TUNING.dayMs - TUNING.lastSpawnBeforeEndMs) return (this.arrivals = []);
-      if (this.spawnCustomer()) this.arrivals.shift();
+      const next = this.arrivals[0];
+      if (next.id && this.cameToday.has(next.id)) this.arrivals.shift();
+      else if (this.spawnCustomer(next.id)) this.arrivals.shift();
       else {
-        this.arrivals[0] = this.clockMs + TUNING.queueRetryMs;
-        this.arrivals.sort((a, b) => a - b);
+        next.at = this.clockMs + TUNING.queueRetryMs;
+        this.arrivals.sort((a, b) => a.at - b.at);
         return;
       }
     }
@@ -1010,8 +1044,8 @@ export default class StallScene extends Phaser.Scene {
         this.scene.stop('Drama');
         this.scene.resume();
         if (ep.fame) this.econ.fame = clampFame(this.econ.fame + ep.fame);
-        for (let i = 0; i < (ep.rush ?? 0); i++) this.arrivals.push(this.clockMs + 800 + i * 2500);
-        this.arrivals.sort((a, b) => a - b);
+        for (let i = 0; i < (ep.rush ?? 0); i++) this.arrivals.push({ at: this.clockMs + 800 + i * 2500, id: null });
+        this.arrivals.sort((a, b) => a.at - b.at);
         logEvent(this.log, 'story', { id: ep.id, flags: this.flags.join(',') }, this.clockMs);
         this.refreshHud();
         if (this.lesson?.afterStory === ep.id && this.lessonState === 'waiting') this.time.delayedCall(300, () => this.showLesson(true));
@@ -1180,7 +1214,7 @@ export default class StallScene extends Phaser.Scene {
     saveRun(tomorrow);
     const done = monthOver(tomorrow);
 
-    const names = Object.fromEntries(CUSTOMERS.map((c) => [c.id, c.name]));
+    const names = Object.fromEntries([...CUSTOMERS, ...WALK_INS].map((c) => [c.id, c.name]));
     const sum = summarizeDay(this.log, e, names);
     const depth = 70;
     this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000, 0.4).setOrigin(0).setDepth(depth).setInteractive();

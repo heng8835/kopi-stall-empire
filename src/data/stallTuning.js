@@ -10,6 +10,7 @@ export const TUNING = {
   lastSpawnBeforeEndMs: 18_000,
   spawnJitter: 0.35, // each arrival lands within +-35% of its even share of the day
   queueRetryMs: 3000, // queue full: try that arrival again this much later
+  regularVariety: 0.25, // chance a regular orders something other than their usual
 
   // Fame (名气, 0-100) decides how many arrivals a day brings (a group counts as one).
   fameStart: 10,

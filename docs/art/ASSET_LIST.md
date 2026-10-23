@@ -36,6 +36,7 @@ How to make them: same style and pipeline as `docs/ART_BIBLE.md`.
 | 2.2 | **Makcik, standing, no stall** | 1 | P1. She teaches "peng" on Day 5. The current art has the stall and sign attached. |
 | 2.3 | Reaction faces for counter customers | 2 each × 6 | P2. A happy (perfect) and a sad (oops) version of Aunty Lim, Marcus, Darren, Wei Ling, Hafiz and Jia Hui. Same pose, only the face changes. |
 | 2.4 | Walk cycles | 4 each × 6 | P2. Side view walking right, same 6 characters. Prompt in ART_BIBLE. |
+| 2.7 | **Walk-in customers, standing at the counter** | 1 each × 4 | P1. Most of the day's customers are random walk-ins (src/data/customers.js `WALK_INS`). Same chibi style, empty hands or a phone/bag, facing the counter: office worker (`walkOffice`, lanyard, shirt), uncle (`walkUncle`, singlet or polo, towel on shoulder), student (`walkStudent`, school uniform + bag), auntie (`walkAuntie`, floral blouse, market bag). Code tints each in 3 colour variants. Until they arrive, Kai and Rain Uncle stand in. Later: NSF, tourist. |
 | 2.5 | Ah Gong reading, page-turn | 2 | P3. An idle loop at his table. |
 | 2.6 | Oyen idle + knock-cup pose | 2–3 | P3. Sleeping loop and a paw swipe for the "daily tax". |
 

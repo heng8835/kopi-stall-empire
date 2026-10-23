@@ -1,6 +1,14 @@
-# Spec (TODO, next session): regulars vs. random walk-ins
+# Spec: regulars vs. random walk-ins
 
-Status: NOTED 2026-10-23 from the user's playtest. Not designed in detail or built yet. Do it in a new session.
+Status: BUILT 2026-10-23. Waiting on walk-in art (docs/art/ASSET_LIST.md 2.7); Kai and Rain Uncle stand in, tinted.
+
+## Decisions (user, 2026-10-23)
+1. Each regular comes once a day; walk-ins fill the rest of the fame count (a low-fame day still brings every regular).
+2. By day period: Ah Gong morning, Marcus lunch rush, Aunty Lim teatime, the kids after school (~3pm).
+3. Usual + small variety: the newest `usual` the menu can make, 1 in 4 times (`TUNING.regularVariety`) something else.
+4. Friendship meter: not now (IDEAS.md).
+5. Walk-ins: office worker, uncle, student, auntie, 3 tints each. Stand-ins until the art arrives.
+6. Lesson teachers stay the regulars: a lesson or story visit counts as that regular's visit for the day.
 
 ## The idea (user's words, tidied)
 - **Random people first.** Most customers in a day are random walk-ins: different faces, random orders from
@@ -24,8 +32,8 @@ Status: NOTED 2026-10-23 from the user's playtest. Not designed in detail or bui
 6. The recipe calendar's teachers stay the regulars (lesson day = their new order).
 
 ## Rough tasks
-- [ ] Data: `regular: true` + `schedule` (time window) + `usual` order list in src/data/customers.js
-- [ ] Walk-in pool: generic customer defs with random orders from unlocked recipes
-- [ ] Arrival schedule: regulars at their time + walk-ins spread over the day (systems/queue.js arrivalSchedule)
-- [ ] Art list update + placeholder sprites until the art arrives
-- [ ] Tests (schedule, order picking), browser check, playtest
+- [x] Data: `regular: true` + `schedule` (time window) + `usual` order list in src/data/customers.js
+- [x] Walk-in pool: generic customer defs with random orders from unlocked recipes
+- [x] Arrival schedule: regulars at their time + walk-ins spread over the day (systems/queue.js arrivalSchedule)
+- [x] Art list update + placeholder sprites until the art arrives
+- [x] Tests (schedule, order picking), browser check, playtest

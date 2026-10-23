@@ -27,3 +27,16 @@ export function arrivalSchedule(n, start, end, jitter, rand = Math.random) {
   }
   return times.sort((a, b) => a - b);
 }
+
+// A whole day's arrivals, sorted by time: each regular once, at a random moment inside their usual
+// window (minutes after opening; the day is 720 minutes, 7am -> 7pm), plus walk-ins spread over the
+// day so the total comes to `total`. Regulars -> { at, id }, walk-ins -> { at, id: null }.
+export function daySchedule({ total, regulars, dayMs, start, end, jitter, rand = Math.random }) {
+  const msPerMin = dayMs / 720;
+  const regs = regulars.map(({ id, window: [from, to] }) => {
+    const at = (from + rand() * (to - from)) * msPerMin;
+    return { at: Math.round(Math.max(start, Math.min(end, at))), id };
+  });
+  const walkIns = arrivalSchedule(Math.max(0, total - regs.length), start, end, jitter, rand).map((at) => ({ at, id: null }));
+  return [...regs, ...walkIns].sort((a, b) => a.at - b.at);
+}

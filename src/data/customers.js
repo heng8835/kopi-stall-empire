@@ -1,5 +1,8 @@
 // v0.1 cast. Orders are written in real kopitiam lingo and parsed by systems/order.js.
-//   weight      how often they show up (relative)
+//   regular     a story regular: comes once a day inside `window`, usually ordering their `usual`
+//   window      [from, to] in minutes after opening (7am = 0, lunch 240, teatime 420, 7pm = 720)
+//   usual       their usual order, oldest first: they drink the newest one the menu can make today
+//   weight      walk-ins: how often this kind shows up (relative)
 //   patience    seconds they wait at the counter before wandering off (gently)
 //   groupSize   cups in one order (the sec school kids order 4 at once)
 //   lines       key into src/i18n/lines.js
@@ -13,7 +16,9 @@ export const CUSTOMERS = [
     name: 'Aunty Lim',
     sprite: 'auntyLim',
     enabled: true,
-    weight: 3,
+    regular: true,
+    window: [430, 540], // teatime
+    usual: ['Teh', 'Teh siew dai'],
     patience: 40,
     groupSize: 1,
     // Orders are filtered to what the recipe calendar has unlocked (src/data/recipes.js).
@@ -34,7 +39,9 @@ export const CUSTOMERS = [
     name: 'Marcus',
     sprite: 'marcus',
     enabled: true,
-    weight: 3,
+    regular: true,
+    window: [250, 380], // lunch rush
+    usual: ['Kopi', 'Kopi C kosong'],
     patience: 22,
     groupSize: 1,
     orders: [
@@ -55,7 +62,9 @@ export const CUSTOMERS = [
     sprite: 'darren',
     sprites: ['darren', 'weiLing', 'hafiz', 'jiaHui'],
     enabled: true,
-    weight: 1,
+    regular: true,
+    window: [480, 590], // after school, ~3pm
+    usual: ['Milo Dinosaur'],
     patience: 50,
     groupSize: 4,
     orders: [
@@ -72,7 +81,9 @@ export const CUSTOMERS = [
     sprite: 'ahGong',
     slot: 'table',
     enabled: true,
-    weight: 2,
+    regular: true,
+    window: [10, 170], // with his morning paper
+    usual: ['Kopi O'],
     patience: 60,
     groupSize: 1,
     orders: [
@@ -115,5 +126,87 @@ export const CUSTOMERS = [
     groupSize: 1,
     orders: [{ text: 'Kopi ga dai', weight: 2 }, { text: 'Kopi O ga dai', weight: 1 }],
     lines: 'officeGuy',
+  },
+];
+
+// Random walk-ins: most of the day's customers. One kind is picked by weight per arrival, in a random
+// colour variant. `sprite` is the art we're waiting for (docs/art/ASSET_LIST.md, walk-ins); until it is
+// in spriteSizes.json the scene uses `standIn`, tinted so the crowd doesn't look like the cast.
+export const WALK_INS = [
+  {
+    id: 'officeWorker',
+    name: 'Office worker',
+    sprite: 'walkOffice',
+    standIn: 'kai',
+    tints: [0xffe0d0, 0xd8e4ff, 0xe4ffd8],
+    weight: 3,
+    patience: 25,
+    groupSize: 1,
+    orders: [
+      { text: 'Kopi', weight: 2 },
+      { text: 'Kopi O', weight: 1 },
+      { text: 'Kopi C', weight: 2 },
+      { text: 'Kopi C kosong', weight: 2 },
+      { text: 'Kopi peng', weight: 2 },
+      { text: 'Teh C peng', weight: 1 },
+    ],
+    lines: 'officeWorker',
+  },
+  {
+    id: 'uncle',
+    name: 'Uncle',
+    sprite: 'walkUncle',
+    standIn: 'rainUncle',
+    tints: [0xffe8c8, 0xdce8ff, 0xf0d8ff],
+    weight: 3,
+    patience: 40,
+    groupSize: 1,
+    orders: [
+      { text: 'Kopi O', weight: 3 },
+      { text: 'Kopi', weight: 2 },
+      { text: 'Kopi O kosong', weight: 1 },
+      { text: 'Kopi ga dai', weight: 2 },
+      { text: 'Teh O', weight: 1 },
+      { text: 'Cham', weight: 1 },
+    ],
+    lines: 'uncle',
+  },
+  {
+    id: 'student',
+    name: 'Student',
+    sprite: 'walkStudent',
+    standIn: 'kai',
+    tints: [0xfff0b8, 0xc8f0ff, 0xffd0e8],
+    weight: 2,
+    patience: 35,
+    groupSize: 1,
+    orders: [
+      { text: 'Milo', weight: 2 },
+      { text: 'Milo peng', weight: 3 },
+      { text: 'Milo Dinosaur', weight: 2 },
+      { text: 'Teh peng', weight: 1 },
+      { text: 'Horlicks peng', weight: 1 },
+      { text: 'Teh O', weight: 1 },
+    ],
+    lines: 'student',
+  },
+  {
+    id: 'auntie',
+    name: 'Auntie',
+    sprite: 'walkAuntie',
+    standIn: 'rainUncle', // any stand-in will do until her art arrives
+    tints: [0xffd8e0, 0xe0d8ff, 0xd8fff0],
+    weight: 2,
+    patience: 45,
+    groupSize: 1,
+    orders: [
+      { text: 'Teh', weight: 3 },
+      { text: 'Teh siew dai', weight: 2 },
+      { text: 'Teh C', weight: 2 },
+      { text: 'Teh peng', weight: 1 },
+      { text: 'Kopi siew dai', weight: 1 },
+      { text: 'Horlicks', weight: 1 },
+    ],
+    lines: 'auntie',
   },
 ];

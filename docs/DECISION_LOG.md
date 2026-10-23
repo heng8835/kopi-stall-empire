@@ -20,3 +20,4 @@
 | 2026-10-23 | Owner 'coach' thought bubble shows the next step for the cup being worked on | Playtest: hard to remember what each order needs |
 | 2026-10-23 | Retuned: 2-minute days, 8 customers on Day 1 (+1 per 15 fame, max 15) | Playtest: 3 minutes with 6 customers felt too empty |
 | 2026-10-23 | No order tickets: cups are matched to the waiting customer they fit best (oldest first), shown as 'for X' above the cup; the coach murmurs the latest order's recipe and the next step | Playtest: tapping customers to take orders got messy with several cups |
+| 2026-10-23 | Regulars (Aunty Lim, Marcus, Ah Gong, kids) come once a day in their day period with their usual (1 in 4 something else); random walk-ins (office worker, uncle, student, auntie, tinted stand-ins until art) fill the rest of the fame count | User: most customers should be random people; the cast have their own preference and routine |
