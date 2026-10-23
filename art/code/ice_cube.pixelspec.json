@@ -1,0 +1,65 @@
+{
+  "schema": "codeart2d.pixelspec.v1",
+  "name": "ice_cube",
+  "canvas": [
+    17,
+    16
+  ],
+  "palette": {
+    "k": "#2c4a63",
+    "t": "#eefaff",
+    "l": "#c4e9f9",
+    "r": "#93cbe6",
+    "w": "#ffffff",
+    "h": "#f4fcff",
+    "s": "#78b4d6",
+    "b": "#e6f7ff",
+    "e": "#d6f1fc",
+    "v": "#aedaef"
+  },
+  "outline": {
+    "mode": "none"
+  },
+  "poses": {
+    "big": [
+      ".....kkkkk.....",
+      "...kkwwtttkk...",
+      "..ktwtttttttk..",
+      ".ktttttttttttk.",
+      ".kleettttteerk.",
+      "klllleeteerrrrk",
+      "klhllllerrrrsrk",
+      "klhllllvrrrrsrk",
+      "klhllllvrrrrrrk",
+      "kllllllvrrrrrrk",
+      ".klllblvrrrrrk.",
+      "..kklllvrrrkk..",
+      "....kklvrkk....",
+      "......kkk......"
+    ],
+    "small": [
+      "....kkkkk....",
+      "..kkwwtttkk..",
+      ".ktwtttttttk.",
+      ".keettttteek.",
+      "kllleeteerrrk",
+      "klhlllerrrsrk",
+      "klhlllvrrrsrk",
+      "klhlllvrrrrrk",
+      "klllblvrrrrrk",
+      ".kklllvrrrkk.",
+      "...kklvrkk...",
+      ".....kkk....."
+    ]
+  },
+  "layers": [
+    {
+      "name": "cube",
+      "origin": [
+        1,
+        1
+      ],
+      "rows": "big"
+    }
+  ]
+}

@@ -182,6 +182,15 @@ table.matrix { border-collapse: separate; border-spacing: 6px; min-width: 640px;
 :root[data-theme="dark"] .phase .ph { color: var(--starter); }
 .phase ul { margin: 4px 0 0; padding-left: 18px; font-size: 14px; }
 
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; }
+.timeline li { display: grid; grid-template-columns: 64px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.timeline li:first-child { border-top: none; }
+.timeline .day { font-family: var(--display); font-size: 15px; color: var(--chilli); line-height: 1.2; }
+.timeline .day small { display: block; font-family: var(--body); font-size: 11px; color: var(--muted); }
+.timeline b { font-size: 14px; }
+.timeline .who { font-size: 13px; color: var(--muted); }
+.steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
+.newcard { border: 3px solid var(--ink); border-radius: 14px; padding: 14px; display: grid; gap: 8px; background: var(--panel); box-shadow: 0 6px 0 var(--line); }
 code { font-size: 12.5px; background: var(--chip); padding: 1px 5px; border-radius: 4px; }
 @media (prefers-reduced-motion: reduce) { .hand-h, .hand-m, .periods .now, .zones .marker.anim { animation: none; } }
 </style>
@@ -193,20 +202,65 @@ code { font-size: 12.5px; background: var(--chip); padding: 1px 5px; border-radi
   <h1>Stall Upgrade Plan</h1>
   <p>Everything for the next build, in one place: the full kopitiam drink list, the starter menu, the upgrade catalogue, a new pour bar your finger can't cover, a real wall clock, and the art I need from you. Nothing here is built yet.</p>
   <nav class="toc" aria-label="Sections">
-    <a href="#decide">Decide</a><a href="#drinks">Drinks</a><a href="#specials">Specials</a><a href="#pour">Pour bar</a><a href="#clock">Clock</a><a href="#catalogue">Catalogue</a><a href="#art">Art needed</a><a href="#phases">Build order</a>
+    <a href="#decide">Decide</a><a href="#unlocks">Recipe calendar</a><a href="#tutorial">Day 1 tutorial</a><a href="#ice">Ice</a><a href="#drinks">Drinks</a><a href="#specials">Specials</a><a href="#pour">Pour bar</a><a href="#clock">Clock</a><a href="#catalogue">Catalogue</a><a href="#art">Art needed</a><a href="#phases">Build order</a>
   </nav>
 </header>
 
 <section id="decide">
   <div class="eyebrow">Decisions</div>
-  <h2>Six calls to approve first</h2>
+  <h2>Your calls</h2>
   <div class="panel decisions">
-    <div class="decision"><div><b>Condensed milk is the sugar for Kopi and Teh.</b> Kopi / Teh = condensed milk only; siew dai = less condensed, ga dai = more. The sugar can is for O and C drinks. That's how a real uncle makes it, and it means one less pour. "Kopi kosong" isn't on the menu (customers say "Kopi C kosong"). <span class="rec">Recommended</span></div></div>
-    <div class="decision"><div><b>The pour bar docks under the clock, full width.</b> While you pour, a big labelled bar shows at the top of the screen, so your finger is never on it. The small meter beside the cup goes away. <span class="rec">Recommended</span></div></div>
-    <div class="decision"><div><b>Liquid becomes HD art, tinted and cropped by code.</b> It replaces the flat drawn rectangles. I'll draw an HD-quality stand-in myself so we're not blocked, and swap in your art when it arrives. <span class="rec">Recommended</span></div></div>
-    <div class="decision"><div><b>Starter menu + unlocks.</b> Day 1 serves 6 bases × kosong / siew dai / normal × hot / peng, plus Milo drinks. Everything else unlocks from the night shop or by fame. <span class="rec">Recommended</span></div></div>
-    <div class="decision"><div><b>Night shop after each day's summary, from Day 3.</b> Items are gated by fame tiers (0 / 25 / 50 / 75), so the month has a steady drip of new toys. <span class="rec">Recommended</span></div></div>
-    <div class="decision"><div><b>Malt drink name.</b> "Horlicks" is what people actually order, but it's a brand, like the Toto issue before. Call it <b>"Malt"</b> in game, keeping Milo as it is already. <span class="rec">Recommended: "Malt"</span></div></div>
+    <div class="decision"><div><b>Condensed milk is the sugar for Kopi and Teh.</b> Kopi / Teh = condensed milk only; siew dai = less condensed, ga dai = more. The sugar can is for O and C drinks. That's how a real uncle makes it, and it means one less pour. "Kopi kosong" isn't on the menu (customers say "Kopi C kosong"). <span class="tag t-starter">Approved</span></div></div>
+    <div class="decision"><div><b>The pour bar sits near the top, but not too high.</b> It docks just above the customers' order bubbles, not up at the clock, so your finger never covers it and your eyes don't travel far. The small meter beside the cup goes away. <span class="tag t-starter">Approved</span></div></div>
+    <div class="decision"><div><b>Liquid becomes HD art, tinted and cropped by code.</b> It replaces the flat drawn rectangles. I'll draw an HD-quality stand-in myself so we're not blocked, and swap in your art when it arrives. The ice is already drawn (see Ice). <span class="tag t-starter">Approved</span></div></div>
+    <div class="decision"><div><b>Start small, open recipes one at a time.</b> Day 1 has just 4 easy recipes. Every few days a regular asks for something new, a short tutorial card teaches it, and it joins the menu. Machines from the shop add the specials. <span class="tag t-starter">Approved</span></div></div>
+    <div class="decision"><div><b>Night shop after each day's summary, from Day 3.</b> Items are gated by fame tiers (0 / 25 / 50 / 75), so the month has a steady drip of new toys. <span class="tag t-starter">Approved</span></div></div>
+    <div class="decision"><div><b>Malt drink name.</b> "Horlicks" is what people actually order, but it's a brand, like the Toto issue before. Call it <b>"Malt"</b> in game, keeping Milo as it is already. <span class="tag t-fame">Still open</span> (my pick: "Malt")</div></div>
+  </div>
+</section>
+
+
+<section id="unlocks">
+  <div class="eyebrow">Recipes open up one by one</div>
+  <h2>The recipe calendar</h2>
+  <p class="muted">Each new order word arrives with a regular who wants it "their way", then a short tutorial card shows how to make it (steps plus the pour-bar zone). That day they order it more often, so you practise it. Shop machines add specials the same way: buy it at night, and next morning someone orders it, with a card.</p>
+  <div class="panel"><ol class="timeline" id="timeline"></ol></div>
+</section>
+
+<section id="tutorial">
+  <div class="eyebrow">Day 1</div>
+  <h2>A quick first-day tutorial</h2>
+  <div class="grid2">
+    <div class="panel"><h3>Uncle Tan's notes (about 2 minutes, skippable)</h3>
+      <ol class="steps">
+        <li><b>Welcome card.</b> Customers walk in and queue; the bubble is their order; the green bar is their patience.</li>
+        <li><b>Make a Kopi together.</b> Put a cup on the tray, hold the kopi pot over it until the bar says FULL, add condensed milk to NORMAL, wiggle the spoon, drag the cup to Aunty Lim.</li>
+        <li><b>Make a Teh.</b> Same steps with the teh pot. The cards get shorter each time.</li>
+        <li><b>Make a Kopi O.</b> "O" means no milk: sugar can instead, to NORMAL.</li>
+        <li><b>Recipe book.</b> The 4 recipes on one card, and where the book lives in the HUD (tap any time; the day pauses).</li>
+        <li><b>Fame 名气.</b> Perfect drinks raise fame, more fame brings more customers tomorrow, and walk-outs dip it a little. Nothing bad happens if you slip.</li>
+        <li><b>The day.</b> Clock and day bar: morning, lunch rush, teatime, closing. Then the stall opens for real and Episode 1 plays.</li>
+      </ol>
+    </div>
+    <div class="panel"><h3>A "new recipe" card looks like this</h3>
+      <div class="newcard">
+        <div class="eyebrow">New order word · Day 3</div>
+        <h3 style="font-size:20px">C = evaporated milk</h3>
+        <p class="small">Marcus: "Boss, kopi C kosong, fast fast!"</p>
+        <ol class="steps small"><li>Kopi pot to <b>FULL</b></li><li>Evap can to <b>C · NORMAL</b></li><li><b>Kosong</b> = skip the sugar</li><li>Stir, serve</li></ol>
+        <div class="zones" style="height:26px"><span class="z-none" style="flex:1.2">none (O)</span><span class="z-gap" style="flex:.8"></span><span class="z-ok target" style="flex:1.8">C · NORMAL</span><span class="z-bad" style="flex:1">too milky</span></div>
+        <p class="small muted">Tap to start · added to your recipe book</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="ice">
+  <div class="eyebrow">Art · first piece done</div>
+  <h2>Peng ice, drawn as pixel art</h2>
+  <div class="panel">
+    <img src="data:image/png;base64,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" alt="Ice cube cluster and a single cube shown large, then at game size on kopi O, teh, Milo and kopi C colours" style="image-rendering: pixelated; width: 100%; max-width: 560px; justify-self: start;">
+    <p class="small muted">Code-drawn (no image model): a 3-cube cluster for peng drinks and a single cube for the ice tool. Each cube has its own outline so they stay separate. In the game they float at the drink's surface, slightly see-through so the drink colour shows. Bottom row: actual game size on kopi O, teh, Milo and kopi C.</p>
   </div>
 </section>
 
@@ -217,16 +271,16 @@ code { font-size: 12.5px; background: var(--chip); padding: 1px 5px; border-radi
   <div class="panel">
     <div class="matrix-wrap"><table class="matrix" id="matrix" aria-label="Kopi and teh combinations"></table></div>
     <div class="chips small" style="gap:10px">
-      <span><span class="tag t-starter">Starter</span> on the Day 1 menu</span>
-      <span><span class="tag t-fame">Fame</span> unlocks free at a fame level</span>
+      <span><span class="tag t-starter">Day 1</span> on the first menu</span>
+      <span><span class="tag t-fame">Day N</span> a regular teaches it that day</span>
       <span><span class="tag t-machine">Machine</span> needs a shop item</span>
       <span>Sugar cubes on the cup = sweetness</span>
     </div>
   </div>
   <div class="panel mods">
     <h3>Modifiers (stack on any cell)</h3>
-    <div class="mod"><b>Temperature</b><div class="chips"><span class="chip">Hot <span class="tag t-starter">Starter</span></span><span class="chip">Peng (iced) <span class="tag t-starter">Starter</span></span><span class="chip">aka "Kopi ice", "Teh bing"</span></div></div>
-    <div class="mod"><b>Strength</b><div class="chips"><span class="chip">Poh (thin)</span><span class="chip">Normal <span class="tag t-starter">Starter</span></span><span class="chip">Gao (strong)</span><span class="chip">Di Lo (no water at all)</span><span class="tag t-machine">Big Brass Kettle</span></div></div>
+    <div class="mod"><b>Temperature</b><div class="chips"><span class="chip">Hot <span class="tag t-starter">Day 1</span></span><span class="chip">Peng (iced) <span class="tag t-fame">Day 5</span></span><span class="chip">aka "Kopi ice", "Teh bing"</span></div></div>
+    <div class="mod"><b>Strength</b><div class="chips"><span class="chip">Poh (thin)</span><span class="chip">Normal <span class="tag t-starter">Day 1</span></span><span class="chip">Gao (strong)</span><span class="chip">Di Lo (no water at all)</span><span class="tag t-machine">Big Brass Kettle</span></div></div>
     <div class="mod"><b>Style</b><div class="chips"><span class="chip">Tarik (pulled, frothy)</span><span class="tag t-machine">Tarik Mugs</span><span class="chip">Halia (ginger)</span><span class="tag t-machine">Halia Pot</span></div></div>
     <div class="mod"><b>To go</b><div class="chips"><span class="chip">Tapau / Da bao (bag + string)</span><span class="tag t-machine">Tapau Station</span></div></div>
   </div>
@@ -309,7 +363,7 @@ code { font-size: 12.5px; background: var(--chip); padding: 1px 5px; border-radi
   <div class="eyebrow">Build order</div>
   <h2>Four steps, each playable on its own</h2>
   <div class="phases">
-    <div class="phase"><div class="ph">A</div><div><b>Feel better to make drinks</b><ul><li>Horizontal pour bar under the HUD, with labelled zones per ingredient</li><li>HD liquid layers (my stand-in first, your art later)</li><li>Condensed-milk sweetness rule, and Teh O added to the menu</li><li>Wall clock + day-period bar in a taller HUD</li></ul></div></div>
+    <div class="phase"><div class="ph">A</div><div><b>Feel better to make drinks</b><ul><li>Horizontal pour bar under the HUD, with labelled zones per ingredient</li><li>HD liquid layers (my stand-in first, your art later)</li><li>Condensed-milk sweetness rule; recipe calendar, "new recipe" cards and a recipe book</li><li>New Day 1 tutorial (play, 4 recipes, fame)</li><li>Ice art in game</li><li>Wall clock + day-period bar in a taller HUD</li></ul></div></div>
     <div class="phase"><div class="ph">B</div><div><b>Order tickets</b> (the existing spec)<ul><li>Tap a customer to take the order; the cup gets a ticket</li><li>The pour bar outlines that ticket's target zone</li><li>Richer day summary with Uncle Tan's tip</li></ul></div></div>
     <div class="phase"><div class="ph">C</div><div><b>Night shop + menu unlocks</b><ul><li>Catalogue data, shop screen after the summary, saved purchases</li><li>Power-up effects (speed, patience, tips, fame per day)</li><li>Menu unlocks change what customers order; a wall menu board shows them</li></ul></div></div>
     <div class="phase"><div class="ph">D</div><div><b>New drink mechanics</b><ul><li>Hot water + strength (gao / poh / di lo)</li><li>Tarik pull, halia, limau, layered Teh C Special, cham, butter, ice cream</li><li>Tapau bagging + delivery rider orders</li></ul></div></div>
@@ -336,7 +390,7 @@ const SWEET = [
 ];
 const cup = (color, cubes = 0, extra = '') =>
   `<div class="cup${extra}" aria-hidden="true"><div class="liq" style="background:${color}"></div><div class="sug">${'<i></i>'.repeat(cubes)}</div></div>`;
-const tag = (kind) => ({ s: '<span class="tag t-starter">Starter</span>', f: '<span class="tag t-fame">Fame 20</span>' })[kind] ?? '';
+const tag = (day) => `<span class="tag ${day === 1 ? 't-starter' : 't-fame'}">Day ${day}</span>`;
 let html = '<thead><tr><th></th>' + SWEET.map((s) => `<th>${s.col}</th>`).join('') + '</tr></thead><tbody>';
 for (const b of BASES) {
   html += `<tr><th class="row">${b.row}<small>${b.note}</small></th>`;
@@ -346,8 +400,8 @@ for (const b of BASES) {
       html += `<td><div class="cell off"><span></span><div class="name">not ordered<span class="zh">say "${b.base === 'kopi' ? 'Kopi' : 'Teh'} C kosong"</span></div></div></td>`;
       continue;
     }
-    const kind = s.word === 'ga dai' ? 'f' : 's';
-    html += `<td><div class="cell">${cup(b.color, s.cubes)}<div class="name">${name}<span class="zh">${b.zh}${s.zh}</span>${tag(kind)}</div></div></td>`;
+    const day = Math.max(b.milk === 'evap' ? 3 : 1, { kosong: 3, 'siew dai': 4, 'ga dai': 8 }[s.word] ?? 1);
+    html += `<td><div class="cell">${cup(b.color, s.cubes)}<div class="name">${name}<span class="zh">${b.zh}${s.zh}</span>${tag(day)}</div></div></td>`;
   }
   html += '</tr>';
 }
@@ -355,8 +409,8 @@ document.getElementById('matrix').innerHTML = html + '</tbody>';
 
 // ---------- specials ----------
 const SPECIALS = [
-  { n: 'Milo / Milo Peng', zh: '美禄', c: '#6b4a32', d: 'Hot or iced chocolate malt.', u: 'Starter', k: 's' },
-  { n: 'Milo Dinosaur', zh: '美禄恐龙', c: '#6b4a32', d: 'Iced Milo with a mountain of powder on top.', u: 'Starter', k: 's' },
+  { n: 'Milo / Milo Peng', zh: '美禄', c: '#6b4a32', d: 'Hot or iced chocolate malt.', u: 'Day 6', k: 'd' },
+  { n: 'Milo Dinosaur', zh: '美禄恐龙', c: '#6b4a32', d: 'Iced Milo with a mountain of powder on top. The kids teach it in Episode 2.', u: 'Day 2', k: 'd' },
   { n: 'Milo Godzilla', zh: '美禄哥斯拉', c: '#6b4a32', d: 'Dinosaur + a scoop of vanilla ice cream.', u: 'Mini Freezer', k: 'm' },
   { n: 'Cham / Yuan Yang', zh: '鸳鸯', c: '#6a3a1e', d: 'Kopi + teh in one cup (O and C versions too). Today it\'s a mistake; with the stand it\'s a menu item.', u: 'Twin Sock Stand', k: 'm' },
   { n: 'Teh Tarik / Kopi Tarik', zh: '拉茶', c: '#d9a46f', d: 'Pulled between two mugs from height until frothy. A drag-up-and-down pull.', u: 'Tarik Mugs', k: 'm' },
@@ -371,7 +425,7 @@ const SPECIALS = [
 document.getElementById('specials-grid').innerHTML = SPECIALS.map((s) => `
   <article class="drink">${s.layered ? '<div class="cup layered" aria-hidden="true"><div class="liq"></div></div>' : cup(s.c, 0)}
     <div><h3>${s.n}</h3><div class="zh">${s.zh}</div><p>${s.d}</p>
-    <div class="meta">${s.k === 's' ? '<span class="tag t-starter">Starter</span>' : `<span class="tag t-machine">${s.u}</span>`}</div></div></article>`).join('');
+    <div class="meta">${s.k === 'd' ? `<span class="tag t-fame">${s.u}</span>` : `<span class="tag t-machine">${s.u}</span>`}</div></div></article>`).join('');
 
 // ---------- catalogue ----------
 const CAT = [
@@ -432,7 +486,7 @@ const ART = [
   { g: 'Drink layers: fixes the blurry filling', p: 1, note: 'Grey / white so code can tint any drink colour. I make an HD stand-in first if these take a while.', items: [
     ['Liquid body for the glass', 'shaded greyscale liquid shape that fills the inside of our glass, full height'],
     ['Liquid surface', 'the oval top of the drink with a highlight (crema / tea surface)'],
-    ['Ice cubes', '3 clear cubes in a cluster, for peng'],
+    ['Ice cubes', 'DONE, code-drawn: see the Ice section'],
     ['Milk cloud', 'white swirl of unstirred milk, for "needs stirring"'],
     ['Condensation drops', 'droplets on the glass, for iced drinks'],
     ['Steam wisps', '2–3 soft curls rising, for hot drinks'],
@@ -479,6 +533,21 @@ document.getElementById('sprite-list').innerHTML = ART.map((g) => `
     ${g.note ? `<p class="small muted">${g.note}</p>` : ''}
     <ol>${g.items.map(([n, d]) => `<li><b>${n}</b> <span>· ${d}</span></li>`).join('')}</ol>
     ${g.have ? `<div class="have">${g.have}</div>` : ''}</div>`).join('');
+
+// ---------- recipe calendar ----------
+const TL = [
+  ['1', 'Start', 'Kopi · Kopi O · Teh · Teh O', "Uncle Tan's Day 1 tutorial. Plain = condensed milk. O = no milk, add sugar. Hot only."],
+  ['2', 'Ep 2', 'Milo Dinosaur', 'The kids, short 20 cents. First ice: pour to the ¾ line, ice, powder on top.'],
+  ['3', 'Ep 3', 'C (evaporated milk) + kosong', 'Marcus: "Kopi C kosong, fast fast!" Unlocks Kopi C, Teh C, and kosong for O and C drinks.'],
+  ['3', 'Night', 'Night shop opens', 'Machines unlock the specials (halia, tarik, limau, cham, Teh C Special…). Each comes with its own card next morning.'],
+  ['4', '', 'Siew dai', 'Aunty Lim: "Doctor say less sweet." Less condensed milk, or less sugar.'],
+  ['5', 'Ep 4', 'Peng for kopi and teh', 'Makcik on a hot day: "Kopi peng!" Pour to ¾, then ice.'],
+  ['6', '', 'Milo · Milo Peng', "Darren: \"Just Milo. No dinosaur today, I'm on a diet.\""],
+  ['8', '', 'Ga dai', 'Taxi Uncle (first visit): "Ga dai! Long day driving." More sweetness.'],
+  ['11', '', 'Gao / Poh (with the Big Kettle)', 'Ah Gong: "老人家要浓." Hot water sets strength. Without the kettle he says he will wait for it.'],
+];
+document.getElementById('timeline').innerHTML = TL.map(([d, t, what, how]) => `
+  <li><div class="day">Day ${d}${t ? `<small>${t}</small>` : ''}</div><div><b>${what}</b><div class="who">${how}</div></div></li>`).join('');
 
 // ---------- clock ticks ----------
 const ticks = document.getElementById('ticks');

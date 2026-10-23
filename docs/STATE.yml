@@ -1,12 +1,12 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-23
 phase: development
-next: "User reviewing docs/specs/next-phase-plan.md (plan page published); on approval build phase A (pour bar, HD liquid, clock). Art list is on the page."
+next: "Build phase A of docs/specs/next-phase-plan.md (pour bar near top, HD liquid stand-in + code-drawn ice, condensed rule, recipe calendar + cards + book, Day 1 tutorial, clock). Decision 6 (Malt) open."
 tier_hint: 1
 blockers: ["Sophie flag/Merlion fix (user)"]
 touched: [src/scenes/StallScene.js, src/scenes/DramaScene.js, src/scenes/TitleScene.js, src/data/events.js, src/data/stallTuning.js, src/data/glossary.js, src/systems/queue.js, src/systems/story.js, src/systems/run.js, src/systems/economy.js, public/sprites/]
 validation: passing
-open_decisions: ["6 decisions in docs/specs/next-phase-plan.md", "Walk-frame route (IDEAS.md)"]
+open_decisions: ["Malt vs Horlicks name", "Walk-frame route (IDEAS.md)"]
 spec: "docs/specs/next-phase-plan.md"
 board_task: ""
 notes: "Jump to any day: ?day=14&fame=60&flags=kidsOwe (title -> Open stall). Pane testing: fake Date.now (tweens use it) + game.step; wait for Title status 5 before starting; screenshots lag, use renderer.snapshotPixel to check pixels."

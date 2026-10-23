@@ -1,6 +1,6 @@
 # Spec (DRAFT, awaiting approval): pour bar, HD liquid, wall clock, menu unlocks, night shop
 
-Status: DRAFT 2026-10-23. Visual version for the user: docs/plan/stall-upgrade-plan.html
+Status: decisions 1-5 APPROVED 2026-10-23 (2: bar near the top but not too high, just above the order bubbles; 4 reshaped as story-paced unlocks); 6 ("Malt") still open. Visual version for the user: docs/plan/stall-upgrade-plan.html
 (published: https://claude.ai/artifact/G28FFgiywwDqsGwrmLoE8z). Waiting on the user's approval of the 6 decisions + art.
 
 ## Decisions proposed (all recommended)
@@ -36,3 +36,17 @@ C night shop + power-ups + menu unlocks + wall menu board · D new drink mechani
 limau, layered, cham, butter, ice cream, tapau + delivery rider).
 
 ## Art needed (P1 first): see the "Art I need from you" section of the plan page.
+
+## Recipe calendar (replaces the big starter menu; approved idea)
+Day 1: Kopi, Kopi O, Teh, Teh O, hot only (Day 1 tutorial) · Day 2: Milo Dinosaur (kids, Ep 2; first ice, the 3/4 rule) ·
+Day 3: C + kosong (Marcus, Ep 3) · Day 3 night: shop opens · Day 4: siew dai (Aunty Lim) · Day 5: peng for kopi/teh (Makcik, Ep 4) ·
+Day 6: Milo, Milo Peng (Darren) · Day 8: ga dai (Taxi Uncle) · Day 11: gao/poh if the Big Kettle is owned (Ah Gong).
+Each unlock: a regular orders it their way -> "new recipe" card (steps + pour-bar zone) -> added to the recipe book; they order it more that day.
+Customer orders are filtered to unlocked recipes. Shop machines: next morning a customer orders the special, with a card.
+
+## Day 1 tutorial (rework of Uncle Tan's notes, skippable)
+Welcome (walk-in, bubble, patience) -> make Kopi (cup, pot to FULL, condensed to NORMAL, stir, serve) -> Teh -> Kopi O (sugar instead of milk)
+-> recipe book card (4 recipes) -> Fame card -> day bar/clock card -> Episode 1.
+
+## Art done
+Ice cubes, code-drawn (no image model): art/code/make_ice_specs.py -> ice_cluster.png / ice_cube.png (review: docs/plan/ice-review.png).

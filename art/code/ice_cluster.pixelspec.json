@@ -1,0 +1,84 @@
+{
+  "schema": "codeart2d.pixelspec.v1",
+  "name": "ice_cluster",
+  "canvas": [
+    29,
+    19
+  ],
+  "palette": {
+    "k": "#2c4a63",
+    "t": "#eefaff",
+    "l": "#c4e9f9",
+    "r": "#93cbe6",
+    "w": "#ffffff",
+    "h": "#f4fcff",
+    "s": "#78b4d6",
+    "b": "#e6f7ff",
+    "e": "#d6f1fc",
+    "v": "#aedaef"
+  },
+  "outline": {
+    "mode": "none"
+  },
+  "poses": {
+    "big": [
+      ".....kkkkk.....",
+      "...kkwwtttkk...",
+      "..ktwtttttttk..",
+      ".ktttttttttttk.",
+      ".kleettttteerk.",
+      "klllleeteerrrrk",
+      "klhllllerrrrsrk",
+      "klhllllvrrrrsrk",
+      "klhllllvrrrrrrk",
+      "kllllllvrrrrrrk",
+      ".klllblvrrrrrk.",
+      "..kklllvrrrkk..",
+      "....kklvrkk....",
+      "......kkk......"
+    ],
+    "small": [
+      "....kkkkk....",
+      "..kkwwtttkk..",
+      ".ktwtttttttk.",
+      ".keettttteek.",
+      "kllleeteerrrk",
+      "klhlllerrrsrk",
+      "klhlllvrrrsrk",
+      "klhlllvrrrrrk",
+      "klllblvrrrrrk",
+      ".kklllvrrrkk.",
+      "...kklvrkk...",
+      ".....kkk....."
+    ]
+  },
+  "layers": [
+    {
+      "name": "back",
+      "z": 0,
+      "origin": [
+        8,
+        1
+      ],
+      "rows": "big"
+    },
+    {
+      "name": "front_left",
+      "z": 1,
+      "origin": [
+        1,
+        4
+      ],
+      "rows": "big"
+    },
+    {
+      "name": "front_right",
+      "z": 2,
+      "origin": [
+        14,
+        6
+      ],
+      "rows": "small"
+    }
+  ]
+}
