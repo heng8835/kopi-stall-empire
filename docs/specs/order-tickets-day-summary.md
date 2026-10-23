@@ -1,6 +1,6 @@
 # Spec: order tickets on cups + peng fill rule + better day summary
 
-Status: TODO — requested by the user on 2026-10-22 after playtesting; to be built in a separate session.
+Status: BUILT 2026-10-23 (phase B). A (peng rule) shipped in phase A; the 3-day flow in D was superseded by the 30-day run. Tickets: tap sprite or bubble; target zone outlined on the pour bar and a dashed target line on the glass.
 Why: players can't tell how much teh to pour for a peng drink or where "siew dai" is on the gauge, and the day-end card is too thin. User chose "order tickets on cups" (tap a customer -> ticketed cup appears -> gauge highlights that order's target band).
 
 ## A. The peng (iced) fill rule (`src/systems/cup.js`, `src/data/stallTuning.js`)

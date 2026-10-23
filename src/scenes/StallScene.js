@@ -16,6 +16,7 @@ import { DrinkArt, ART_ORIGIN } from '../systems/drinkArt.js';
 import { PourBar } from '../systems/pourBar.js';
 import { showRecipeCard, showRecipeBook } from '../systems/cards.js';
 import { ordersFor, lessonFor } from '../systems/menu.js';
+import { summarizeDay } from '../systems/daySummary.js';
 import { createDayState, applyServe, applyTimeout, formatMoney, customersForFame, clampFame } from '../systems/economy.js';
 import { weightedPick } from '../systems/random.js';
 import { placeArrival, frontCanTake, arrivalSchedule } from '../systems/queue.js';
@@ -54,6 +55,7 @@ const BG_SCALE = 901 / GAME_W; // background art pixels per logical px
 const ENTRY = { x: -40, feetY: 236 };
 const QUEUE_POS = [{ x: 126, feetY: 270 }, { x: 88, feetY: 262 }, { x: 50, feetY: 254 }];
 const MID_STORY_AT = 0.4; // a 'mid' episode plays this far into the day
+const TICKET_HINTS = 3; // show "tap to take order" on the first few bubbles of the day
 const LESSON_AT_MS = 5000; // a recipe teacher walks in this far into a lesson day
 // Day periods on the HUD bar, in minutes from opening (7am): morning, lunch rush, teatime, closing.
 const PERIODS = [['Morning', 0, 240, 0xffe9a8], ['Lunch', 240, 420, 0xffb870], ['Teatime', 420, 600, 0xbfe0c4], ['Closing', 600, 720, 0x9fb3d9]];
@@ -89,6 +91,14 @@ export default class StallScene extends Phaser.Scene {
     this.lastPourSound = 0;
     this.log = startDay({ day: this.day, owner: this.owner.name });
     this.input.dragDistanceThreshold = 6; // taps don't start drags
+    this.hintsLeft = TICKET_HINTS;
+    // Tap a waiting customer (sprite or bubble) to take their order: a ticketed cup appears.
+    this.input.on('pointerup', (p, over) => {
+      if (this.paused || this.ended || p.getDistance() > 8) return;
+      if (over.some((o) => o.tool || this.slots.some((sl) => sl.container === o))) return;
+      const c = this.customerAt(p.worldX, p.worldY);
+      if (c) this.takeOrder(c);
+    });
 
     this.drawBackdrop();
     this.drawHud();
@@ -159,13 +169,17 @@ export default class StallScene extends Phaser.Scene {
       const art = new DrinkArt(this, `cupArt${i}`);
       const img = this.add.image(0, 0, `cupArt${i}`).setOrigin(ART_ORIGIN.x, ART_ORIGIN.y).setScale(CUP_H / 186);
       container.add(img);
+      // the order ticket clipped above the cup (filled in by takeOrder)
+      const tag = this.add.rectangle(0, -CUP_H - 14, 100, 26, 0xfff3c4).setStrokeStyle(1.5, 0x8a5a2b).setVisible(false);
+      const tagText = addText(this, 0, -CUP_H - 14, '', { size: 9, bold: true, align: 'center', origin: 0.5, color: '#3a2e2a', wrap: 96 });
+      container.add([tag, tagText]);
       // Hit box covers the whole cup + saucer: world y from CUP_BOTTOM - CUP_H - 8 to CUP_BOTTOM + 16.
       // (A container's local hit space starts at its position minus half its size.)
       const hitH = CUP_H + 24;
       container.setSize(CUP_W + 24, hitH);
       container.setInteractive(new Phaser.Geom.Rectangle(0, hitH / 2 - CUP_H - 8, CUP_W + 24, hitH), Phaser.Geom.Rectangle.Contains);
       this.input.setDraggable(container);
-      const slot = { i, x, cup: null, container, art, label };
+      const slot = { i, x, cup: null, container, art, label, tag, tagText, ticket: null };
       container.on('dragstart', () => this.onCupDragStart(slot));
       container.on('drag', (p) => this.onCupDrag(slot, p));
       container.on('dragend', (p) => this.onCupDragEnd(slot, p));
@@ -219,6 +233,7 @@ export default class StallScene extends Phaser.Scene {
   // The drink itself is drawn every frame by slot.art (systems/drinkArt.js); this updates the label.
   redrawSlot(slot) {
     slot.label.setText(slot.cup ? formatCup(slot.cup) : '');
+    this.drawTicket(slot);
   }
 
   // ---------- cups on the tray ----------
@@ -241,8 +256,51 @@ export default class StallScene extends Phaser.Scene {
   }
 
   removeCup(slot) {
+    if (slot.ticket) slot.ticket.c.ticketsTaken = Math.max(0, (slot.ticket.c.ticketsTaken ?? 0) - 1);
+    slot.ticket = null;
     slot.cup = null;
     this.redrawSlot(slot);
+  }
+
+  // ---------- order tickets ----------
+
+  // How many more cups this customer still needs a ticket for.
+  ticketsOwed(c) {
+    return Math.max(0, c.n - c.served - (c.ticketsTaken ?? 0));
+  }
+
+  takeOrder(c) {
+    if (c.state !== 'waiting') return;
+    if (!this.ticketsOwed(c)) return this.setFeedback('Already got their ticket — make the drink!');
+    const slot = this.freeSlot();
+    if (!slot) return this.setFeedback('Tray full — serve or bin a cup first');
+    this.placeCup(slot);
+    c.ticketsTaken = (c.ticketsTaken ?? 0) + 1;
+    const cupNo = c.n > 1 ? ` ${c.served + c.ticketsTaken}/${c.n}` : '';
+    slot.ticket = { c, spec: c.spec, who: c.def.name, text: `${c.orderText}${cupNo}` };
+    this.drawTicket(slot);
+    play('tap');
+    logEvent(this.log, 'ticket', { who: c.def.id, order: c.orderText }, this.clockMs);
+    this.tutorial?.onTicket?.(c);
+    this.showBubble(c, c.orderLine, 'order'); // shows the ✓
+  }
+
+  drawTicket(slot) {
+    const t = slot.ticket;
+    slot.tag.setVisible(!!t);
+    slot.tagText.setText(t ? `${t.text}\n${t.who}${t.left ? ' (left)' : ''}` : '');
+    if (t) {
+      slot.tag.setFillStyle(t.left ? 0xdedede : 0xfff3c4);
+      slot.tagText.setColor(t.left ? '#8a8a8a' : '#3a2e2a');
+      slot.tag.setSize(Math.min(104, slot.tagText.width + 10), slot.tagText.height + 6);
+    }
+  }
+
+  // Where a ticketed cup should be poured to: ¾ for peng (the ice tops it up), else full.
+  targetFill(slot) {
+    const spec = slot.ticket?.spec;
+    if (!spec || slot.ticket.left) return null;
+    return spec.iced ? 0.7 : 0.95;
   }
 
   slotAt(x, y) {
@@ -338,7 +396,7 @@ export default class StallScene extends Phaser.Scene {
     if (!slot?.cup) return;
     pour(slot.cup, ingredient, dtMs);
     this.redrawSlot(slot);
-    this.pourBar.show(ingredient, slot.cup, slot.i + 1);
+    this.pourBar.show(ingredient, slot.cup, slot.i + 1, slot.ticket && !slot.ticket.left ? slot.ticket : null);
   }
 
   dropOnCup(slot, what) {
@@ -525,10 +583,22 @@ export default class StallScene extends Phaser.Scene {
       extras.push(addText(this, x + pad, 0, `Cup ${c.served + 1}/${c.n}`, { size: 10, color: '#8a7a70' }));
       h += 13;
     }
-    if (kind === 'order') h += 8; // patience bar
+    if (kind === 'order') {
+      const owed = this.ticketsOwed(c);
+      const mark = !owed ? '✓ ticket taken' : c.ticketsTaken ? `✓ ${c.ticketsTaken} taken · tap for next` : this.hintsLeft > 0 ? 'tap me to take the order' : '';
+      if (mark) {
+        extras.push(addText(this, x + pad, 0, mark, { size: 9, bold: true, color: owed ? '#c8562e' : '#2f7a3a' }));
+        h += 12;
+        if (owed && !c.ticketsTaken && !c.hinted) {
+          c.hinted = true;
+          this.hintsLeft -= 1;
+        }
+      }
+      h += 8; // patience bar
+    }
     const y = table ? TABLE.bubble.y : BUBBLE_BOTTOM - h;
     words.objects.forEach((o) => o.setY(o.y + y + pad));
-    extras.forEach((o) => o.setY(y + pad + words.height));
+    extras.forEach((o, i) => o.setY(y + pad + words.height + i * 13));
     const frame = this.add.rectangle(x, y, w, h, 0xffffff).setOrigin(0).setStrokeStyle(2, COLORS.inkHex, 0.8).setDepth(30);
     const tx = table ? x + 6 : Phaser.Math.Clamp(this.centerX(c), x + 12, x + w - 12);
     const tail = table
@@ -593,7 +663,9 @@ export default class StallScene extends Phaser.Scene {
     play('clink');
     this.time.delayedCall(140, () => play('coin'));
     this.time.delayedCall(420, () => play(tier === 'oops' ? 'oops' : tier === 'perfect' ? 'perfect' : 'tap'));
-    this.showBubble(c, pickLine(c.def.lines, tier, this.lineVars()), 'reaction');
+    const reply = pickLine(c.def.lines, tier, this.lineVars());
+    if (tier === 'perfect') this.log.events.at(-1).line = reply;
+    this.showBubble(c, reply, 'reaction');
     this.floatText(`+${formatMoney(res.paid + res.tip)}`, this.centerX(c), this.headTop(c) + 10);
     this.coinBurst(c);
     if (tier === 'perfect') this.happyHop(c);
@@ -635,6 +707,7 @@ export default class StallScene extends Phaser.Scene {
     this.clearBubble(c);
     if (c === this.tableGuest) this.tableGuest = null;
     this.spots = this.spots.map((s) => (s === c ? null : s));
+    for (const sl of this.slots) if (sl.ticket?.c === c && sl.cup) (sl.ticket.left = true), this.drawTicket(sl);
     c.sprites.forEach((s) => this.tweens.add({ targets: s, alpha: 0, y: s.y - 12, duration: 450, onComplete: () => s.destroy() }));
     this.time.delayedCall(350, () => this.advanceQueue());
   }
@@ -709,7 +782,7 @@ export default class StallScene extends Phaser.Scene {
   update(time, delta) {
     if (this.paused) return;
     for (const s of this.slots) {
-      s.art.update(s.cup, delta, this.pouring?.slot === s ? { ingredient: this.pouring.tool.tool.ingredient } : null);
+      s.art.update(s.cup, delta, this.pouring?.slot === s ? { ingredient: this.pouring.tool.tool.ingredient } : null, this.targetFill(s));
       s.art.draw();
     }
     if (this.ended) return;
@@ -909,33 +982,53 @@ export default class StallScene extends Phaser.Scene {
     saveRun(tomorrow);
     const done = monthOver(tomorrow);
 
+    const names = Object.fromEntries(CUSTOMERS.map((c) => [c.id, c.name]));
+    const sum = summarizeDay(this.log, e, names);
     const depth = 70;
-    this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000, 0.35).setOrigin(0).setDepth(depth).setInteractive();
+    this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000, 0.4).setOrigin(0).setDepth(depth).setInteractive();
     const cx = GAME_W / 2;
-    const cardW = 300;
-    const top = 110;
-    this.add.rectangle(cx - cardW / 2, top, cardW, 410, COLORS.paper).setOrigin(0).setStrokeStyle(2, COLORS.inkHex).setDepth(depth + 1);
-    const t = (y, str, o = {}) => addText(this, cx, top + y, str, { size: 16, align: 'center', origin: [0.5, 0], ...o }).setDepth(depth + 2);
-    t(20, UI.dayDone.replace('{day}', this.day), { size: 24, bold: true });
-    t(56, UI.dayDoneZh, { size: 16 });
-    t(96, `Cups served: ${e.served}  (perfect ${e.perfect})`);
-    t(124, `Earned today: ${formatMoney(e.earnedToday)}`);
-    const gain = Math.floor(e.fame) - Math.floor(e.fameStart);
-    t(152, `名气 Fame: ${Math.floor(e.fame)}  (${gain >= 0 ? '+' : ''}${gain})`);
-    t(180, `Aunty Lim's teh score: ${this.rating}/10`, { size: 14, color: '#8a5a1e' });
-    if (e.walkedOut) t(206, `${e.walkedOut} wandered off — no worries lah`, { size: 12, color: '#8a7a70' });
-    if (!done) t(226, `Tomorrow: about ${customersForFame(e.fame)} customers`, { size: 12, color: '#8a7a70' });
-
-    const button = (y, h, label, onTap, o) => {
-      const b = makeButton(this, cx - 110, top + y, 220, h, label, onTap, o);
+    const cardW = 320;
+    const left = cx - cardW / 2 + 16;
+    const items = [];
+    const line = (str, o = {}, gap = 6, x = null) => items.push([addText(this, x ?? cx, 0, str, { size: 13, align: 'center', origin: [x === null ? 0.5 : 0, 0], wrap: cardW - 32, ...o }).setDepth(depth + 2), gap]);
+    line(UI.dayDone.replace('{day}', this.day), { size: 22, bold: true }, 0);
+    line(UI.dayDoneZh, { size: 14, color: '#6b5a50' }, 4);
+    line('★'.repeat(sum.stars) + '☆'.repeat(3 - sum.stars), { size: 26, color: '#e0a21a' }, 6);
+    const c = sum.counts;
+    line(`${c.served} cups · ${c.perfect} perfect · ${c.close} close · ${c.oops} oops${c.walkedOut ? ` · ${c.walkedOut} left` : ''}`, {}, 4);
+    line(`Sales ${formatMoney(sum.money.sales)}  ·  Tips ${formatMoney(sum.money.tips)}  ·  Total ${formatMoney(sum.money.total)}`, { bold: true }, 4);
+    const gain = sum.fame.to - sum.fame.from;
+    line(`名气 Fame ${sum.fame.from} → ${sum.fame.to} (${gain >= 0 ? '+' : ''}${gain})   ·   Aunty Lim's teh: ${this.rating}/10`, { size: 12, color: '#8a5a1e' }, 8);
+    for (const r of sum.perCustomer.slice(0, 5)) {
+      const bits = [r.perfect && `${r.perfect} perfect`, r.close && `${r.close} close`, r.oops && `${r.oops} oops`, r.walkedOut && `${r.walkedOut} left`].filter(Boolean).join(', ');
+      line(`${r.name}: ${bits}`, { size: 12, align: 'left' }, 2, left);
+    }
+    if (sum.topSlips.length) line(`Most slips: ${sum.topSlips.map((t) => `${t.reason} ×${t.n}`).join(', ')}`, { size: 11, color: '#8a7a70', align: 'left' }, 2, left);
+    line(`Uncle Tan says: ${sum.tip.en}`, { size: 12, color: '#2f7a3a', bold: true, align: 'left' }, 2, left);
+    line(sum.tip.zh, { size: 11, color: '#6b5a50', align: 'left' }, 6, left);
+    if (sum.quote) line(`${sum.quote.who}: "${sum.quote.line}"`, { size: 11, color: '#8a5a1e', align: 'left' }, 6, left);
+    if (!done) line(`Tomorrow: about ${customersForFame(e.fame)} customers`, { size: 11, color: '#8a7a70' }, 8);
+    const textH = items.reduce((h, [t, gap]) => h + t.height + gap, 0);
+    const cardH = 16 + textH + 8 + 54 + 6 + 30 + 6 + 28 + 14;
+    const top = Math.max(6, Math.round((GAME_H - cardH) / 2));
+    this.add.rectangle(cx - cardW / 2, top, cardW, cardH, COLORS.paper).setOrigin(0).setStrokeStyle(2, COLORS.inkHex).setDepth(depth + 1);
+    let y = top + 16;
+    for (const [t, gap] of items) {
+      t.setY(y);
+      y += t.height + gap;
+    }
+    y += 8;
+    const button = (h, label, onTap, o) => {
+      const b = makeButton(this, cx - 110, y, 220, h, label, onTap, o);
       b.bg.setDepth(depth + 2);
       b.txt.setDepth(depth + 3);
+      y += h + 6;
       return b;
     };
-    if (done) button(256, 56, 'Month 1 complete  完', () => this.scene.start('Title'), { size: 17, bold: true, fill: 0xbfe3c0 });
-    else button(256, 56, `Next day ▸  Day ${tomorrow.day}`, () => this.scene.start('Day', { run: tomorrow }), { size: 18, bold: true, fill: 0xbfe3c0 });
-    button(322, 34, UI.closeStall, () => this.scene.start('Title'), { size: 13 });
-    const copy = button(364, 32, 'Copy playtest notes', () => this.copyNotes(copy), { size: 12 });
+    if (done) button(54, 'Month 1 complete  完', () => this.scene.start('Title'), { size: 17, bold: true, fill: 0xbfe3c0 });
+    else button(54, `Next day ▸  Day ${tomorrow.day}`, () => this.scene.start('Day', { run: tomorrow }), { size: 18, bold: true, fill: 0xbfe3c0 });
+    button(30, UI.closeStall, () => this.scene.start('Title'), { size: 13 });
+    const copy = button(28, 'Copy playtest notes', () => this.copyNotes(copy), { size: 12 });
   }
 
   copyNotes(btn) {

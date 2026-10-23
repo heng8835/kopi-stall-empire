@@ -105,8 +105,10 @@ export class DrinkArt {
     this.dirty = true;
   }
 
-  // pour: { ingredient } while a tool pours into this cup, else null
-  update(cup, dtMs, pour) {
+  // pour: { ingredient } while a tool pours into this cup, else null.
+  // targetFill: where a ticketed order should be poured to (¾ for peng, full for hot), else null.
+  update(cup, dtMs, pour, targetFill = null) {
+    this.targetFill = targetFill;
     const dt = Math.min(50, dtMs);
     this.t += dt;
     if (!cup) {
@@ -276,6 +278,17 @@ export class DrinkArt {
       g.beginPath(); g.ellipse(o.cx, o.cy + dy, o.rx - 1, o.ry - 1, tilt, Math.PI * 1.05, Math.PI * 1.95); g.stroke();
       g.fillStyle = 'rgba(255,255,255,.35)';
       g.beginPath(); g.ellipse(o.cx - o.rx * 0.45, o.cy + dy + o.ry * 0.25, o.rx * 0.22, o.ry * 0.18, tilt, 0, Math.PI * 2); g.fill();
+      g.restore();
+    }
+
+    // the ticket's target line: a dashed oval on the glass until the drink reaches it
+    if (this.targetFill && fill < this.targetFill + 0.08) {
+      const o = oval(levelY(this.targetFill));
+      g.save();
+      g.setLineDash([7, 5]);
+      g.lineWidth = 3;
+      g.strokeStyle = 'rgba(255,210,63,0.95)';
+      g.beginPath(); g.ellipse(o.cx, o.cy, o.rx + 1, o.ry + 1, 0, 0, Math.PI); g.stroke();
       g.restore();
     }
 

@@ -39,6 +39,16 @@ const KIND = {
   evap: { name: 'Evaporated milk · C', zones: EVAP, value: (c) => c.evap },
 };
 
+// The zone a ticketed order is aiming for, for this ingredient (null = no ticket / no target).
+const SWEET_ZONE = { none: 'KOSONG', less: 'SIEW DAI', normal: 'NORMAL', more: 'GA DAI' };
+export function targetZone(ingredient, spec) {
+  if (!spec) return null;
+  if (['kopi', 'teh', 'milo'].includes(ingredient)) return spec.iced ? '¾ PENG' : 'FULL';
+  if (ingredient === 'evap') return spec.milk === 'evap' ? 'C · NORMAL' : 'NONE (O)';
+  if (ingredient === 'condensed' || ingredient === 'sugar') return spec.sugar ? SWEET_ZONE[spec.sugar] : null;
+  return null;
+}
+
 const X = 8;
 const W = GAME_W - 16;
 const BAR_H = 22;
@@ -59,8 +69,9 @@ export class PourBar {
     this.hideAt = 0;
   }
 
-  // Called every frame while pouring: ingredient key, the cup, and the slot number (1-3).
-  show(ingredient, cup, slotNo) {
+  // Called every frame while pouring: ingredient key, the cup, the slot number (1-3) and, for a
+  // ticketed cup, the ticket ({ spec, who }) so the order's target zone is outlined.
+  show(ingredient, cup, slotNo, ticket = null) {
     const k = KIND[ingredient];
     if (!k || !cup) return;
     if (this.kind !== ingredient) this.layout(ingredient);
@@ -68,9 +79,17 @@ export class PourBar {
     const max = k.zones.at(-1)[2];
     const mx = X + (Math.min(v, max) / max) * W;
     const zone = k.zones.find((z) => v >= z[1] && v < z[2]) ?? k.zones.at(-1);
-    this.label.setText(`Cup ${slotNo} · ${k.name}`);
+    this.label.setText(ticket ? `Cup ${slotNo} · ${ticket.who} · ${k.name}` : `Cup ${slotNo} · ${k.name}`);
     this.now.setText(zone[0]);
-    this.marker.clear().fillStyle(0x111111, 1).fillRect(mx - 2.5, 12, 5, BAR_H + 8).lineStyle(1, 0xffffff, 1).strokeRect(mx - 2.5, 12, 5, BAR_H + 8);
+    this.marker.clear();
+    const target = k.zones.find((z) => z[0] === targetZone(ingredient, ticket?.spec));
+    if (target) {
+      const x0 = X + (target[1] / max) * W;
+      const x1 = X + (target[2] / max) * W;
+      this.marker.lineStyle(3, 0xffd23f, 1).strokeRect(x0 + 1.5, 17.5, x1 - x0 - 3, BAR_H - 3);
+      this.now.setText(zone === target ? `★ ${zone[0]}` : `${zone[0]}  → ★ ${target[0]}`);
+    }
+    this.marker.fillStyle(0x111111, 1).fillRect(mx - 2.5, 12, 5, BAR_H + 8).lineStyle(1, 0xffffff, 1).strokeRect(mx - 2.5, 12, 5, BAR_H + 8);
     // tremble in the careful zone, shake in the red one (never wild)
     const t = this.scene.time.now;
     const amp = zone[3] === 'bad' ? 2.6 : zone[3] === 'hi' ? 0.9 : 0;

@@ -7,6 +7,7 @@ export function createDayState(carry = {}) {
   return {
     money: carry.money ?? 0,
     earnedToday: 0,
+    tipsToday: 0,
     fame: carry.fame ?? TUNING.fameStart,
     fameStart: carry.fame ?? TUNING.fameStart,
     served: 0,
@@ -37,6 +38,7 @@ export function applyServe(state, tier, wantedSpec) {
   const fame = TUNING.fameDelta[tier];
   state.money += paid + tip;
   state.earnedToday += paid + tip;
+  state.tipsToday += tip;
   state.fame = clampFame(state.fame + fame);
   state.served += 1;
   if (tier === 'perfect') state.perfect += 1;
