@@ -27,6 +27,16 @@ export function endingFor(endings = [], fame) {
   return [...endings].sort((a, b) => b.min - a.min).find((e) => fame >= e.min) ?? null;
 }
 
+const WHEN = { start: 0, mid: 1, end: 2 };
+const later = (a, b) => a.day > b.day || (a.day === b.day && WHEN[a.when] > WHEN[b.when]);
+
+// The 下集 sting after an episode's last part shows only the next episode's number and title, so
+// nothing is given away early. null = more of this episode is still to come, or nothing follows.
+export function nextEpisode(events, ep) {
+  if (events.some((e) => e.ep === ep.ep && later(e, ep))) return null;
+  return events.filter((e) => e.ep > ep.ep).sort((a, b) => a.ep - b.ep || (later(a, b) ? 1 : -1))[0] ?? null;
+}
+
 // Fill {owner}, {rating}, ... in a line.
 export const fill = (text, vars) => text.replace(/\{(\w+)\}/g, (m, k) => (vars[k] ?? m));
 

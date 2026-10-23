@@ -13,7 +13,8 @@
 //   after                beats after the choice (both options)
 //   endings              finale only: [{ id, min (fame), title, beats }]
 //   epilogue             finale only: beats after the ending
-//   caption              the "下集…" sting on the last card
+//   caption              finale only: the closing line. Other episodes end on a 下集 card with just the
+//                        next episode's number + title (systems/story.js nextEpisode), no spoilers
 // Line text: {owner} = Ah Boy / Ah Girl, {rating} = Aunty Lim's score today.
 // Keep glossary words space-separated so they stay tappable (systems/order.js tokenize).
 
@@ -37,6 +38,10 @@ export const CAST = {
   rainUncle: { name: 'Rain Uncle', sprite: 'rainUncle' },
   uncleTan: { name: 'Uncle Tan', sprite: 'rainUncle' },
 };
+
+// Where each speaker's face is across their sprite (0 = left edge, 1 = right), for the portrait
+// beside the dialogue box. Unlisted sprites use 0.48. The crop is a square from the top of the sprite.
+export const FACE_X = { makcik: 0.36, mei: 0.38, kai: 0.58, taxiUncle: 0.6, weiLing: 0.56, hafiz: 0.56, darren: 0.54, jiaHui: 0.54, marcus: 0.44, rainUncle: 0.42, jun: 0.44, exerciseAunties: 0.44 };
 
 const N = (text, extra = {}) => ({ who: 'narrator', text, ...extra });
 
@@ -63,7 +68,6 @@ export const EVENTS = [
       ],
     },
     after: [N('She writes the number in a little red notebook. Why does a retired canteen aunty need a notebook?')],
-    caption: '下集: twenty cents can change everything.',
   },
   {
     id: 'ep2-twenty-cents', day: 2, when: 'mid', ep: 2,
@@ -83,7 +87,6 @@ export const EVENTS = [
       ],
     },
     after: [N('Jia Hui closes her sketchbook. She drew something. She won\'t say what.')],
-    caption: '下集: a phone falls. The screen tells the truth.',
   },
   {
     id: 'ep3-fast-fast', day: 3, when: 'mid', ep: 3,
@@ -107,7 +110,6 @@ export const EVENTS = [
       N('Across the road, a man in sunglasses takes a photo of your stall.'),
       { who: 'kenneth', name: '???', silhouette: true, text: 'So this is the stall. Still the same.' },
     ],
-    caption: '下集: someone wants your stall. Who is he?',
   },
   {
     id: 'ep4-double-life', day: 5, when: 'mid', ep: 4,
@@ -126,7 +128,6 @@ export const EVENTS = [
       ],
     },
     after: [{ who: 'oyen', text: 'Meow. (knocks a cup off your counter: the daily tax)' }],
-    caption: '下集: a 37-year-old tissue packet starts a war.',
   },
   {
     id: 'ep5-tissue', day: 7, when: 'start', ep: 5,
@@ -145,7 +146,6 @@ export const EVENTS = [
         { label: '"Can share the table?"', flags: ['sharedTable'], fame: 2, beats: [N('Ah Gong grumbles, gets dragged into qigong… and his back stops aching.'), { who: 'ahGong', text: '…明天再来.' }] },
       ],
     },
-    caption: '下集: $50,000. Cash. Today.',
   },
   {
     id: 'ep6-offer', day: 10, when: 'mid', ep: 6,
@@ -166,7 +166,6 @@ export const EVENTS = [
       N('At the door he stops, and looks at the old kopi pot.'),
       { who: 'kenneth', text: '(softly) …Still using this pot ah.' },
     ],
-    caption: '下集: how does he know the pot?',
   },
   {
     id: 'ep7-ninja', day: 12, when: 'mid', ep: 7,
@@ -182,7 +181,6 @@ export const EVENTS = [
       N('Top comment, from @kenneth.tan: "That pot is 38 years old."'),
     ],
     fame: 10,
-    caption: '下集: who really owns this kopitiam?',
   },
   {
     id: 'ep8-notebook', day: 14, when: 'mid', ep: 8,
@@ -200,7 +198,6 @@ export const EVENTS = [
       { who: 'kenneth', text: 'Aunty, my company makes three thousand cups an hour.' },
       { who: 'auntyLim', text: 'I only drink one.' },
     ],
-    caption: '下集: the inspector is coming. And Oyen is in the cash drawer.',
   },
   {
     id: 'ep9-inspection', day: 17, when: 'mid', ep: 9,
@@ -220,7 +217,6 @@ export const EVENTS = [
       ],
     },
     after: [N('Oyen now sleeps on the tin. Nobody is surprised.')],
-    caption: '下集: lunch rush. Lights out. Marcus breaks.',
   },
   {
     id: 'ep10-blackout', day: 19, when: 'mid', ep: 10,
@@ -242,7 +238,6 @@ export const EVENTS = [
       ],
     },
     after: [N('The lights come back. Ah Gong had unplugged the fridge to charge his radio.')],
-    caption: '下集: it only rains when he comes.',
   },
   {
     id: 'ep11-rain-uncle', day: 21, when: 'mid', ep: 11,
@@ -261,7 +256,6 @@ export const EVENTS = [
       N('The rain stops. The uncle is gone. His umbrella is still hooked on the counter.'),
       N('The name tag on the handle says: TAN.'),
     ],
-    caption: '下集: fire.',
   },
   {
     id: 'ep12-fire', day: 24, when: 'mid', ep: 12,
@@ -286,7 +280,6 @@ export const EVENTS = [
       { who: 'kenneth', text: 'My father\'s stall cannot burn.' },
       { who: 'owner', text: '…Your FATHER\'S stall?' },
     ],
-    caption: '下集: a 30-year-old crossword.',
   },
   {
     id: 'ep13-crossword', day: 26, when: 'start', ep: 13,
@@ -309,7 +302,6 @@ export const EVENTS = [
       N('She finishes. Then she sits down at Ah Gong\'s table. First time anyone has shared it since 1987.'),
       { who: 'auntyLim', text: 'Your matchmaking: 10 out of 10. Your teh: still counting.', if: 'cupid' },
     ],
-    caption: '下集: it\'s raining again. Kenneth says "Pa?"',
   },
   {
     id: 'ep14-father-son', day: 28, when: 'end', ep: 14,
@@ -331,7 +323,6 @@ export const EVENTS = [
       ],
     },
     after: [{ who: 'uncleTan', text: 'Day 30, open the tin. Then you decide, Kenneth.' }],
-    caption: '下集 (大结局): open the tin.',
   },
   {
     id: 'ep15-the-tin', day: 30, when: 'end', ep: 15,

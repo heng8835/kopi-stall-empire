@@ -11,7 +11,8 @@ Edit the data file for wording changes; keep this doc in sync for the secrets/th
 - `{owner}` = Ah Boy / Ah Girl
 - `[if flag]` = a line shown only when that flag is set
 - **When:** `start` (before the first customer; on Day 1, after the tutorial), `mid` (~40% into the day), `end` (after the last customer, before the summary)
-- **Caption:** the 短剧 "next episode" sting, shown on the last card
+- **Caption:** writers' note for the 下集 tease. In game the last card shows only the next episode's number + title
+  (playtest 2026-10-23: the captions gave too much away). Only the finale's closing caption is shown.
 - **Fame:** effects are rough numbers, tuned in `stallTuning.js`
 
 ## The secrets (spoilers, for us only)

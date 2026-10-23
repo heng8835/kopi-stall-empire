@@ -46,3 +46,16 @@ describe('story', () => {
     expect(scriptFor(ep, { flags: ['cupid'], fame: 50, option }).map((b) => b.text)).toEqual(['1', '2', '3', 'end', 'epi']);
   });
 });
+
+describe('下集 teaser', () => {
+  it('shows only the next episode, after the last part of this one', async () => {
+    const { nextEpisode } = await import('../src/systems/story.js');
+    const { EVENTS } = await import('../src/data/events.js');
+    const byId = (id) => EVENTS.find((e) => e.id === id);
+    expect(nextEpisode(EVENTS, byId('ep1-note'))).toBe(null); // ep 1 continues at closing
+    expect(nextEpisode(EVENTS, byId('ep1-rating')).ep).toBe(2);
+    expect(nextEpisode(EVENTS, byId('ep14-father-son')).ep).toBe(15);
+    expect(nextEpisode(EVENTS, byId('ep15-the-tin'))).toBe(null);
+    expect(EVENTS.filter((e) => e.caption).map((e) => e.ep)).toEqual([15]); // no spoiler captions
+  });
+});
