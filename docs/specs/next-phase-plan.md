@@ -1,6 +1,6 @@
 # Spec (DRAFT, awaiting approval): pour bar, HD liquid, wall clock, menu unlocks, night shop
 
-Status: decisions 1-5 APPROVED 2026-10-23 (2: bar near the top but not too high, just above the order bubbles; 4 reshaped as story-paced unlocks); 6 ("Malt") still open. Visual version for the user: docs/plan/stall-upgrade-plan.html
+Status: decisions 1-5 APPROVED 2026-10-23 (2: bar near the top but not too high, just above the order bubbles; 4 reshaped as story-paced unlocks); 6 decided: keep Horlicks. Visual version for the user: docs/plan/stall-upgrade-plan.html
 (published: https://claude.ai/artifact/G28FFgiywwDqsGwrmLoE8z). Waiting on the user's approval of the 6 decisions + art.
 
 ## Decisions proposed (all recommended)
@@ -14,7 +14,7 @@ Status: decisions 1-5 APPROVED 2026-10-23 (2: bar near the top but not too high,
 4. Starter menu: Kopi/Kopi O/Kopi C/Teh/Teh O/Teh C × kosong/siew dai/normal × hot/peng + Milo, Milo Peng, Milo Dinosaur.
    Ga dai unlocks free at fame 20; everything else from the shop.
 5. Night shop after each day's summary from Day 3; items gated by fame tiers 0/25/50/75; purchases saved in the run.
-6. Horlicks is called "Malt" in game (trademark); Milo stays.
+6. DECIDED: keep the real name Horlicks (as with Milo); no logo on any art.
 
 ## Clock
 Taller HUD: wall clock sprite (hour hand 7am→7pm over the 90 s day, minute hand spins), day bar with periods
