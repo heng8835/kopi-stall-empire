@@ -2,7 +2,7 @@
 // Safe everywhere: if audio is unavailable, muted, or throws, every call is a silent no-op.
 import { load, save } from './save.js';
 
-const VOLUME = 0.6;
+const VOLUME = 0.9;
 let ctx = null;
 let master = null;
 let noiseBuf = null;
@@ -28,6 +28,8 @@ export function unlock() {
     if (!ctx) {
       const C = AudioCtor();
       if (!C) return;
+      // iPhone: play like a video, even with the ring/silent switch on silent (Safari 16.4+)
+      if (navigator.audioSession) navigator.audioSession.type = 'playback';
       ctx = new C();
       master = ctx.createGain();
       master.gain.value = muted ? 0 : VOLUME;

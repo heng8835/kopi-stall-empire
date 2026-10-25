@@ -28,7 +28,8 @@ const game = new Phaser.Game({
 
 watchResize(game);
 // Browsers only start audio after a tap.
-window.addEventListener('pointerdown', sfx.unlock, { passive: true });
+// (iPhone Safari only counts the end of a tap, so listen to that too)
+for (const ev of ['pointerdown', 'pointerup', 'touchend']) window.addEventListener(ev, sfx.unlock, { passive: true });
 
 if (import.meta.env.DEV) {
   window.__game = game;
