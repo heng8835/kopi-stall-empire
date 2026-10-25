@@ -19,7 +19,7 @@ export const TOOLS = [
   { id: 'condensed', label: 'Condensed', kind: 'pour', ingredient: 'condensed', sprite: 'toolCondensed', pourSprite: 'pourCondensed', x: 212, feet: SHELF, w: 48, h: 66 },
   { id: 'evap', label: 'Evap (C)', kind: 'pour', ingredient: 'evap', sprite: 'toolEvap', pourSprite: 'pourEvap', x: 264, feet: SHELF, w: 48, h: 66 },
   { id: 'milo', label: 'Milo', kind: 'pour', ingredient: 'milo', sprite: 'toolMilo', pourSprite: 'pourMilo', x: 318, feet: SHELF, w: 52, h: 70 },
-  { id: 'ice', label: 'Ice', kind: 'drop', apply: 'ice', sprite: 'toolIce', x: 122, feet: RAIL, w: 64, h: 66 },
+  { id: 'ice', label: 'Ice', kind: 'drop', apply: 'ice', sprite: 'toolIce', liftSprite: 'toolIceScoop', liftH: 40, liftAngle: -8, x: 122, feet: RAIL, w: 64, h: 66 },
   { id: 'stir', label: 'Spoon', kind: 'stir', sprite: 'toolStir', liftSprite: 'toolSpoon', liftH: 62, x: 172, feet: RAIL, w: 50, h: 72 },
   { id: 'rack', label: 'Cups', kind: 'rack', sprite: 'toolRack', x: 238, feet: RAIL, w: 76, h: 76 },
   { id: 'powder', label: 'Powder', kind: 'drop', apply: 'powder', sprite: 'toolMilo', spriteH: 48, x: 296, feet: RAIL, w: 46, h: 58 },

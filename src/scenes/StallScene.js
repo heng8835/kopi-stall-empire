@@ -66,6 +66,8 @@ const MID_STORY_AT = 0.4; // a 'mid' episode plays this far into the day
 const COACH_Y = 410; // the owner's thought bubble, between the tray and the tools
 const LESSON_AT_MS = 5000; // a recipe teacher walks in this far into a lesson day
 // Day periods on the HUD bar, in minutes from opening (7am): morning, lunch rush, teatime, closing.
+// Code-drawn stand-ins for lifted tools whose own art hasn't arrived yet (StallScene methods).
+const DRAWN_LIFT = { toolSpoon: function () { return this.drawnSpoon(); }, toolIceScoop: function () { return this.drawnIceScoop(); } };
 const PERIOD_ICONS = ['iconMorning', 'iconLunch', 'iconTeatime', 'iconClosing'];
 const PERIODS = [['Morning', 0, 240, 0xffe9a8], ['Lunch', 240, 420, 0xffb870], ['Teatime', 420, 600, 0xbfe0c4], ['Closing', 600, 720, 0x9fb3d9]];
 const DRAG_WAIT_MS = 3000; // ...once the player lets go of a cup/tool (or after this long at most)
@@ -471,10 +473,10 @@ export default class StallScene extends Phaser.Scene {
   liftTool(tool, lifted) {
     const t = tool.tool;
     if (!t.liftSprite || !tool.sprite) return;
-    const key = lifted ? (this.textures.exists(t.liftSprite) ? t.liftSprite : this.drawnSpoon()) : t.sprite;
+    const key = lifted ? (this.textures.exists(t.liftSprite) ? t.liftSprite : DRAWN_LIFT[t.liftSprite].call(this)) : t.sprite;
     tool.sprite.setTexture(key);
     const h = lifted ? t.liftH : t.spriteH ?? displayHeight(key);
-    tool.sprite.setScale(h / tool.sprite.height).setAngle(lifted ? 18 : 0);
+    tool.sprite.setScale(h / tool.sprite.height).setAngle(lifted ? t.liftAngle ?? 18 : 0);
   }
 
   // A long kopitiam spoon drawn in code (3x for crispness), until its own art arrives.
@@ -489,6 +491,44 @@ export default class StallScene extends Phaser.Scene {
     g.fillStyle(0x9aa1a8, 1).fillEllipse(30, 168, 14, 26); // bowl shade
     g.generateTexture(key, 48, 194);
     g.destroy();
+    return key;
+  }
+
+  // An ice scoop heaped with our pixel ice, drawn in code (3x) until its own art arrives.
+  drawnIceScoop() {
+    const key = 'toolIceScoopDrawn';
+    if (this.textures.exists(key)) return key;
+    const tex = this.textures.createCanvas(key, 180, 126);
+    const ctx = tex.getContext();
+    const ink = '#3a2e2a';
+    const steel = (fill) => {
+      ctx.fillStyle = fill;
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = ink;
+    };
+    // handle, off to the right
+    steel('#b9bfc6');
+    ctx.beginPath();
+    ctx.roundRect(96, 70, 80, 22, 11);
+    ctx.fill();
+    ctx.stroke();
+    // the heap of ice in the bowl (pixel art: scaled without smoothing)
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(this.textures.get('iceCluster').getSourceImage(), 10, 8, 87, 57);
+    ctx.drawImage(this.textures.get('iceCluster').getSourceImage(), 28, 0, 70, 46);
+    // the bowl's front, covering the bottom of the heap
+    steel('#c9ced4');
+    ctx.beginPath();
+    ctx.moveTo(6, 56);
+    ctx.lineTo(110, 56);
+    ctx.lineTo(100, 112);
+    ctx.quadraticCurveTo(58, 124, 16, 112);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#f4f6f8';
+    ctx.fillRect(20, 64, 8, 38); // shine
+    tex.refresh();
     return key;
   }
 
