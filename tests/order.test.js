@@ -4,19 +4,25 @@ import { DRINKS } from '../src/data/drinks.js';
 
 describe('parseOrder', () => {
   it('reads the kopi grammar', () => {
-    expect(parseOrder('Kopi')).toEqual({ base: 'kopi', milk: 'condensed', sugar: 'normal', iced: false, topping: null });
+    expect(parseOrder('Kopi')).toEqual({ base: 'kopi', milk: 'condensed', sugar: 'normal', iced: false, topping: null, strength: 'normal' });
     expect(parseOrder('Kopi O kosong')).toMatchObject({ milk: 'none', sugar: 'none' });
-    expect(parseOrder('Teh C siew dai peng')).toEqual({ base: 'teh', milk: 'evap', sugar: 'less', iced: true, topping: null });
+    expect(parseOrder('Teh C siew dai peng')).toEqual({ base: 'teh', milk: 'evap', sugar: 'less', iced: true, topping: null, strength: 'normal' });
     expect(parseOrder('kopi c kosong')).toMatchObject({ base: 'kopi', milk: 'evap', sugar: 'none' });
   });
 
   it('knows Milo Dinosaur is iced with powder', () => {
-    expect(parseOrder('Milo Dinosaur')).toEqual({ base: 'milo', milk: null, sugar: null, iced: true, topping: 'milo' });
+    expect(parseOrder('Milo Dinosaur')).toEqual({ base: 'milo', milk: null, sugar: null, iced: true, topping: 'milo', strength: null });
   });
 
   it('rejects unknown words', () => {
-    expect(() => parseOrder('Kopi gao')).toThrow();
+    expect(() => parseOrder('Kopi siu')).toThrow();
     expect(() => parseOrder('Bubble tea')).toThrow();
+  });
+
+  it('reads strength: gao (strong) and poh (weak)', () => {
+    expect(parseOrder('Kopi O gao siew dai')).toMatchObject({ milk: 'none', strength: 'gao', sugar: 'less' });
+    expect(parseOrder('Teh poh')).toMatchObject({ base: 'teh', strength: 'poh' });
+    for (const t of ['Kopi O gao', 'Kopi C poh siew dai', 'Kopi gao peng']) expect(formatOrder(parseOrder(t))).toBe(t);
   });
 });
 
@@ -39,7 +45,7 @@ describe('formatOrder round-trip', () => {
 
   it('Horlicks family', () => {
     for (const t of ['Horlicks', 'Horlicks peng', 'Horlicks Dinosaur']) expect(formatOrder(parseOrder(t))).toBe(t);
-    expect(parseOrder('Horlicks Dinosaur')).toEqual({ base: 'horlicks', milk: null, sugar: null, iced: true, topping: 'horlicks' });
+    expect(parseOrder('Horlicks Dinosaur')).toEqual({ base: 'horlicks', milk: null, sugar: null, iced: true, topping: 'horlicks', strength: null });
     expect(findDrink(parseOrder('Horlicks Dinosaur')).id).toBe('horlicksDino');
     expect(() => parseOrder('Horlicks kosong')).toThrow();
   });

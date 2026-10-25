@@ -31,6 +31,7 @@ export const CUSTOMERS = [
       { text: 'Teh peng', weight: 1 },
       { text: 'Cham', weight: 2 },
       { text: 'Horlicks', weight: 1 },
+      { text: 'Teh poh', weight: 1 },
     ],
     lines: 'auntyLim',
   },
@@ -51,6 +52,7 @@ export const CUSTOMERS = [
       { text: 'Kopi C kosong peng', weight: 2 },
       { text: 'Kopi O kosong', weight: 1 },
       { text: 'Cham C kosong', weight: 2 },
+      { text: 'Kopi gao', weight: 2 },
       { text: 'Horlicks peng', weight: 1 },
     ],
     lines: 'officeGuy',
@@ -90,6 +92,8 @@ export const CUSTOMERS = [
       { text: 'Kopi O', weight: 4 },
       { text: 'Kopi O siew dai', weight: 1 },
       { text: 'Cham O', weight: 1 },
+      { text: 'Kopi O gao', weight: 2 },
+      { text: 'Kopi O poh', weight: 2 },
     ],
     lines: 'ahGong',
   },
@@ -149,7 +153,7 @@ export const WALK_INS = [
     weight: 3,
     patience: 25,
     groupSize: 1,
-    orders: [{ text: 'Kopi O', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Kopi peng', weight: 2 }, { text: 'Kopi C', weight: 1 }],
+    orders: [{ text: 'Kopi O', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Kopi peng', weight: 2 }, { text: 'Kopi C', weight: 1 }, { text: 'Kopi O gao', weight: 1 }],
     lines: 'officeWorker',
   },
   {
@@ -159,7 +163,7 @@ export const WALK_INS = [
     weight: 3,
     patience: 40,
     groupSize: 1,
-    orders: [{ text: 'Kopi O', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Kopi ga dai', weight: 2 }, { text: 'Kopi O kosong', weight: 1 }, { text: 'Cham', weight: 1 }],
+    orders: [{ text: 'Kopi O', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Kopi ga dai', weight: 2 }, { text: 'Kopi O kosong', weight: 1 }, { text: 'Cham', weight: 1 }, { text: 'Kopi O gao', weight: 2 }],
     lines: 'uncle',
   },
   {
@@ -229,7 +233,7 @@ export const WALK_INS = [
     weight: 2,
     patience: 45,
     groupSize: 1,
-    orders: [{ text: 'Teh C', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Teh', weight: 1 }, { text: 'Kopi siew dai', weight: 1 }],
+    orders: [{ text: 'Teh C', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Teh', weight: 1 }, { text: 'Kopi siew dai', weight: 1 }, { text: 'Teh poh', weight: 1 }],
     lines: 'uncle',
   },
   {
@@ -239,7 +243,7 @@ export const WALK_INS = [
     weight: 2,
     patience: 60,
     groupSize: 1,
-    orders: [{ text: 'Horlicks', weight: 3 }, { text: 'Teh siew dai', weight: 3 }, { text: 'Milo', weight: 1 }, { text: 'Teh', weight: 1 }],
+    orders: [{ text: 'Horlicks', weight: 3 }, { text: 'Teh siew dai', weight: 3 }, { text: 'Milo', weight: 1 }, { text: 'Teh', weight: 1 }, { text: 'Teh poh', weight: 2 }],
     lines: 'ahMa',
   },
   {
@@ -259,7 +263,7 @@ export const WALK_INS = [
     weight: 2,
     patience: 30,
     groupSize: 1,
-    orders: [{ text: 'Kopi peng', weight: 3 }, { text: 'Kopi ga dai', weight: 2 }, { text: 'Kopi O peng', weight: 2 }, { text: 'Teh peng', weight: 1 }],
+    orders: [{ text: 'Kopi peng', weight: 3 }, { text: 'Kopi ga dai', weight: 2 }, { text: 'Kopi O peng', weight: 2 }, { text: 'Teh peng', weight: 1 }, { text: 'Kopi gao peng', weight: 1 }],
     lines: 'worker',
   },
   {
@@ -279,7 +283,7 @@ export const WALK_INS = [
     weight: 2,
     patience: 40,
     groupSize: 1,
-    orders: [{ text: 'Kopi ga dai', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Kopi O ga dai', weight: 1 }, { text: 'Teh', weight: 1 }],
+    orders: [{ text: 'Kopi ga dai', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Kopi O ga dai', weight: 1 }, { text: 'Teh', weight: 1 }, { text: 'Kopi gao', weight: 2 }],
     lines: 'uncle',
   },
   {
@@ -289,7 +293,7 @@ export const WALK_INS = [
     weight: 2,
     patience: 30,
     groupSize: 1,
-    orders: [{ text: 'Kopi C ga dai', weight: 2 }, { text: 'Milo', weight: 2 }, { text: 'Kopi C', weight: 2 }, { text: 'Teh siew dai', weight: 1 }],
+    orders: [{ text: 'Kopi C ga dai', weight: 2 }, { text: 'Milo', weight: 2 }, { text: 'Kopi C', weight: 2 }, { text: 'Teh siew dai', weight: 1 }, { text: 'Kopi C gao', weight: 1 }],
     lines: 'nurse',
   },
   {
@@ -309,7 +313,7 @@ export const WALK_INS = [
     weight: 1,
     patience: 35,
     groupSize: 1,
-    orders: [{ text: 'Kopi O kosong', weight: 4 }, { text: 'Kopi O', weight: 1 }, { text: 'Teh O kosong', weight: 1 }],
+    orders: [{ text: 'Kopi O kosong', weight: 4 }, { text: 'Kopi O', weight: 1 }, { text: 'Teh O kosong', weight: 1 }, { text: 'Kopi O gao kosong', weight: 2 }],
     lines: 'hipster',
   },
   {

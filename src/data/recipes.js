@@ -3,6 +3,7 @@
 // Features are the building blocks of an order (see systems/menu.js featuresOf):
 //   kopi, teh, milo        bases          O, C        no milk / evaporated milk
 //   kosong, siewDai, gaDai sweetness      peng        iced          miloDino   Milo Dinosaur
+//   gao, poh               strength (hot water from the Big Brass Kettle)
 //
 // Lesson fields:
 //   day        the day it's taught (and unlocked from then on)
@@ -101,6 +102,18 @@ export const LESSONS = [
 // Machines from the night shop teach their drink the same way: the morning after you buy one,
 // a regular orders it with a card. Keyed by shop item id (src/data/shop.js).
 export const MACHINE_LESSONS = {
+  kettle: {
+    features: ['gao', 'poh'],
+    teacher: 'ahGong',
+    order: 'Kopi O poh',
+    card: {
+      title: 'Gao = strong · Poh = weak',
+      zh: '浓 · 淡',
+      line: 'Ah Gong: "Kopi O poh. Doctor say my heart cannot take Uncle Tan\'s gao gao one."',
+      steps: ['Poh: kopi pot only to about HALF', 'Hot water kettle (on the rail) to FULL', 'Gao: pot to FULL, no water at all', 'Then milk and sugar as usual'],
+      zone: '½ POH',
+    },
+  },
   twinSock: {
     features: ['cham'],
     teacher: 'auntyLim',
@@ -141,5 +154,7 @@ export const BOOK = {
   miloDino: { name: 'Milo Dinosaur', zh: '美禄恐龙', text: 'Iced Milo with a mountain of powder on top. No stirring.' },
   cham: { name: 'Cham', zh: '鸳鸯', text: 'Kopi + teh in one cup: half kopi, teh to FULL, then milk as usual.' },
   horlicks: { name: 'Horlicks', zh: '好立克', text: 'Horlicks tin to FULL. Peng: ¾ + ice.' },
+  gao: { name: 'Gao', zh: '浓', text: 'Strong: the pot only, no hot water at all.' },
+  poh: { name: 'Poh', zh: '淡', text: 'Weak: pot to about half, then hot water from the kettle to FULL.' },
   horlicksDino: { name: 'Horlicks Dinosaur', zh: '好立克恐龙', text: 'Iced Horlicks with a mountain of powder on top.' },
 };

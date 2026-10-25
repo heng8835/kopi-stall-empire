@@ -222,7 +222,11 @@ export default class StallScene extends Phaser.Scene {
     for (const t of [...TOOLS, ...extra]) {
       const c = this.add.container(t.x, t.y).setDepth(20);
       const parts = [];
-      if (t.sprite) parts.push(addSprite(this, t.sprite, 0, t.h / 2 - 12, t.spriteH));
+      if (t.sprite) {
+        const s = addSprite(this, t.sprite, 0, t.h / 2 - 12, t.spriteH);
+        if (t.tint) s.setTint(t.tint); // a stand-in recoloured until its own art arrives
+        parts.push(s);
+      }
       else {
         const g = this.add.graphics();
         this.drawToolShape(g, t);

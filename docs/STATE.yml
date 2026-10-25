@@ -1,10 +1,10 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-23
 phase: development
-next: "Part 2 art from user (docs/art/PROMPTS_2026-10.md sittings 7-11): pour poses, stall props for bought items (needs code), HUD, title sign, night stall, Uncle Tan, Sophie. Else phase D drink mechanics."
+next: "Phase D next machine (tarik mugs / limau / halia...). Art waiting: part 2 + part 3 (docs/art/PROMPTS_2026-10.md), incl. kettle art (sitting 15)."
 tier_hint: 1
 blockers: ["Sophie flag/Merlion fix (user)"]
-touched: [src/scenes/OpeningScene.js, src/data/opening.js, src/scenes/TitleScene.js, src/data/customers.js, src/i18n/lines.js, src/data/glossary.js]
+touched: [src/systems/cup.js, src/systems/order.js, src/systems/hints.js, src/systems/pourBar.js, src/data/recipes.js, src/data/shop.js, src/data/tools.js, tests/kettle.test.js]
 validation: passing
 open_decisions: ["Walk-frame route (IDEAS.md)"]
 spec: "docs/specs/opening-and-art-plan.md"

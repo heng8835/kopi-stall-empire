@@ -26,6 +26,8 @@ export const MODIFIERS = {
   'siew dai': { sugar: 'less' },
   'ga dai': { sugar: 'more' },
   peng: { iced: true },
+  gao: { strength: 'gao' }, // strong: kopi / teh only, no hot water (Big Brass Kettle)
+  poh: { strength: 'poh' }, // weak: pot to half, hot water to FULL
 };
 
 export const ICED_SURCHARGE = 20; // cents, for peng (Milo Dinosaur already iced)

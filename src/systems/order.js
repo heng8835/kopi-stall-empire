@@ -1,10 +1,11 @@
 import { DRINKS, MODIFIERS } from '../data/drinks.js';
 import { GLOSSARY } from '../data/glossary.js';
 
-// A drink spec is { base, milk, sugar, iced, topping }.
+// A drink spec is { base, milk, sugar, iced, topping, strength }.
 //   base:  'kopi' | 'teh' | 'cham' (kopi + teh) | 'milo' | 'horlicks'
 //   milk:  'condensed' | 'evap' | 'none'   (null for the malt drinks, Milo and Horlicks)
 //   sugar: 'normal' | 'less' | 'none' | 'more'   (null for the malt drinks)
+//   strength: 'normal' | 'gao' (strong, no water) | 'poh' (weak, hot water added)   (null for malt drinks)
 //   For condensed-milk drinks (Kopi, Teh) the condensed milk is the sweetness; O and C use the sugar can.
 
 const MILK_WORD = { O: 'none', C: 'evap' };
@@ -12,6 +13,7 @@ const MILK_TO_WORD = { none: 'O', evap: 'C', condensed: '' };
 export const MALT = ['milo', 'horlicks']; // malt drinks: one tin, no milk or sugar to judge
 const NAME = { kopi: 'Kopi', teh: 'Teh', cham: 'Cham', milo: 'Milo', horlicks: 'Horlicks' };
 const SUGAR_TO_WORD = { none: 'kosong', less: 'siew dai', normal: '', more: 'ga dai' };
+const STRENGTH_TO_WORD = { gao: 'gao', poh: 'poh', normal: '' };
 
 export function findDrink(spec) {
   if (spec.base === 'milo') return spec.topping ? DRINKS.miloDino : DRINKS.milo;
@@ -27,13 +29,13 @@ export function parseOrder(text) {
   if (MALT.includes(first)) {
     // "Milo", "Milo peng", "Milo Dinosaur" (iced, powder on top); Horlicks the same
     const rest = words.join(' ').toLowerCase();
-    if (rest === 'dinosaur') return { base: first, milk: null, sugar: null, iced: true, topping: first };
-    if (rest === '' || rest === 'peng') return { base: first, milk: null, sugar: null, iced: rest === 'peng', topping: null };
+    if (rest === 'dinosaur') return { base: first, milk: null, sugar: null, iced: true, topping: first, strength: null };
+    if (rest === '' || rest === 'peng') return { base: first, milk: null, sugar: null, iced: rest === 'peng', topping: null, strength: null };
     throw new Error(`Unknown ${first} order: "${text}"`);
   }
   if (!['kopi', 'teh', 'cham'].includes(first)) throw new Error(`Unknown drink: "${text}"`);
 
-  const spec = { base: first, milk: 'condensed', sugar: 'normal', iced: false, topping: null };
+  const spec = { base: first, milk: 'condensed', sugar: 'normal', iced: false, topping: null, strength: 'normal' };
   for (let i = 0; i < words.length; i++) {
     const w = words[i];
     const two = `${w} ${words[i + 1] ?? ''}`.toLowerCase();
@@ -50,7 +52,7 @@ export function formatOrder(spec) {
   if (!spec?.base) return '';
   if (MALT.includes(spec.base)) return `${NAME[spec.base]}${spec.iced && spec.topping ? ' Dinosaur' : spec.iced ? ' peng' : ''}`;
   const name = NAME[spec.base];
-  return [name, MILK_TO_WORD[spec.milk], SUGAR_TO_WORD[spec.sugar], spec.iced ? 'peng' : '']
+  return [name, MILK_TO_WORD[spec.milk], STRENGTH_TO_WORD[spec.strength ?? 'normal'], SUGAR_TO_WORD[spec.sugar], spec.iced ? 'peng' : '']
     .filter(Boolean)
     .join(' ');
 }

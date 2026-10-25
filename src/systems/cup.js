@@ -7,7 +7,7 @@ const BASES = ['kopi', 'teh', 'milo', 'horlicks'];
 const MILKS = ['condensed', 'evap'];
 
 export function newCup() {
-  return { base: null, fill: 0, sugar: 0, condensed: 0, evap: 0, ice: false, powder: false, stir: 0 };
+  return { base: null, fill: 0, water: 0, sugar: 0, condensed: 0, evap: 0, ice: false, powder: false, stir: 0 };
 }
 
 // Pour `ingredient` for dtMs while the tool is held over the cup. Returns the cup (mutated).
@@ -17,6 +17,10 @@ export function pour(cup, ingredient, dtMs) {
     // A second, different base turns it into an accidental "cham" (mix).
     if (cup.base && cup.base !== ingredient && cup.fill > 0.05) cup.base = 'cham';
     else if (!cup.base) cup.base = ingredient;
+    cup.fill += amt;
+  } else if (ingredient === 'water') {
+    // Hot water from the Big Brass Kettle: fills the cup, makes kopi / teh weaker (poh)
+    cup.water += amt;
     cup.fill += amt;
   } else if (ingredient === 'sugar') cup.sugar += amt;
   else if (MILKS.includes(ingredient)) cup[ingredient] += amt;
@@ -39,7 +43,13 @@ export function stirStep(cup) {
   return cup;
 }
 
-export const isEmpty = (cup) => !cup.base && cup.sugar < 0.02 && cup.condensed < 0.02 && cup.evap < 0.02;
+export const isEmpty = (cup) => !cup.base && cup.water < 0.02 && cup.sugar < 0.02 && cup.condensed < 0.02 && cup.evap < 0.02;
+
+// Hot water's share of the drink, ice not counted: 0 = all pot (gao), about half = poh.
+export function waterShare(cup) {
+  const liquid = cup.fill - (cup.ice ? TUNING.iceVolume : 0);
+  return liquid > 0.01 ? Math.min(1, cup.water / liquid) : 0;
+}
 const hasMix = (cup) => cup.sugar > ZONES.trace || milkAmount(cup) > ZONES.trace;
 export const needsStir = (cup) => hasMix(cup) && cup.stir < 1;
 
@@ -112,6 +122,16 @@ export function gradeCup(cup, spec) {
     }
   }
 
+  if (!MALT.includes(spec.base) && cup.base) {
+    // Strength (Big Brass Kettle): poh needs hot water, gao none at all, normal tolerates a splash
+    const w = waterShare(cup);
+    const want = spec.strength ?? 'normal';
+    if (want === 'poh' && w < ZONES.water.poh[0]) close.push('not poh: needs hot water');
+    else if (want === 'poh' && w > ZONES.water.poh[1]) close.push('too watery, even for poh');
+    else if (want === 'gao' && w > ZONES.water.gao) close.push('gao means no water');
+    else if (want === 'normal' && w >= ZONES.water.poh[0]) close.push('too watery');
+  }
+
   if (!!spec.iced !== cup.ice) close.push(spec.iced ? 'forgot the ice (peng)' : 'should be hot, not iced');
   if (!!spec.topping !== cup.powder) close.push(spec.topping ? 'forgot the powder on top' : 'extra powder on top');
   if (needsStir(cup)) close.push('forgot to stir');
@@ -129,7 +149,8 @@ export function formatCup(cup) {
   const sugar = s <= 1 ? 'none' : s <= 3 ? 'less' : s <= 5 ? 'normal' : 'more';
   const mt = milkType(cup);
   const milk = mt === 'evap' ? 'evap' : mt === 'condensed' ? 'condensed' : 'none';
-  let text = MALT.includes(cup.base) ? formatOrder({ base: cup.base, iced: cup.ice, topping: cup.powder }) : formatOrder({ base: cup.base, milk, sugar, iced: cup.ice });
+  const strength = waterShare(cup) >= ZONES.water.poh[0] ? 'poh' : 'normal';
+  let text = MALT.includes(cup.base) ? formatOrder({ base: cup.base, iced: cup.ice, topping: cup.powder }) : formatOrder({ base: cup.base, milk, sugar, strength, iced: cup.ice });
   const notes = [];
   if (cup.fill < ZONES.fill.good[0]) notes.push('not full');
   if (s === 8) notes.push('too sweet');
@@ -142,7 +163,7 @@ export function formatCup(cup) {
 // Liquid colour for drawing: base colour, lightened by milk.
 export function liquidColor(cup) {
   const base = LIQUID[cup.base] ?? LIQUID.kopi;
-  const m = Math.min(1, milkAmount(cup) / 1.6);
+  const m = Math.min(1, milkAmount(cup) / 1.6 + waterShare(cup) * 0.35); // hot water thins it a little
   const milk = cup.evap > cup.condensed ? LIQUID.evap : LIQUID.condensed;
   const mix = (a, b, t) => Math.round(a + (b - a) * t);
   const ch = (c, s) => (c >> s) & 0xff;

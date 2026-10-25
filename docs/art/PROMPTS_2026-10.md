@@ -199,6 +199,12 @@ Attach: **`art/source/ref-kids.png`** (and `art/source/owner-jun-mei.webp` for t
 ### Image 25 → `art/source/kids-hd.png`
 > Redraw the four secondary school kids in the first attached image as high-resolution chibi pixel-art game characters in the style of the second attached image: exactly the same kids, faces, hair, uniforms, bags, props and poses, but crisp and detailed, with a clean thick dark outline and soft shading. Left to right: 1) Darren, spiky hair, cheering with an iced Milo Dinosaur, 2) Wei Ling, high ponytail and glasses, 3) Hafiz, backwards cap, 4) Jia Hui, short bob with a sketchbook. Full body, one row with wide clear gaps, same scale, feet on the same line. Landscape image. Plain flat white background, no shadow, no text, no logos, no school crest.
 
+## Sitting 15: the Big Brass Kettle (1 image)
+Attach: **`art/source/tools-shelf-hd.png`** (from sitting 12, so it matches the other tools)
+
+### Image 26 → `art/source/kettle.png`
+> Pixel-art game props in exactly the same style as the attached image. Two items in one row with a wide gap: 1) a big old-fashioned brass kettle for hot water, round body, long curved spout, black wooden handle on top, a little steam from the spout, standing upright; 2) the SAME kettle tilted about 40 degrees, spout pointing down to the LEFT, mid-pour, no water stream. Landscape image. Plain flat white background, no shadow, no text, no logos.
+
 ## Optional, later: the stall background
 `public/bg/stall.webp` is 901 px wide, a little soft on big phones. Redrawing it is risky: the tools, tray plates and
 counter are lined up with it to the pixel, and ChatGPT tends to move things. If you try it: attach `art/source/stall-bg.webp`

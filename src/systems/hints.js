@@ -1,7 +1,7 @@
 // The recipe hint under each order bubble, in the same words as the pour bar zones.
 // "Teh C siew dai peng" -> "Teh ¾ · evap C · sugar SIEW DAI · stir · ice". Pure, no Phaser.
 import { ZONES } from '../data/stallTuning.js';
-import { sweetness, sugarBucket, needsStir } from './cup.js';
+import { sweetness, sugarBucket, needsStir, waterShare } from './cup.js';
 
 const SWEET = { none: 'KOSONG', less: 'SIEW DAI', normal: 'NORMAL', more: 'GA DAI' };
 
@@ -13,6 +13,8 @@ export function recipeHint(spec) {
   }
   const name = { kopi: 'Kopi', teh: 'Teh', cham: 'Kopi + teh' }[spec.base];
   const steps = [`${name} ${pot}`];
+  if (spec.strength === 'poh') steps.splice(0, 1, `${name} ½`, 'hot water FULL');
+  if (spec.strength === 'gao') steps.push('no water');
   if (spec.milk === 'condensed') steps.push(`condensed ${SWEET[spec.sugar]}`);
   else {
     steps.push(spec.milk === 'evap' ? 'evap C' : 'no milk');
@@ -45,6 +47,19 @@ export function nextStep(cup, spec, who) {
     if (cup.base === 'teh') return { text: `Now the kopi pot on top, till ${zone}` };
   }
   if (cup.base && cup.base !== spec.base) return { text: 'Wrong drink in this cup! Drag it to the bin', bin: true };
+  // strength (Big Brass Kettle): poh = pot to half, then hot water; gao = no water at all
+  if (!malt) {
+    const pot = cup.fill - cup.water - (cup.ice ? 0.25 : 0);
+    if (spec.strength === 'poh') {
+      if (!cup.base || pot < ZONES.pohPot[0]) return { text: `Poh = weak: ${POT[spec.base] ?? 'pot'} to about HALF` };
+      if (pot > ZONES.pohPot[1] + 0.05) return { text: 'Too much kopi for poh! Bin it and pour to half', bin: true };
+      if (fill < lo) return { text: `Hot water kettle (rail) till ${zone}` };
+    } else if (spec.strength === 'gao' && waterShare(cup) > ZONES.water.gao) {
+      return { text: 'Gao = no water! Bin it and try again', bin: true };
+    } else if (waterShare(cup) >= ZONES.water.poh[0]) {
+      return { text: 'Too watery! Bin it and try again', bin: true };
+    }
+  }
   if (!cup.base || fill < lo) return { text: `Hold the ${spec.base === 'cham' ? 'pot' : POT[spec.base]} over the cup till ${zone}` };
   if (cup.fill > ZONES.fill.spill || (peng && !cup.ice && fill >= hi + 0.03)) return { text: peng ? 'Too full for peng! Bin it and pour to ¾' : 'Spilled! Bin it and try again', bin: true };
 

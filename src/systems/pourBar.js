@@ -27,23 +27,33 @@ const FILL = [
   ['FULL', ...Z.fill.good, 'ok'],
   ['SPILL', Z.fill.good[1], 1.3, 'bad'],
 ];
+// For a poh (weak) order the pot stops at about half, then the kettle's hot water tops it up.
+const FILL_POH = [
+  ['POURING…', 0, Z.pohPot[0], 'none'],
+  ['½ POH', ...Z.pohPot, 'lo'],
+  ['', Z.pohPot[1], Z.fill.good[0], 'none'],
+  ['FULL', ...Z.fill.good, 'ok'],
+  ['SPILL', Z.fill.good[1], 1.3, 'bad'],
+];
 const FILL_COLORS = { none: 0xf2f2f2, lo: 0xcfe9cf, ok: 0x66bb6a, hi: 0xf2c14e, bad: 0xe57368 };
 
 const KIND = {
-  kopi: { name: 'Kopi pot · fill', zones: FILL, value: (c) => c.fill },
-  teh: { name: 'Teh pot · fill', zones: FILL, value: (c) => c.fill },
+  kopi: { name: 'Kopi pot · fill', zones: FILL, pohZones: FILL_POH, value: (c) => c.fill },
+  teh: { name: 'Teh pot · fill', zones: FILL, pohZones: FILL_POH, value: (c) => c.fill },
   milo: { name: 'Milo · fill', zones: FILL, value: (c) => c.fill },
   horlicks: { name: 'Horlicks · fill', zones: FILL, value: (c) => c.fill },
   condensed: { name: 'Condensed milk · sweetness', zones: SWEET, value: sweetness },
   sugar: { name: 'Sugar · sweetness', zones: SWEET, value: sweetness },
   evap: { name: 'Evaporated milk · C', zones: EVAP, value: (c) => c.evap },
+  water: { name: 'Hot water · fill', zones: FILL, value: (c) => c.fill },
 };
 
 // The zone a ticketed order is aiming for, for this ingredient (null = no ticket / no target).
 const SWEET_ZONE = { none: 'KOSONG', less: 'SIEW DAI', normal: 'NORMAL', more: 'GA DAI' };
 export function targetZone(ingredient, spec) {
   if (!spec) return null;
-  if (['kopi', 'teh', 'milo', 'horlicks'].includes(ingredient)) return spec.iced ? '¾ PENG' : 'FULL';
+  if (['kopi', 'teh'].includes(ingredient) && spec.strength === 'poh' && !spec.iced) return '½ POH';
+  if (['kopi', 'teh', 'milo', 'horlicks', 'water'].includes(ingredient)) return spec.iced ? '¾ PENG' : 'FULL';
   if (ingredient === 'evap') return spec.milk === 'evap' ? 'C · NORMAL' : 'NONE (O)';
   if (ingredient === 'condensed' || ingredient === 'sugar') return spec.sugar ? SWEET_ZONE[spec.sugar] : null;
   return null;
@@ -74,15 +84,17 @@ export class PourBar {
   show(ingredient, cup, slotNo, ticket = null) {
     const k = KIND[ingredient];
     if (!k || !cup) return;
-    if (this.kind !== ingredient) this.layout(ingredient);
+    const zones = k.pohZones && ticket?.spec?.strength === 'poh' && !ticket.spec.iced ? k.pohZones : k.zones;
+    const key = `${ingredient}:${zones === k.zones ? '' : 'poh'}`;
+    if (this.kind !== key) this.layout(key, zones);
     const v = k.value(cup);
-    const max = k.zones.at(-1)[2];
+    const max = zones.at(-1)[2];
     const mx = X + (Math.min(v, max) / max) * W;
-    const zone = k.zones.find((z) => v >= z[1] && v < z[2]) ?? k.zones.at(-1);
+    const zone = zones.find((z) => v >= z[1] && v < z[2]) ?? zones.at(-1);
     this.label.setText(ticket ? `Cup ${slotNo} · ${ticket.who} · ${k.name}` : `Cup ${slotNo} · ${k.name}`);
     this.now.setText(zone[0]);
     this.marker.clear();
-    const target = k.zones.find((z) => z[0] === targetZone(ingredient, ticket?.spec));
+    const target = zones.find((z) => z[0] === targetZone(ingredient, ticket?.spec));
     if (target) {
       const x0 = X + (target[1] / max) * W;
       const x1 = X + (target[2] / max) * W;
@@ -98,14 +110,13 @@ export class PourBar {
     this.hideAt = t + 700;
   }
 
-  layout(ingredient) {
-    this.kind = ingredient;
-    const k = KIND[ingredient];
-    const max = k.zones.at(-1)[2];
+  layout(key, zones) {
+    this.kind = key;
+    const max = zones.at(-1)[2];
     this.g.clear();
     this.zoneTexts.forEach((t) => t.destroy());
     this.zoneTexts = [];
-    for (const [label, a, b, kind] of k.zones) {
+    for (const [label, a, b, kind] of zones) {
       const x0 = X + (a / max) * W;
       const x1 = X + (b / max) * W;
       this.g.fillStyle(FILL_COLORS[kind], 1).fillRect(x0, 16, x1 - x0, BAR_H);

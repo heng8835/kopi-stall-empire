@@ -29,7 +29,7 @@ export const TUNING = {
 
   // Pour speeds, in "units per second" while holding a tool over a cup.
   // 1.0 = a full cup of base / a normal amount of sugar or milk.
-  pourPerSec: { kopi: 0.9, teh: 0.9, milo: 0.9, horlicks: 0.9, sugar: 1.0, condensed: 1.0, evap: 1.0 },
+  pourPerSec: { kopi: 0.9, teh: 0.9, milo: 0.9, horlicks: 0.9, sugar: 1.0, condensed: 1.0, evap: 1.0, water: 0.9 },
 
   stirWigglesNeeded: 6,
   autoStirMs: 1000, // dropping the spoon on a cup stirs it in this long
@@ -47,6 +47,10 @@ export const ZONES = {
   // FULL for hot drinks; peng = pour into the ¾ zone, the ice adds iceVolume (0.25) into FULL
   fill: { peng: [0.55, 0.8], good: [0.8, 1.08], spill: 1.12 },
   trace: 0.08, // less than this of milk / sugar counts as "none added"
+  // Strength = hot water's share of the drink (before ice). Gao: no water. Normal: a splash is fine.
+  // Poh: pot to about half, hot water to FULL.
+  water: { gao: 0.08, poh: [0.28, 0.65] },
+  pohPot: [0.35, 0.65], // where the pot should stop for a poh drink
 };
 
 // Liquid colours (for drawing cups): base colours, lightened by milk.

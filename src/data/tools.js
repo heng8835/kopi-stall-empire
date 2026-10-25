@@ -17,7 +17,7 @@ export const TOOLS = [
   { id: 'condensed', label: 'Condensed', kind: 'pour', ingredient: 'condensed', sprite: 'toolCondensed', x: 212, feet: SHELF, w: 48, h: 66 },
   { id: 'evap', label: 'Evap (C)', kind: 'pour', ingredient: 'evap', sprite: 'toolEvap', x: 264, feet: SHELF, w: 48, h: 66 },
   { id: 'milo', label: 'Milo', kind: 'pour', ingredient: 'milo', sprite: 'toolMilo', x: 318, feet: SHELF, w: 52, h: 70 },
-  { id: 'ice', label: 'Ice', kind: 'drop', apply: 'ice', sprite: 'toolIce', x: 110, feet: RAIL, w: 64, h: 66 },
+  { id: 'ice', label: 'Ice', kind: 'drop', apply: 'ice', sprite: 'toolIce', x: 122, feet: RAIL, w: 64, h: 66 },
   { id: 'stir', label: 'Spoon', kind: 'stir', sprite: 'toolStir', x: 172, feet: RAIL, w: 50, h: 72 },
   { id: 'rack', label: 'Cups', kind: 'rack', sprite: 'toolRack', x: 238, feet: RAIL, w: 76, h: 76 },
   { id: 'powder', label: 'Powder', kind: 'drop', apply: 'powder', sprite: 'toolMilo', spriteH: 48, x: 296, feet: RAIL, w: 46, h: 58 },
@@ -26,7 +26,8 @@ export const TOOLS = [
 
 // Tools that come with a night-shop machine (shown only when it's owned), keyed by shop item id.
 export const MACHINE_TOOLS = {
-  horlicksShelf: { id: 'horlicks', label: 'Horlicks', kind: 'pour', ingredient: 'horlicks', sprite: 'toolHorlicks', x: 44, feet: RAIL, w: 46, h: 58, color: 0xd9c49a },
+  kettle: { id: 'water', label: 'Hot water', kind: 'pour', ingredient: 'water', sprite: 'toolTehPot', tint: 0xf2c46b, spriteH: 50, x: 70, feet: RAIL, w: 44, h: 58 }, // brass stand-in until its own art
+  horlicksShelf: { id: 'horlicks', label: 'Horlicks', kind: 'pour', ingredient: 'horlicks', sprite: 'toolHorlicks', x: 22, feet: RAIL, w: 46, h: 58, color: 0xd9c49a },
 };
 for (const t of Object.values(MACHINE_TOOLS)) t.y = t.feet - t.h / 2;
 

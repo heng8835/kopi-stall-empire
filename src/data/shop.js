@@ -19,7 +19,7 @@ export const SHOP = [
   { id: 'twinSock', aisle: 'machine', name: 'Twin Sock Stand', zh: '双咖啡袋架', price: 5500, tier: 25, icon: '☕', text: 'Brew kopi and teh side by side. Pour both into one cup: Cham!', effect: {}, unlocks: ['cham'] },
   { id: 'horlicksShelf', aisle: 'machine', name: 'Horlicks Shelf', zh: '好立克架', price: 3500, tier: 0, icon: '🥛', text: 'A tin of Horlicks on the rail. Horlicks, Horlicks peng, Horlicks Dinosaur.', effect: {}, unlocks: ['horlicks', 'horlicksDino'] },
   { id: 'iceMachine', aisle: 'machine', name: 'Ice Machine', zh: '制冰机', price: 6000, tier: 25, icon: '🧊', text: 'Crystal-clear ice. Iced drinks earn +20¢.', effect: { icedTip: 20 } },
-  { id: 'kettle', aisle: 'machine', name: 'Big Brass Kettle', zh: '大铜壶', price: 4500, tier: 0, icon: '🫖', text: 'Hot water sets strength: gao, poh, di lo.', soon: true },
+  { id: 'kettle', aisle: 'machine', name: 'Big Brass Kettle', zh: '大铜壶', price: 4500, tier: 0, icon: '🫖', text: 'Hot water on the rail. Kopi / teh poh (weak) and gao (strong): new orders the regulars love.', effect: {}, unlocks: ['gao', 'poh'] },
   { id: 'tarikMugs', aisle: 'machine', name: 'Tarik Mugs', zh: '拉茶杯', price: 4000, tier: 25, icon: '🍵', text: 'Pull teh from a height until frothy.', soon: true },
   { id: 'haliaPot', aisle: 'machine', name: 'Halia Pot', zh: '姜茶壶', price: 3500, tier: 25, icon: '🫚', text: 'Ginger tea: Teh Halia.', soon: true },
   { id: 'limau', aisle: 'machine', name: 'Limau Squeezer', zh: '酸柑榨汁器', price: 3000, tier: 0, icon: '🍋', text: 'Calamansi lime tea: Teh O Limau.', soon: true },
