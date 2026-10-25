@@ -23,8 +23,12 @@ describe('regulars and walk-ins', () => {
     expect(s.map((a) => a.at)).toEqual([...s.map((a) => a.at)].sort((a, b) => a - b));
   });
 
-  it('the first customer comes straight away', () => {
-    for (let i = 0; i < 5; i++) expect(daySchedule({ ...day, total: 8, regulars: [] })[0].at).toBe(day.start);
+  it('the first customer comes straight away, and regulars still keep their time', () => {
+    for (let i = 0; i < 20; i++) {
+      const s = daySchedule({ ...day, total: 8, regulars: [{ id: 'ahGong', window: [10, 170] }] });
+      expect(s[0].at).toBe(day.start);
+      expect(s.find((a) => a.id === 'ahGong').at).toBeGreaterThanOrEqual(10_000);
+    }
   });
 
   it('a low-fame day still brings every regular', () => {

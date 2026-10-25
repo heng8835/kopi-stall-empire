@@ -129,21 +129,31 @@ the lunch rush; I'd crossfade into it at 11am and back out at 2pm.)*
 ```
 
 ## 6. The prologue and the finale
-**For:** the opening ("One Month to Try") and Day 30 (opening the tin, the ending). **Feeling:** a dream coming true, family, gratitude, a new beginning.
-**File:** `art/audio/finale.wav` · **Title:** `One Month to Try`
+**For:** the opening ("One Month to Try") and Day 30 (opening the tin, the ending). **Feeling:** a dream coming
+true, family, gratitude, a new beginning: the warm lump-in-the-throat of a National Day evening at the void deck,
+everyone from the block together.
+**File:** `art/audio/finale.mp3` · **Title:** `One Month to Try`
+
+*The Singapore sound here (no erhu):* the strummed acoustic guitar of 80s xinyao campus songs, a gentle Malay
+keroncong lilt on ukulele and cuatro-like strums, a soft kompang hand-drum heartbeat, a touch of tabla, and warm
+piano and strings carrying a singalong-style melody, the kind of tune a whole community could hum together.
+Many cultures, one neighbourhood.
 
 **Style**
-> emotional uplifting instrumental, the Corner Kopitiam theme played big and warm, acoustic guitar, piano, soft strings, gentle erhu solo, light drums building gently, Singapore neighbourhood nostalgia, hopeful, grateful, bittersweet happy tears, 80 bpm, instrumental
+> emotional uplifting instrumental, Singapore community spirit, warm National Day evening at the HDB void deck, strummed acoustic guitar in 1980s xinyao campus folk style, soft keroncong ukulele lilt, gentle kompang hand drum heartbeat, light tabla, warm piano melody, soft strings, simple singalong melody everyone could hum, starts small and intimate, grows gently warmer, hopeful, grateful, bittersweet happy tears, 78 bpm, instrumental
+
+**Exclude styles**
+> erhu, guzheng, Chinese opera, vocals, choir, cinematic trailer, epic orchestra, electronic, dubstep, heavy drums
 
 **Lyrics box**
 ```
 [Instrumental]
-[Intro]
+[Soft Guitar Intro]
 [Verse]
 [Chorus]
-[Bridge]
+[Verse]
 [Chorus]
-[Outro]
+[Warm Ending]
 ```
 *(This one doesn't need to loop: it plays once, under the big moments.)*
 

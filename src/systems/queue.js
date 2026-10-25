@@ -31,7 +31,7 @@ export function arrivalSchedule(n, start, end, jitter, rand = Math.random) {
 // A whole day's arrivals, sorted by time: each regular once, at a random moment inside their usual
 // window (minutes after opening; the day is 720 minutes, 7am -> 7pm), plus walk-ins spread over the
 // day so the total comes to `total`. Regulars -> { at, id }, walk-ins -> { at, id: null }.
-// The first arrival is always right at `start`.
+// The first walk-in always comes right at `start`.
 export function daySchedule({ total, regulars, dayMs, start, end, jitter, rand = Math.random }) {
   const msPerMin = dayMs / 720;
   const regs = regulars.map(({ id, window: [from, to] }) => {
@@ -39,7 +39,6 @@ export function daySchedule({ total, regulars, dayMs, start, end, jitter, rand =
     return { at: Math.round(Math.max(start, Math.min(end, at))), id };
   });
   const walkIns = arrivalSchedule(Math.max(0, total - regs.length), start, end, jitter, rand).map((at) => ({ at, id: null }));
-  const all = [...regs, ...walkIns].sort((a, b) => a.at - b.at);
-  if (all[0]) all[0].at = start; // nobody waits long for the first customer of the day
-  return all;
+  if (walkIns[0]) walkIns[0].at = start; // nobody waits long for the first customer (regulars keep their own time)
+  return [...regs, ...walkIns].sort((a, b) => a.at - b.at);
 }
