@@ -163,3 +163,44 @@ Attach: **`art/source/stall-assets.webp`**, and say which one is Sophie (the "to
 ---
 
 **Total for part 2: 10 images in 5 sittings.** With part 1 that is 20 images (+1 optional). After these, the whole game has its must-have art.
+
+---
+
+# Part 3: sharpen the early art (sittings 12–14)
+
+I measured every sprite against the size the game shows it at. These 17 come from small or messy sources, so the
+game blows them up and they look soft, and the tools also have white speckles around their edges:
+**Jun, Mei, Marcus, Darren, Wei Ling, Hafiz, Jia Hui, the kopi pot, teh kettle, sugar jar, condensed can,
+evap can, Milo tin, ice bucket, spoon cup, cup rack and the glass mug.**
+Everything else (Aunty Lim, Ah Gong, Oyen, the story cast, the 20 walk-ins, the Horlicks tin) is sharp enough.
+
+The trick: **attach the old picture and ask ChatGPT to redraw the same thing, bigger and cleaner.** It keeps the design,
+so nothing in the game changes except the sharpness. The reference sheets below are ready in `art/source/`.
+Same rules as before: new chat per sitting, attach once, save with the given name, tell me.
+
+## Sitting 12: the tools (2 images)
+Attach: **`art/source/ref-tools-upright.png`**
+
+### Image 22 → `art/source/tools-shelf-hd.png`
+> Redraw the six objects in the attached image as clean, high-resolution pixel-art game props: exactly the same objects, shapes, colours and angle, but crisp, with a clean thick dark outline all the way round, soft 2–3 tone shading, warm light from the top-left, and no white specks or fuzzy edges. Same order, left to right, in one row with wide clear gaps, each one large and standing upright: 1) kopi pot with the cloth coffee sock, 2) teh kettle, 3) glass sugar jar with lid and spoon, 4) cream condensed milk can, open top, 5) blue-and-white evaporated milk can, open top, 6) green malt powder tin with a spoon. Landscape image. Plain flat white background, no shadow, no text, no letters, no logos.
+
+### Image 23 → `art/source/tools-rail-hd.png` (same chat, also attach `art/source/ref-tools-rail.png`)
+> Same again for these four objects in the newly attached image: exactly the same objects, shapes and colours, redrawn crisp and high-resolution with a clean thick dark outline and no white specks: 1) metal ice bucket with ice cubes and a scoop, 2) small metal cup with a stirring spoon in it, 3) wooden-and-metal rack holding upside-down glass cups, 4) one empty clear glass mug with a handle. One row, wide clear gaps, each one large. Landscape image. Plain flat white background, no shadow, no text, no logos.
+
+## Sitting 13: Jun, Mei and Marcus (1 image)
+Attach: **`art/source/ref-owners-marcus.png`** (and `art/source/owner-jun-mei.webp` for the style)
+
+### Image 24 → `art/source/owners-marcus-hd.png`
+> Redraw the three characters in the first attached image as high-resolution chibi pixel-art game characters in the style of the second attached image: exactly the same people, faces, hair, outfits, colours, props and poses, but crisp and detailed, with a clean thick dark outline, soft 2–3 tone shading and pink blush. Left to right: 1) Jun, young man in a brown kopitiam apron holding a metal mug and an iced kopi, 2) Mei, young woman with a high ponytail in the same apron holding a metal mug and a tray of drinks, 3) Marcus, office worker with a lanyard on a phone call, holding an iced kopi, bag on his shoulder. Full body, in one row with wide clear gaps, all the same scale, feet on the same line. Landscape image. Plain flat white background, no shadow, no text, no logos.
+
+## Sitting 14: the four kids (1 image)
+Attach: **`art/source/ref-kids.png`** (and `art/source/owner-jun-mei.webp` for the style)
+
+### Image 25 → `art/source/kids-hd.png`
+> Redraw the four secondary school kids in the first attached image as high-resolution chibi pixel-art game characters in the style of the second attached image: exactly the same kids, faces, hair, uniforms, bags, props and poses, but crisp and detailed, with a clean thick dark outline and soft shading. Left to right: 1) Darren, spiky hair, cheering with an iced Milo Dinosaur, 2) Wei Ling, high ponytail and glasses, 3) Hafiz, backwards cap, 4) Jia Hui, short bob with a sketchbook. Full body, one row with wide clear gaps, same scale, feet on the same line. Landscape image. Plain flat white background, no shadow, no text, no logos, no school crest.
+
+## Optional, later: the stall background
+`public/bg/stall.webp` is 901 px wide, a little soft on big phones. Redrawing it is risky: the tools, tray plates and
+counter are lined up with it to the pixel, and ChatGPT tends to move things. If you try it: attach `art/source/stall-bg.webp`
+and ask *"Upscale this exact image to a higher resolution and sharpen it. Do not move, add or remove anything; keep the
+exact layout, colours and camera."* Then I check the alignment before using it.
