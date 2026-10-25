@@ -1,10 +1,10 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-23
 phase: development
-next: "Phase D next machine (tarik mugs / limau / halia...). Art waiting: part 2 + part 3 (docs/art/PROMPTS_2026-10.md), incl. kettle art (sitting 15)."
+next: "Part 3 art from user (sharpen 17 sprites; then redo pour poses from the sharp tools) + kettle art (sitting 15). Else phase D next machine."
 tier_hint: 1
-blockers: ["Sophie flag/Merlion fix (user)"]
-touched: [src/systems/cup.js, src/systems/order.js, src/systems/hints.js, src/systems/pourBar.js, src/data/recipes.js, src/data/shop.js, src/data/tools.js, tests/kettle.test.js]
+blockers: []
+touched: [src/data/stallProps.js, src/scenes/StallScene.js, src/scenes/TitleScene.js, src/scenes/ShopScene.js, src/data/customers.js, src/data/tools.js]
 validation: passing
 open_decisions: ["Walk-frame route (IDEAS.md)"]
 spec: "docs/specs/opening-and-art-plan.md"
