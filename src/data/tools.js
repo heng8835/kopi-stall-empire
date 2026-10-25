@@ -1,7 +1,8 @@
 // Stall tools. Positions are tool centres in logical px (360x640), laid out on the shelf of
 // the stall background (public/bg/stall.webp). sprite = HD sprite key (spriteSizes.json);
 // tools without a sprite are drawn as simple shapes. pourSprite = the tilted mid-pour picture swapped in
-// while pouring (tools without one just tilt). kind:
+// while pouring (tools without one just tilt). liftSprite = what you hold once it's picked up (the spoon
+// leaves its cup). kind:
 //   pour  - hold over a cup to pour `ingredient` (meter shows how much)
 //   drop  - release over a cup to add once (ice / Milo powder)
 //   stir  - drop it on a cup and it stirs by itself (wiggling over the cup works too)
@@ -19,7 +20,7 @@ export const TOOLS = [
   { id: 'evap', label: 'Evap (C)', kind: 'pour', ingredient: 'evap', sprite: 'toolEvap', pourSprite: 'pourEvap', x: 264, feet: SHELF, w: 48, h: 66 },
   { id: 'milo', label: 'Milo', kind: 'pour', ingredient: 'milo', sprite: 'toolMilo', pourSprite: 'pourMilo', x: 318, feet: SHELF, w: 52, h: 70 },
   { id: 'ice', label: 'Ice', kind: 'drop', apply: 'ice', sprite: 'toolIce', x: 122, feet: RAIL, w: 64, h: 66 },
-  { id: 'stir', label: 'Spoon', kind: 'stir', sprite: 'toolStir', x: 172, feet: RAIL, w: 50, h: 72 },
+  { id: 'stir', label: 'Spoon', kind: 'stir', sprite: 'toolStir', liftSprite: 'toolSpoon', liftH: 62, x: 172, feet: RAIL, w: 50, h: 72 },
   { id: 'rack', label: 'Cups', kind: 'rack', sprite: 'toolRack', x: 238, feet: RAIL, w: 76, h: 76 },
   { id: 'powder', label: 'Powder', kind: 'drop', apply: 'powder', sprite: 'toolMilo', spriteH: 48, x: 296, feet: RAIL, w: 46, h: 58 },
   { id: 'bin', label: 'Bin', kind: 'bin', x: 336, feet: RAIL, w: 42, h: 56, color: 0x6c757d },

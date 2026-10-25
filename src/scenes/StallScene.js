@@ -437,6 +437,7 @@ export default class StallScene extends Phaser.Scene {
   onToolDragStart(tool) {
     this.dragging += 1;
     play('pickup');
+    this.liftTool(tool, true);
     tool.setDepth(46);
     this.tweens.add({ targets: tool, scale: 1.08, duration: 80 });
     tool.lastStirDir = 0;
@@ -466,6 +467,31 @@ export default class StallScene extends Phaser.Scene {
     tool.hoverSlot = target;
   }
 
+  // Picked up: some tools leave their holder (the spoon comes out of its cup), and go back on release.
+  liftTool(tool, lifted) {
+    const t = tool.tool;
+    if (!t.liftSprite || !tool.sprite) return;
+    const key = lifted ? (this.textures.exists(t.liftSprite) ? t.liftSprite : this.drawnSpoon()) : t.sprite;
+    tool.sprite.setTexture(key);
+    const h = lifted ? t.liftH : t.spriteH ?? displayHeight(key);
+    tool.sprite.setScale(h / tool.sprite.height).setAngle(lifted ? 18 : 0);
+  }
+
+  // A long kopitiam spoon drawn in code (3x for crispness), until its own art arrives.
+  drawnSpoon() {
+    const key = 'toolSpoonDrawn';
+    if (this.textures.exists(key)) return key;
+    const g = this.make.graphics({ add: false });
+    const ink = 0x3a2e2a;
+    g.fillStyle(ink, 1).fillRoundedRect(15, 0, 18, 150, 9).fillEllipse(24, 160, 48, 66); // outline
+    g.fillStyle(0xc9ced4, 1).fillRoundedRect(19, 4, 10, 142, 5).fillEllipse(24, 160, 38, 56); // steel
+    g.fillStyle(0xf4f6f8, 1).fillRoundedRect(21, 10, 3, 120, 2).fillEllipse(17, 152, 9, 22); // shine
+    g.fillStyle(0x9aa1a8, 1).fillEllipse(30, 168, 14, 26); // bowl shade
+    g.generateTexture(key, 48, 194);
+    g.destroy();
+    return key;
+  }
+
   // Mid-pour: swap in the tool's tilted pour picture (or just tilt it when it has none).
   poseTool(tool, pouring) {
     const t = tool.tool;
@@ -487,6 +513,7 @@ export default class StallScene extends Phaser.Scene {
     if (t.kind === 'rack' && slot && !slot.cup) this.placeCup(slot);
     this.pouring = null;
     this.poseTool(tool, false);
+    this.liftTool(tool, false);
     tool.setAngle(0);
     // While it glides home it passes BEHIND the cups (depth 14), so a quick tap on a cup still
     // grabs the cup, but the tool itself can be grabbed again straight away.
