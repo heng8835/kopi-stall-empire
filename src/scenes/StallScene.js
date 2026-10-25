@@ -36,6 +36,7 @@ import { Tutorial } from '../systems/tutorial.js';
 import { TUTORIAL_STEPS, TOOL_IDS } from '../data/tutorial.js';
 import { load, save } from '../systems/save.js';
 import { demoSteps, MEASURE } from '../systems/demo.js';
+import { playMusic, stopMusic, duckMusic } from '../systems/music.js';
 
 // The kopi stall, seen from behind the counter: customers across the counter at the top,
 // a tray of 3 cup spots in the middle, and the tools along the bottom. Drinks are made by
@@ -141,6 +142,7 @@ export default class StallScene extends Phaser.Scene {
     this.feedback = addText(this, GAME_W / 2, COUNTER_Y + 10, '', { size: 12, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: 340 }).setDepth(40);
     this.feedback.setStroke('#3a2414', 3);
 
+    playMusic('day');
     this.tutorial = new Tutorial(this, TUTORIAL_STEPS);
     if (data?.morning) this.openShutter();
     // Day 1, first time: Episode 1 first (Aunty Lim walks in and says hello), then the tutorial
@@ -1224,6 +1226,7 @@ export default class StallScene extends Phaser.Scene {
     this.pouring = null;
     this.tweens.killTweensOf(this.feedback);
     this.feedback.setAlpha(0);
+    duckMusic(true);
     this.scene.launch('Drama', {
       ep,
       flags: this.flags,
@@ -1233,6 +1236,7 @@ export default class StallScene extends Phaser.Scene {
       onChoice: (opt) => this.applyStoryChoice(opt),
       onEnding: (e) => (this.ending = e.id),
       onDone: () => {
+        duckMusic(false);
         this.scene.stop('Drama');
         this.scene.resume();
         if (ep.fame) this.econ.fame = clampFame(this.econ.fame + ep.fame);
@@ -1510,6 +1514,7 @@ export default class StallScene extends Phaser.Scene {
   toNight(run) {
     if (this.leaving) return;
     this.leaving = true;
+    stopMusic(0.9);
     this.cameras.main.fadeOut(700, 11, 20, 48);
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Shop', { run }));
   }

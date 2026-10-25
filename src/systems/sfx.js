@@ -11,6 +11,17 @@ let muted = load('muted', false);
 
 const AudioCtor = () => (typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)) || null;
 
+const readyFns = [];
+
+// The audio context + master volume for other players (systems/music.js); null until unlocked.
+export const audioOut = () => (ctx ? { ctx, master } : null);
+
+// Run fn once audio is unlocked (straight away if it already is).
+export function onAudioReady(fn) {
+  if (ctx) fn();
+  else readyFns.push(fn);
+}
+
 // Browsers only allow audio after a user gesture: call this from a pointerdown handler.
 export function unlock() {
   try {
@@ -21,6 +32,9 @@ export function unlock() {
       master = ctx.createGain();
       master.gain.value = muted ? 0 : VOLUME;
       master.connect(ctx.destination);
+      // no sound while the game is in the background (phone locked, another tab)
+      document.addEventListener('visibilitychange', () => (document.hidden ? ctx.suspend() : ctx.resume()));
+      readyFns.splice(0).forEach((fn) => fn());
     }
     if (ctx.state === 'suspended') ctx.resume();
     startAmbience();

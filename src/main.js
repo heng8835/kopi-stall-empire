@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { backbufferSize, watchResize } from './systems/view.js';
 import * as sfx from './systems/sfx.js';
+import * as music from './systems/music.js';
 import BootScene from './scenes/BootScene.js';
 import TitleScene from './scenes/TitleScene.js';
 import StallScene from './scenes/StallScene.js';
@@ -32,4 +33,5 @@ window.addEventListener('pointerdown', sfx.unlock, { passive: true });
 if (import.meta.env.DEV) {
   window.__game = game;
   window.__sfx = sfx;
+  window.__music = music;
 }

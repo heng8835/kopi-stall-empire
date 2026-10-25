@@ -76,6 +76,6 @@ keeps eating her char kway teow.
 - `npm run dev` (http://localhost:5173), `npm test` (Vitest), `npm run build` -> `dist/`
 - Every scene's `create()` starts with `fitCamera(this)` (render-scale zoom, see `src/systems/view.js`).
 - Place characters with `addSprite(scene, key, x, yFeet)` from `src/systems/sprites.js`.
-- Dev hooks: `window.__stall` (scene), `window.__sfx`; drinks graded by `gradeCup` in `src/systems/cup.js`.
+- Dev hooks: `window.__stall` (scene), `window.__sfx`, `window.__music`; drinks graded by `gradeCup` in `src/systems/cup.js`.
 - Use `addText()` from `src/systems/text.js` for all text (crisp at any zoom).
 - Session handoff: `docs/STATE.yml`. Decisions: `docs/DECISION_LOG.md`. Scope/acceptance: `docs/PROJECT_BRIEF.md`.

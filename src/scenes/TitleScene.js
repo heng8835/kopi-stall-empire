@@ -6,6 +6,7 @@ import { fitCamera } from '../systems/view.js';
 import { addSprite } from '../systems/sprites.js';
 import { makeButton, addMuteToggle } from '../systems/ui.js';
 import { load, save } from '../systems/save.js';
+import { stopMusic } from '../systems/music.js';
 import { OWNERS } from '../data/owners.js';
 import { newRun, loadRun, saveRun, monthOver, runFromQuery } from '../systems/run.js';
 
@@ -16,6 +17,7 @@ export default class TitleScene extends Phaser.Scene {
 
   create() {
     fitCamera(this);
+    stopMusic(); // (the title gets its own theme later)
     const cx = GAME_W / 2;
     this.owner = load('owner', 'mei');
     if (!OWNERS[this.owner]) this.owner = 'mei';

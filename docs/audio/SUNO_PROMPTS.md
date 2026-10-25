@@ -6,11 +6,12 @@ folk (xinyao), a hint of Malay keroncong strumming, a touch of erhu or guzheng o
 movie music". Cozy, sunny, a little bittersweet, never sleepy.
 
 ## How to make them (and keep your usage low)
-- **Instrumental ON** for every track. Paste the **Exclude styles** line from track 1 into every track too. Paste the **Style** text into the style box and the **Lyrics** text
+- **Instrumental ON** for every track. Paste the **Style** text into the style box, the **Exclude styles** line from
+  track 1 into the exclude box (every track), and the **Lyrics** text
   (just the section tags) into the lyrics box. Use the title given.
 - Suno makes 2 versions per go. Pick the better one; only re-roll a track you really don't like.
-- **Download as WAV if your plan allows it, else MP3.** Save into `art/audio/` with the file name given, then tell me.
-- **Looping is my job.** Suno songs start with an intro and end with an outro or a fade. I cut each one so the
+- **MP3 is fine.** Save into `art/audio/` with the file name given, then tell me.
+- **Trimming and looping are my job.** Suno songs start with an intro and end with an outro or a fade. I cut each one so the
   end flows straight back into the start (no gap, no fade), so it can play the whole 2-minute day, or a long
   night in the shop, without anyone noticing. That's why every prompt asks for a steady groove with no big
   build-up, no tempo change and no ending: that makes a clean loop much easier to find.
@@ -18,71 +19,47 @@ movie music". Cozy, sunny, a little bittersweet, never sleepy.
 
 ---
 
-## 1. Stall day loop: the one you hear most (the most important, do this first)
+## 1. Stall day loop: the one you hear most
 **For:** the whole serving day, looping for the full day. **Feeling:** chill and easy, sitting quietly *behind* the
 game (you notice the pouring and the customers, not the music), but with a light, happy bounce that keeps you
 wanting to serve one more cup. Never busy, never loud, never boring.
-**File:** `art/audio/day.wav` · **Title:** `Corner Kopitiam`
+**File:** `art/audio/day.mp3` · **Title:** `Corner Kopitiam`
 
-*Why the first try sounded wrong:* "lo-fi hip hop" makes Suno write a playlist song (long intro, a beat that
-builds, a fade at the end). Game background music is different: a short, catchy melody that repeats, a steady
-bouncy pulse from the first second, lots of space so it never tires you out, and no big moments. So these
-prompts say **video game background music** and describe it like a cozy shop game's BGM.
+**DONE (2026-10-25):** your first take is in the game. It plays the start once, then loops 0:12 → 1:52 all day
+with a 2-second crossfade (`src/data/music.js`, trimmed by `tools/trim_mp3.py`). The prompts below are for a
+smoother remake later, if you ever want one: they keep the middle the same all the way through.
 
-**Style (version A: soft and bouncy, try this first)**
-> chill cozy video game background music, soft and low-key, sits quietly in the background, mellow ukulele and soft marimba, light pizzicato, warm electric piano pads, gentle hand percussion, sparse and airy arrangement, simple happy repeating melody, light bouncy groove, quietly uplifting, sunny Southeast Asian neighbourhood morning, 92 bpm, loopable, no build-up, no ending, instrumental
+*Why game music is different:* a playlist-style song builds up, changes section, and fades out. Game background
+music is one relaxed groove that just keeps going: a simple tune that repeats, a steady soft pulse from the first
+second, and changes only at the very start and the very end. That's what these prompts ask for.
 
-**Style (version B: more Singapore, a little nostalgic)**
-> chill cozy video game BGM, soft and low-key background music, sunny Singapore kopitiam morning, gentle nylon guitar and soft ukulele strums, light glockenspiel melody, xinyao campus folk warmth, soft keroncong lilt, brushed snare and shaker kept quiet, warm round bass, sparse and airy, quietly cheerful, simple repeating 8-bar theme, 90 bpm, loopable, instrumental
-
-**Exclude styles** line from track 1 into every track too. Paste the **Style** text into the style box and the **Lyrics** text
-  (just the section tags) into the lyrics box. Use the title given.
-- Suno makes 2 versions per go. Pick the better one; only re-roll a track you really don't like.
-- **Download as WAV if your plan allows it, else MP3.** Save into `art/audio/` with the file name given, then tell me.
-- **Looping is my job.** Suno songs start with an intro and end with an outro or a fade. I cut each one so the
-  end flows straight back into the start (no gap, no fade), so it can play the whole 2-minute day, or a long
-  night in the shop, without anyone noticing. That's why every prompt asks for a steady groove with no big
-  build-up, no tempo change and no ending: that makes a clean loop much easier to find.
-- Never put a real artist or song name in a Suno prompt (it refuses, and we must not copy anyone).
-
----
-
-## 1. Stall day loop: the one you hear most (the most important, do this first)
-**For:** the whole serving day, looping for the full day. **Feeling:** chill and easy, sitting quietly *behind* the
-game (you notice the pouring and the customers, not the music), but with a light, happy bounce that keeps you
-wanting to serve one more cup. Never busy, never loud, never boring.
-**File:** `art/audio/day.wav` · **Title:** `Corner Kopitiam`
-
-*Why the first try sounded wrong:* "lo-fi hip hop" makes Suno write a playlist song (long intro, a beat that
-builds, a fade at the end). Game background music is different: a short, catchy melody that repeats, a steady
-bouncy pulse from the first second, lots of space so it never tires you out, and no big moments. So these
-prompts say **video game background music** and describe it like a cozy shop game's BGM.
-
-**Style (version A: cozy and bouncy, try this first)**
-> cozy video game background music, shop management game BGM, cheerful and relaxed, ukulele, marimba, soft pizzicato strings, light hand percussion, warm electric piano chords, simple catchy repeating melody, steady bouncy rhythm from the start, Southeast Asian neighbourhood morning, gentle erhu phrase, 100 bpm, loopable, no build-up, no ending, instrumental
+**Style (version A: soft and bouncy)**
+> chill cozy video game background music, soft and low-key, sits quietly in the background, mellow ukulele and soft marimba, light pizzicato, warm electric piano pads, gentle hand percussion, sparse and airy arrangement, simple happy repeating melody, light bouncy groove, quietly uplifting, sunny Southeast Asian neighbourhood morning, 92 bpm, one steady chill groove the whole way through, the same relaxed section repeating, only a short soft intro and a gentle ending, instrumental
 
 **Style (version B: more Singapore, a little nostalgic)**
-> cozy video game BGM, sunny Singapore kopitiam morning, nylon guitar and ukulele strumming, glockenspiel melody, soft xinyao campus folk feeling, light keroncong rhythm, brushed snare and shaker, warm bass, cheerful, nostalgic, simple repeating 8-bar theme, steady tempo, 96 bpm, loopable game soundtrack, instrumental
+> chill cozy video game BGM, soft and low-key background music, sunny Singapore kopitiam morning, gentle nylon guitar and soft ukulele strums, light glockenspiel melody, xinyao campus folk warmth, soft keroncong lilt, brushed snare and shaker kept quiet, warm round bass, sparse and airy, quietly cheerful, 90 bpm, one steady chill groove the whole way through, the same relaxed section repeating, only a short soft intro and a gentle ending, instrumental
 
 **Exclude styles** *(the box under the style box; if your Suno version has it)*
-> vocals, choir, lo-fi hip hop, cinematic, epic, loud, busy, heavy drums, energetic, dramatic, fade out, slow intro, drum solo
+> vocals, choir, lo-fi hip hop, cinematic, epic, loud, busy, heavy drums, energetic, dramatic, breakdown, key change, tempo change, solo, drum solo, long intro
 
-**Lyrics box**
+**Lyrics box** (the middle is one section, repeated, so Suno keeps it the same)
 ```
 [Instrumental]
-[Theme A]
-[Theme B]
-[Theme A]
-[Theme B]
-[Theme A]
+[Short Soft Intro]
+[Chill Groove]
+[Chill Groove]
+[Chill Groove]
+[Chill Groove]
+[Chill Groove]
+[Gentle Ending]
 ```
 
-**Pick the version where:** the tune starts within the first 2–3 seconds, you could hum the melody after one
-listen, nothing suddenly gets louder or slower, and you could leave it on for 10 minutes while doing something else
-without it getting on your nerves. Quiet and gentle wins over catchy and busy. It's fine if it's 2–3 minutes long; I cut one clean loop out of it.
+**Pick the version where:** the tune starts within 2–3 seconds, the middle sounds the same from minute 1 to
+minute 2, nothing suddenly gets louder or slower, and you could leave it on for 10 minutes while doing something
+else without it getting on your nerves. Quiet and gentle wins over catchy and busy.
 
-*(Optional later: a `day-lunch` version with the same style plus "busier, 112 bpm, extra percussion" for the
-lunch rush. I'd crossfade into it at 11am and back out at 2pm. Only if you like the idea after hearing the first.)*
+*(Optional later: a `day-lunch` version with the same style plus "busier, 104 bpm, a little more percussion" for
+the lunch rush; I'd crossfade into it at 11am and back out at 2pm.)*
 
 ## 2. Title theme
 **For:** the title screen and choosing Jun or Mei. **Feeling:** "welcome home": hopeful, nostalgic, the first sip of the day.
