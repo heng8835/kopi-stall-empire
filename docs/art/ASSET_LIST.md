@@ -15,7 +15,37 @@ How to make them: same style and pipeline as `docs/ART_BIBLE.md`.
 | P2 | night shop and polish |
 | P3 | later |
 
-## 1. Drink making (P1: the biggest smoothness win)
+## Whole-game check (2026-10-25): what is still missing, in order
+
+Went through every screen. Counted in ChatGPT images (4–6 items per image where possible).
+
+**A. Must-have for a finished feel (about 21 images)**
+
+| Item | Images | Why | Status |
+|---|---|---|---|
+| 20 walk-ins (2.7) | 5 | Most customers are walk-ins; now only 2 stand-ins | prompts ready (PROMPTS_2026-10 sittings 1–5) |
+| Horlicks tin (1.7) | 1 | Today a plain box | prompt ready (sitting 1) |
+| Opening cutscene backgrounds (8) | 4 | The game starts with no story intro | prompts ready (sitting 6) |
+| Title screen: blank wooden signboard + kopi cup emblem | 1 | Title is a flat colour with text; the sunrise bg + a sign makes it a real title screen | new |
+| Pour poses, 7 tools (1.1) | 2 | Tools only rotate; a real pour pose makes making drinks feel good | new prompt needed |
+| Taxi Uncle + Makcik standing (2.1, 2.2) | 1 | They teach peng and ga dai; others stand in today | prompt ready (optional image 11) |
+| Uncle Tan standing (4.2) | 1 | The finale and tutorial use the Rain Uncle art; his reveal deserves his own look | prompt in ART_BIBLE |
+| Sophie fix (7) | 1 edit | Blocked since v0.1 (flag + Merlion) | prompt in ART_BIBLE |
+| **Bought items you can see in the stall** | 2 | Fan, radio, plants, lanterns, neon sign, fairy lights, cat bed, tip jar, bell, cup warmer, signboard and menu board: bought in the night shop but invisible at the stall today. Drawn as props that sit on the stall picture. Needs code too. | new |
+| Night stall background (5.1) | 1 edit | The shop is a dark tint over code shapes | new |
+| HUD set: clock face + hands, 4 period icons, fame badge, coin, recipe-book icon (3.1–3.7) | 2 | Code-drawn now; art makes the HUD feel crafted | new prompt needed |
+
+**B. Makes it feel alive (later, about 12 images)**
+Reaction faces happy/sad for the 6 counter regulars (2.3, 6 edits) · story expression portraits for the big
+twists: Aunty Lim, Kenneth, Uncle Tan, Marcus (7) · Oyen idle + knock-cup (2.6) · Ah Gong page-turn (2.5) ·
+recipe card + NEW burst + pointer hand (4.1, 4.3, 4.4) · ceramic kopi cup (1.4) · bin lid (1.6) · spoon stir frames (1.2).
+
+**C. Comes with phase D (new drinks), not before**
+Shop machine pictures for the "coming soon" machines (5.4) and the new-drink bits (6).
+
+**Not art, still missing:** music (9), walk cycles (2.4, needs a video route: IDEAS.md).
+
+
 
 | # | Asset | Frames | Notes |
 |---|---|---|---|
