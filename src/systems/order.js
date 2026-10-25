@@ -1,5 +1,5 @@
 import { DRINKS, MODIFIERS } from '../data/drinks.js';
-import { GLOSSARY } from '../data/glossary.js';
+import { GLOSSARY, NAMES, CLAUSE_END_ONLY, PARTICLES } from '../data/glossary.js';
 
 // A drink spec is { base, milk, sugar, iced, topping, strength }.
 //   base:  'kopi' | 'teh' | 'cham' (kopi + teh) | 'milo' | 'horlicks'
@@ -59,20 +59,35 @@ export function formatOrder(spec) {
 
 const stripPunct = (w) => w.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
 
+const bare = (w) => stripPunct(w).replace(/['’]s$/, ''); // "Tan's" -> "tan"
+
 // Split a dialogue line into words, tagging the ones that have a glossary entry.
-// Two-word phrases ("siew dai", "fast fast") are matched before single words.
+// Names ("Uncle Tan") stay plain; two-word phrases ("siew dai", "fast fast") are matched before
+// single words; clause-end words ("can") only count before punctuation or a particle.
 export function tokenize(text) {
   const words = text.split(/\s+/).filter(Boolean);
   const out = [];
   for (let i = 0; i < words.length; i++) {
     const pair = words[i + 1] ? `${stripPunct(words[i])} ${stripPunct(words[i + 1])}` : null;
+    // a listed name, or an honorific + a capitalised name ("Ah Huat", "Aunty May"), but not "Ah Girl"
+    const honorific = /^(Ah|Uncle|Aunty|Auntie)$/.test(words[i]) && /^[A-Z][a-z]/.test(words[i + 1] ?? '') && !GLOSSARY[pair];
+    if (words[i + 1] && (honorific || NAMES.includes(`${bare(words[i])} ${bare(words[i + 1])}`))) {
+      out.push({ text: words[i], glossaryKey: null }, { text: words[i + 1], glossaryKey: null });
+      i++;
+      continue;
+    }
     if (pair && GLOSSARY[pair]) {
       out.push({ text: `${words[i]} ${words[i + 1]}`, glossaryKey: pair });
       i++;
       continue;
     }
     const one = stripPunct(words[i]);
-    out.push({ text: words[i], glossaryKey: GLOSSARY[one] ? one : null });
+    let key = GLOSSARY[one] ? one : null;
+    if (key && CLAUSE_END_ONLY.includes(key)) {
+      const endsClause = /[?!.,…~]$/.test(words[i]) || !words[i + 1] || PARTICLES.includes(stripPunct(words[i + 1]));
+      if (!endsClause) key = null;
+    }
+    out.push({ text: words[i], glossaryKey: key });
   }
   return out;
 }

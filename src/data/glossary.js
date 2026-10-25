@@ -1,6 +1,14 @@
 // Tap-to-explain glossary. Keys are lowercase; multi-word keys are matched first.
 // Every local term that can appear in a bubble needs an entry here.
 
+// Names that contain a glossary word but are just names: never highlighted ("Uncle Tan", not "[Uncle] Tan").
+export const NAMES = ['uncle tan', 'taxi uncle', 'rain uncle', 'ah gong', 'ah ma', 'aunty lim'];
+
+// Words that are only Singlish at the end of a clause ("Can?", "can lah"), plain English elsewhere
+// ("Can I get a coffee?"): highlighted only before punctuation or a particle.
+export const CLAUSE_END_ONLY = ['can'];
+export const PARTICLES = ['lah', 'leh', 'lor', 'mah', 'hor', 'ah', 'or', 'not'];
+
 export const GLOSSARY = {
   kopi: { term: 'Kopi', en: 'Coffee. Comes with sweet condensed milk unless you say otherwise.', zh: '咖啡 — 默认加炼奶。' },
   teh: { term: 'Teh', en: 'Tea. Also comes with condensed milk by default.', zh: '茶 — 默认加炼奶。' },

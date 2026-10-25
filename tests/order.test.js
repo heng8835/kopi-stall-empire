@@ -63,3 +63,21 @@ describe('tokenize', () => {
     expect(t.map((x) => x.glossaryKey)).toEqual(['teh', 'c', 'siew dai', null, null]);
   });
 });
+
+describe('tokenize: names and plain English', () => {
+  const keys = (t) => tokenize(t).filter((x) => x.glossaryKey).map((x) => x.glossaryKey);
+  it('never half-highlights a name', () => {
+    expect(keys("Last time Uncle Tan make got soul one.")).toEqual([]);
+    expect(keys("Uncle Tan's teh: 9 out of 10.")).toEqual(['teh']);
+    expect(keys('Taxi Uncle, you know anyone hiring?')).toEqual([]);
+    expect(keys('Ah Gong reads his paper. Kopi O ah.')).toEqual(['kopi', 'o', 'ah']);
+    expect(keys('Thank you, uncle!')).toEqual(['uncle']); // on its own it is still the word
+    expect(keys('Ah Huat. Primary school.')).toEqual([]);
+    expect(keys('Ah Girl, one more.')).toEqual(['ah girl']);
+  });
+  it('"can" is Singlish only at the end of a clause', () => {
+    expect(keys('Boss, fast fast can?')).toEqual(['boss', 'fast fast', 'can']);
+    expect(keys('Hmm... can lah, can drink.')).toEqual(['can', 'lah']);
+    expect(keys('Can I get a Kopi, did I say it right?')).toEqual(['kopi']);
+  });
+});
