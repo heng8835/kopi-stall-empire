@@ -703,12 +703,28 @@ export default class StallScene extends Phaser.Scene {
     for (const sl of this.slots) if (sl.cup && !sl.ticket) this.assignCup(sl);
     if (c.lesson) this.time.delayedCall(500, () => !this.ended && this.showLesson(c.lessonLine));
     if (c.episode) {
-      this.time.delayedCall(400, () => {
+      this.time.delayedCall(900, () => {
         if (this.ended) return; // closing time plays it instead
-        this.guestEpisode = null;
-        this.playEpisode(c.episode);
+        this.storyCue(c, () => {
+          if (this.ended) return;
+          this.guestEpisode = null;
+          this.playEpisode(c.episode);
+        });
       });
     }
+  }
+
+  // A story is about to happen: a "!" pops up over the guest's head first.
+  storyCue(c, then) {
+    const s = c.sprites[0];
+    const mark = addText(this, this.centerX(c), s.y - s.displayHeight - 6, '!', { size: 26, bold: true, color: '#f2c14e', origin: [0.5, 1] }).setDepth(45);
+    mark.setStroke('#3a2414', 5).setScale(0);
+    play('tap');
+    this.tweens.add({ targets: mark, scale: 1, duration: 260, ease: 'Back.out' });
+    this.time.delayedCall(900, () => {
+      mark.destroy();
+      then();
+    });
   }
 
   centerX(c) {
@@ -1288,7 +1304,7 @@ export default class StallScene extends Phaser.Scene {
     };
     if (done) button(54, 'Month 1 complete  完', () => this.scene.start('Title'), { size: 17, bold: true, fill: 0xbfe3c0 });
     else if (this.day >= SHOP_FROM_DAY) button(54, 'Night shop ▸  供应商', () => this.toNight(tomorrow), { size: 17, bold: true, fill: 0xbfe3c0 });
-    else button(54, `Next day ▸  Day ${tomorrow.day}`, () => this.scene.start('Day', { run: tomorrow }), { size: 18, bold: true, fill: 0xbfe3c0 });
+    else button(54, 'Close up for the night ▸  收档', () => this.toNight(tomorrow), { size: 16, bold: true, fill: 0xbfe3c0 });
     button(30, UI.closeStall, () => this.scene.start('Title'), { size: 13 });
     const copy = button(28, 'Copy playtest notes', () => this.copyNotes(copy), { size: 12 });
   }

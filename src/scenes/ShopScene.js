@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../config.js';
-import { AISLES, SHOP } from '../data/shop.js';
+import { AISLES, SHOP, SHOP_FROM_DAY } from '../data/shop.js';
 import { addText } from '../systems/text.js';
 import { STALL_PROPS } from '../data/stallProps.js';
 import { MACHINE_TOOLS } from '../data/tools.js';
@@ -33,6 +33,9 @@ export default class ShopScene extends Phaser.Scene {
     this.add.image(0, 0, 'stallNight').setOrigin(0).setDisplaySize(GAME_W, GAME_H);
     this.add.rectangle(0, 0, GAME_W, GAME_H, 0x0b1430, 0.35).setOrigin(0);
     this.cameras.main.fadeIn(700, 11, 20, 48);
+
+    // Days 1-2: just the quiet stall at night; Uncle Tan's catalogue arrives after Day 3
+    if (this.run.day - 1 < SHOP_FROM_DAY) return this.quietNight();
 
     addText(this, GAME_W / 2, 14, "Uncle Tan's Supplier Catalogue", { size: 17, bold: true, color: '#fff6dc', origin: [0.5, 0] });
     addText(this, GAME_W / 2, 36, '供应商目录 · the stall is closed, time to shop', { size: 11, color: '#d8cbb5', origin: [0.5, 0] });
@@ -69,6 +72,23 @@ export default class ShopScene extends Phaser.Scene {
     this.add.rectangle(0, LIST.bottom, GAME_W, GAME_H - LIST.bottom, 0x000000, 0.001).setOrigin(0).setDepth(DEPTH - 1).setInteractive();
 
     this.showAisle(this.aisle);
+  }
+
+  quietNight() {
+    const cx = GAME_W / 2;
+    const card = [
+      this.add.rectangle(cx, 300, 300, 150, COLORS.paper, 0.94).setStrokeStyle(3, COLORS.inkHex),
+      addText(this, cx, 248, 'Shutters down. 收档啦.', { size: 18, bold: true, origin: 0.5 }),
+      addText(this, cx, 290, `Day ${this.run.day - 1} done. The stall is quiet, the chairs are up.`, { size: 13, origin: 0.5, align: 'center', wrap: 270 }),
+      addText(this, cx, 336, "Uncle Tan's supplier catalogue comes after Day 3: save up!", { size: 12, color: '#8a5a1e', origin: 0.5, align: 'center', wrap: 270 }),
+    ];
+    card.forEach((o, i) => {
+      o.setAlpha(0);
+      this.tweens.add({ targets: o, alpha: 1, duration: 500, delay: 400 + i * 120 });
+    });
+    const open = makeButton(this, cx - 120, GAME_H - 54, 240, 46, `Open stall ▸  Day ${this.run.day}`, () => this.scene.start('Day', { run: this.run }), { size: 17, bold: true, fill: 0xbfe3c0 });
+    open.bg.setDepth(DEPTH);
+    open.txt.setDepth(DEPTH + 1);
   }
 
   showAisle(id) {

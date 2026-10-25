@@ -12,6 +12,8 @@ import { visibleBeats, endingFor, fill, nextEpisode } from '../systems/story.js'
 // title card -> lines (tap to advance) -> choice -> reply -> ending (finale) -> "下集" card (next
 // episode's number + title only, so nothing is given away early).
 // Launched by StallScene with { ep, flags, fame, vars, owner, onChoice, onDone }.
+// Everything eases in and out: the stall dims, the title card rises and moves on by itself, lines
+// crossfade, and at the end the overlay fades away before the stall carries on.
 
 const BOX_Y = 446;
 const BOX_H = 168;
@@ -23,6 +25,9 @@ const LEDGE = { top: 282, bottom: 318 }; // logical px, matches StallScene COUNT
 const FEET_Y = 312;
 const BG_SCALE = 901 / GAME_W; // background art pixels per logical px
 const MOODS = { dark: [0x05060f, 0.82], rain: [0x1d3b5c, 0.62], fire: [0x6b1e05, 0.58] };
+const FADE_IN_MS = 450; // the stall dims
+const TITLE_HOLD_MS = 2300; // the title card moves on by itself after this (a tap skips it)
+const SWAP_MS = 140; // old card out / new card in
 
 export default class DramaScene extends Phaser.Scene {
   constructor() {
@@ -35,7 +40,8 @@ export default class DramaScene extends Phaser.Scene {
     this.flags = new Set(data.flags);
     const [tint, alpha] = MOODS[data.ep.mood] ?? [0x000000, 0.55];
     this.shade = { tint, alpha };
-    this.add.rectangle(0, 0, GAME_W, GAME_H, tint, alpha).setOrigin(0).setInteractive().on('pointerdown', () => this.advance());
+    this.shadeRect = this.add.rectangle(0, 0, GAME_W, GAME_H, tint, alpha).setOrigin(0).setAlpha(0).setInteractive().on('pointerdown', () => this.advance());
+    this.tweens.add({ targets: this.shadeRect, alpha: 1, duration: FADE_IN_MS, ease: 'Sine.out' });
     // Phaser reuses this scene object for every episode: reset all per-episode state.
     this.layer = []; // what the current card drew
     this.queue = [];
@@ -44,6 +50,7 @@ export default class DramaScene extends Phaser.Scene {
     this.finished = false;
     this.waitingChoice = false;
     this.glossaryOpen = false;
+    this.lastWho = null;
 
     const skip = addText(this, GAME_W - 10, 36, 'Skip ▸▸', { size: 13, bold: true, color: '#fff6dc', origin: [1, 0] }).setDepth(20);
     skip.setInteractive({ useHandCursor: true }).on('pointerdown', (p, x, y, e) => {
@@ -56,9 +63,20 @@ export default class DramaScene extends Phaser.Scene {
 
   // ---------- cards ----------
 
+  // Fade the current card out (the next one fades in over it).
   clear() {
-    this.layer.forEach((o) => o.destroy());
+    const old = this.layer;
     this.layer = [];
+    this.tweens.add({ targets: old, alpha: 0, duration: SWAP_MS, onComplete: () => old.forEach((o) => o.destroy()) });
+  }
+
+  // Ease freshly drawn objects in: up from `rise` px below, after `delay` ms.
+  easeIn(objs, { rise = 8, delay = 0, duration = 220 } = {}) {
+    objs.forEach((o) => {
+      const a = o.alpha;
+      o.setAlpha(0).setY(o.y + rise);
+      this.tweens.add({ targets: o, alpha: a, y: o.y - rise, duration, delay, ease: 'Cubic.out' });
+    });
   }
 
   titleCard() {
@@ -69,14 +87,17 @@ export default class DramaScene extends Phaser.Scene {
     t(250, `EP ${ep.ep} / ${total}`, { size: 14, bold: true, color: '#f2c14e' });
     t(284, ep.title.zh, { size: 30, bold: true });
     t(322, ep.title.en, { size: 17 });
-    t(372, 'tap to continue', { size: 11, color: '#d8cbb5' });
+    this.layer.forEach((o, i) => this.easeIn([o], { rise: 12, delay: FADE_IN_MS * 0.6 + i * 110, duration: 380 }));
     this.queue = visibleBeats(ep.beats, this.flags);
     this.stage = 'beats';
+    this.onTitle = true;
+    this.time.delayedCall(TITLE_HOLD_MS, () => this.onTitle && this.advance());
   }
 
   advance() {
     if (this.glossaryOpen || this.waitingChoice) return;
     if (this.stage === 'done') return this.finish();
+    this.onTitle = false;
     const next = this.queue.shift();
     if (next) return this.showBeat(next);
     this.nextStage();
@@ -115,16 +136,23 @@ export default class DramaScene extends Phaser.Scene {
   }
 
   showBeat(beat) {
+    const fresh = this.lastWho === null; // first line after the title card
+    const newSpeaker = beat.who !== this.lastWho;
+    this.lastWho = beat.who;
     this.clear();
     const who = this.speaker(beat.who, beat);
     const text = fill(beat.text, this.d.vars);
+    const start = this.layer.length;
     if (who?.sprite && this.textures.exists(who.sprite)) {
       const s = addSprite(this, who.sprite, GAME_W / 2, FEET_Y);
       s.setScale(s.scaleX * Math.min(1.5, PORTRAIT_H / s.displayHeight));
       if (s.displayWidth > GAME_W - 20) s.setScale(s.scaleX * ((GAME_W - 20) / s.displayWidth));
       if (who.silhouette) s.setTintFill(0x14110f);
-      s.y += 8;
-      this.tweens.add({ targets: s, y: s.y - 8, duration: 160, ease: 'Back.out' });
+      // a new speaker steps up; the same speaker just stays put
+      if (newSpeaker) {
+        s.setAlpha(0).y += 10;
+        this.tweens.add({ targets: s, alpha: 1, y: s.y - 10, duration: 260, ease: 'Back.out' });
+      }
       // the counter ledge in front of them, shaded like the rest of the stall
       const top = Math.round(LEDGE.top * BG_SCALE);
       const ledge = this.add.image(0, 0, 'stallBg').setOrigin(0).setDisplaySize(GAME_W, GAME_H).setCrop(0, top, 901, Math.round(LEDGE.bottom * BG_SCALE) - top);
@@ -153,7 +181,12 @@ export default class DramaScene extends Phaser.Scene {
       const words = layoutLine(this, text, x + 14, BOX_Y + 20, w - 28, (key) => this.openGlossary(key), { size: 16 });
       this.layer.push(...words.objects);
     }
-    this.layer.push(addText(this, GAME_W - 18, BOX_Y + BOX_H - 18, '▼', { size: 12, color: beat.who === 'narrator' ? '#d8cbb5' : '#8a7a70', origin: [1, 0] }));
+    const more = addText(this, GAME_W - 18, BOX_Y + BOX_H - 18, '▼', { size: 12, color: beat.who === 'narrator' ? '#d8cbb5' : '#8a7a70', origin: [1, 0] });
+    this.layer.push(more);
+    this.tweens.add({ targets: more, y: more.y + 3, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    // the box rises in after the title; later lines crossfade in place
+    const card = this.layer.slice(start).filter((o) => o.type !== 'Sprite' && o.type !== 'Image');
+    this.easeIn(card, fresh ? { rise: 24, duration: 280 } : { rise: 0, duration: SWAP_MS });
     play('tap');
   }
 
@@ -180,6 +213,8 @@ export default class DramaScene extends Phaser.Scene {
       const btn = makeButton(this, 24, 310 + i * 70, GAME_W - 48, 58, opt.label, () => this.choose(opt), { size: 15, bold: true });
       this.layer.push(btn.bg, btn.txt);
     });
+    this.lastWho = null;
+    this.layer.forEach((o, i) => this.easeIn([o], { rise: 10, delay: Math.floor(i / 2) * 70, duration: 260 }));
   }
 
   choose(opt) {
@@ -198,6 +233,8 @@ export default class DramaScene extends Phaser.Scene {
     t(260, 'ENDING', { size: 14, bold: true, color: '#f2c14e' });
     t(300, this.ending.title, { size: 24, bold: true, wrap: 320 });
     t(360, 'tap to continue', { size: 11, color: '#d8cbb5' });
+    this.lastWho = null;
+    this.layer.forEach((o, i) => this.easeIn([o], { rise: 12, delay: i * 120, duration: 380 }));
   }
 
   // After an episode's last part: 下集 + the next episode's number and title (or the finale's caption).
@@ -215,6 +252,8 @@ export default class DramaScene extends Phaser.Scene {
       t(344, next.title.en, { size: 14, color: '#fff6dc' });
     } else t(315, cap, { size: 17, bold: true, color: '#f2c14e' });
     t(400, 'tap to continue', { size: 11, color: '#d8cbb5' });
+    this.lastWho = null;
+    this.layer.forEach((o, i) => this.easeIn([o], { rise: i ? 10 : 0, delay: i * 110, duration: 360 }));
   }
 
   // Skip the lines: a pending choice still has to be made (it changes the story).
@@ -233,11 +272,12 @@ export default class DramaScene extends Phaser.Scene {
     showGlossary(this, key, () => this.time.delayedCall(0, () => (this.glossaryOpen = false)));
   }
 
+  // Fade the overlay away, then hand back to the stall.
   finish() {
     if (this.finished) return;
     this.finished = true;
     const ending = this.ending ?? endingFor(this.d.ep.endings, this.d.fame);
     if (ending) this.d.onEnding?.(ending);
-    this.d.onDone?.();
+    this.tweens.add({ targets: [this.shadeRect, ...this.layer, ...this.children.list.filter((o) => o.type === 'Text')], alpha: 0, duration: 380, ease: 'Sine.in', onComplete: () => this.d.onDone?.() });
   }
 }
