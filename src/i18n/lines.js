@@ -36,7 +36,6 @@ export const LINES = {
     oops: ['Boss, this one not Milo leh... paiseh we drink anyway.'],
     timeout: ['Bell ring already! Run run run!'],
   },
-  // M2 — not in the spawn pool yet.
   ahGong: {
     order: ['老板, {order} 一杯, 不要太甜 ah.', 'Same as usual. {order}.', '{order}. Last time Uncle Tan make got soul one.'],
     perfect: ['嗯. 好.'],
@@ -142,6 +141,20 @@ export const LINES = {
     close: ['Ooh, interesting! Thank you!'],
     oops: ['Not sure that was mine, but I love it!'],
     timeout: ['No worries, I will find you again!'],
+  },
+  makcik: {
+    order: ['Boss, {order} satu! Panas lah today.', '{owner}, {order} ah. I bring nasi lemak later.', 'Assalamualaikum! {order}, extra cold ah.'],
+    perfect: ['Sedap! Like Uncle Tan last time.', 'Wah, shiok! Terima kasih.'],
+    close: ['Can lah, still sedap.'],
+    oops: ['Eh, this one not mine… takpe lah.'],
+    timeout: ['Aiyo, my stall got customers. I go first!'],
+  },
+  taxiUncle: {
+    order: ['Boss, {order}! Long day driving.', '{order} one, boss. Quick ah, meter running.', 'Boss {order}. You know the 5G tower got cameras?'],
+    perfect: ['Power! Now I can drive till midnight.', 'Steady boss. Better than the aliens make.'],
+    close: ['Can lah, can drive.'],
+    oops: ['Wrong one ah… never mind, I drink at the red light.'],
+    timeout: ['Got booking! Next time boss!'],
   },
   tourist: {
     order: ['Hi! Could I get a coffee, no milk, no sugar, please?'],

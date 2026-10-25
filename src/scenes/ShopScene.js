@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../config.js';
 import { AISLES, SHOP } from '../data/shop.js';
 import { addText } from '../systems/text.js';
+import { STALL_PROPS } from '../data/stallProps.js';
+import { MACHINE_TOOLS } from '../data/tools.js';
 import { fitCamera } from '../systems/view.js';
 import { makeButton } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
@@ -27,19 +29,10 @@ export default class ShopScene extends Phaser.Scene {
     this.aisle = data.aisle ?? 'machine';
     this.scroll = 0;
 
-    // the stall at night: the day background, dimmed, with one warm bulb
-    this.add.image(0, 0, 'stallBg').setOrigin(0).setDisplaySize(GAME_W, GAME_H);
-    this.add.rectangle(0, 0, GAME_W, GAME_H, 0x0b1430, 0.62).setOrigin(0);
-    const glow = this.add.graphics();
-    for (let r = 120; r > 0; r -= 12) glow.fillStyle(0xffd28a, 0.02).fillCircle(GAME_W / 2, 40, r);
-    // night falls: a moon and a few twinkling stars, faded in from the day
+    // the stall at night, chairs up, one warm bulb; dimmed a little so the catalogue reads
+    this.add.image(0, 0, 'stallNight').setOrigin(0).setDisplaySize(GAME_W, GAME_H);
+    this.add.rectangle(0, 0, GAME_W, GAME_H, 0x0b1430, 0.35).setOrigin(0);
     this.cameras.main.fadeIn(700, 11, 20, 48);
-    const sky = this.add.graphics();
-    sky.fillStyle(0xfff3c4, 1).fillCircle(GAME_W - 34, 118, 13).fillStyle(0x0b1430, 1).fillCircle(GAME_W - 28, 113, 11); // crescent
-    for (let i = 0; i < 9; i++) {
-      const star = this.add.circle(14 + ((i * 97) % (GAME_W - 28)), 98 + ((i * 53) % 40), 1.4, 0xfff6dc);
-      this.tweens.add({ targets: star, alpha: { from: 1, to: 0.2 }, duration: 700 + i * 90, yoyo: true, repeat: -1 });
-    }
 
     addText(this, GAME_W / 2, 14, "Uncle Tan's Supplier Catalogue", { size: 17, bold: true, color: '#fff6dc', origin: [0.5, 0] });
     addText(this, GAME_W / 2, 36, '供应商目录 · the stall is closed, time to shop', { size: 11, color: '#d8cbb5', origin: [0.5, 0] });
@@ -113,7 +106,11 @@ export default class ShopScene extends Phaser.Scene {
     const text = addText(this, x + 52, y + 27, item.text, { size: 11, wrap: w - 52 - 96, color: '#3a2e2a', lineSpacing: 1 });
     const h = Math.max(CARD_H, 27 + text.height + 22);
     const bg = this.add.rectangle(x, y, w, h, state === 'owned' ? 0xe6f2e1 : COLORS.paper, dim ? 0.82 : 1).setOrigin(0).setStrokeStyle(2, state === 'owned' ? 0x2f7a3a : COLORS.inkHex, 0.9);
-    const icon = addText(this, x + 26, y + h / 2, item.icon, { size: 26, origin: 0.5 });
+    // the item's own art when it has some (stall props, machine tools), else its emoji
+    const art = STALL_PROPS[item.id]?.[0]?.key ?? MACHINE_TOOLS[item.id]?.sprite ?? (item.id === 'menuBoard' ? 'propMenuBoard' : null);
+    const icon = art ? this.add.image(x + 26, y + h / 2, art) : addText(this, x + 26, y + h / 2, item.icon, { size: 26, origin: 0.5 });
+    if (art) icon.setScale(Math.min(40 / icon.width, 40 / icon.height));
+    if (art && MACHINE_TOOLS[item.id]?.tint) icon.setTint(MACHINE_TOOLS[item.id].tint);
     const name = addText(this, x + 52, y + 8, item.name, { size: 14, bold: true, color: dim ? '#8a7a70' : '#3a2e2a' });
     const zh = addText(this, x + 52 + name.width + 6, y + 10, item.zh, { size: 11, color: '#8a7a70' });
     const tier = addText(this, x + 52, y + h - 16, item.tier ? `Fame ${item.tier}+` : 'Any fame', { size: 9, bold: true, color: '#8a5a1e' });

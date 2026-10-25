@@ -7,7 +7,7 @@ import { TUNING } from '../data/stallTuning.js';
 import { pickLine, UI } from '../i18n/lines.js';
 import { addText } from '../systems/text.js';
 import { fitCamera } from '../systems/view.js';
-import { addSprite } from '../systems/sprites.js';
+import { addSprite, displayHeight } from '../systems/sprites.js';
 import { makeButton, layoutLine, showGlossary, addMuteToggle } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
 import { parseOrder } from '../systems/order.js';
@@ -19,6 +19,7 @@ import { showRecipeCard, showRecipeBook } from '../systems/cards.js';
 import { ordersFor, lessonFor, unlockedFeatures, regularOrder } from '../systems/menu.js';
 import { perks, gift } from '../systems/shop.js';
 import { SHOP_FROM_DAY, GIFTS } from '../data/shop.js';
+import { STALL_PROPS, PROP_DEPTH } from '../data/stallProps.js';
 import { MACHINE_LESSONS, BOOK } from '../data/recipes.js';
 import { MALT } from '../systems/order.js';
 import { summarizeDay } from '../systems/daySummary.js';
@@ -65,6 +66,7 @@ const MID_STORY_AT = 0.4; // a 'mid' episode plays this far into the day
 const COACH_Y = 410; // the owner's thought bubble, between the tray and the tools
 const LESSON_AT_MS = 5000; // a recipe teacher walks in this far into a lesson day
 // Day periods on the HUD bar, in minutes from opening (7am): morning, lunch rush, teatime, closing.
+const PERIOD_ICONS = ['iconMorning', 'iconLunch', 'iconTeatime', 'iconClosing'];
 const PERIODS = [['Morning', 0, 240, 0xffe9a8], ['Lunch', 240, 420, 0xffb870], ['Teatime', 420, 600, 0xbfe0c4], ['Closing', 600, 720, 0x9fb3d9]];
 const DRAG_WAIT_MS = 3000; // ...once the player lets go of a cup/tool (or after this long at most)
 
@@ -98,7 +100,7 @@ export default class StallScene extends Phaser.Scene {
     this.freshFeatures = machineLessons.flatMap((l) => l.features);
     // Today's arrivals: every regular with something to drink comes once at their usual time, and
     // random walk-ins fill up the rest. More fame, more customers (a group counts as one arrival).
-    const regulars = CUSTOMERS.filter((c) => c.regular && c.enabled && c.sprite && this.menuOf(c).length);
+    const regulars = CUSTOMERS.filter((c) => c.regular && c.enabled && c.sprite && (c.fromDay ?? 1) <= this.day && this.menuOf(c).length);
     this.arrivals = daySchedule({
       total: customersForFame(this.econ.fame) + this.perks.extraCustomers,
       regulars,
@@ -130,6 +132,7 @@ export default class StallScene extends Phaser.Scene {
     this.drawTray();
     this.drawCoach();
     this.drawTools();
+    this.drawStallProps();
     if (this.perks.menuBoard) this.drawMenuBoard();
     if (this.perks.famePerDay) this.time.delayedCall(800, () => this.setFeedback(`Your decor & comforts: 名气 +${this.perks.famePerDay} today`));
     this.feedback = addText(this, GAME_W / 2, COUNTER_Y + 10, '', { size: 12, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: 340 }).setDepth(40);
@@ -154,17 +157,13 @@ export default class StallScene extends Phaser.Scene {
   drawHud() {
     this.add.rectangle(0, 0, GAME_W, HUD_H, 0x2e5e63).setOrigin(0).setDepth(50);
     const opts = { size: 13, bold: true, color: '#ffffff' };
-    // wall clock (code-drawn until the clock art arrives): the hour hand sweeps 7am -> 7pm
+    // the kopitiam wall clock: the hour hand sweeps 7am -> 7pm, the minute hand spins
     const cx = 20;
     const cy = HUD_H / 2;
-    const face = this.add.graphics().setDepth(51);
-    face.fillStyle(0x8a5a2b, 1).fillCircle(cx, cy, 17).fillStyle(0xfffaf0, 1).fillCircle(cx, cy, 14.5);
-    for (let i = 0; i < 12; i++) {
-      const a = (i / 12) * Math.PI * 2;
-      face.fillStyle(0x3a2e2a, 1).fillCircle(cx + Math.sin(a) * 12, cy - Math.cos(a) * 12, i % 3 ? 0.8 : 1.4);
-    }
-    this.clockHands = this.add.graphics().setDepth(52);
-    this.clockCenter = { x: cx, y: cy };
+    addSprite(this, 'hudClockFace', cx, cy + displayHeight('hudClockFace') / 2).setDepth(51);
+    // hands pivot on the round boss near their base
+    this.hourHand = addSprite(this, 'hudHourHand', cx, cy).setOrigin(0.5, 0.86).setDepth(52);
+    this.minuteHand = addSprite(this, 'hudMinuteHand', cx, cy).setOrigin(0.5, 0.9).setDepth(53);
     this.hudDay = addText(this, 42, 3, '', { ...opts, size: 12 }).setDepth(51);
     // the day as a bar with labelled periods and a moving marker
     this.dayBar = { x: 42, y: 20, w: 172, h: 14 };
@@ -177,12 +176,15 @@ export default class StallScene extends Phaser.Scene {
     }
     bar.lineStyle(1.5, 0x1c3a3d, 1).strokeRect(this.dayBar.x, this.dayBar.y, this.dayBar.w, this.dayBar.h);
     this.dayMarker = this.add.graphics().setDepth(53);
-    this.hudFame = addText(this, 222, 12, '', opts).setDepth(51);
+    // the icon of the period we're in, beside the time
+    this.periodIcon = addSprite(this, 'iconMorning', 0, 15).setDepth(51);
+    addSprite(this, 'iconFame', 229, 29).setDepth(51);
+    this.hudFame = addText(this, 239, 12, '', opts).setDepth(51);
     this.hudMoney = addText(this, GAME_W - 8, 12, '', { ...opts, origin: [1, 0] }).setDepth(51);
+    this.hudCoin = addSprite(this, 'iconCoin', 0, 28).setDepth(51);
     // under the HUD, top right: recipe book + sound
-    const book = makeButton(this, GAME_W - 40, HUD_H + 4, 34, 24, '📖', () => this.openRecipeBook(), { size: 13 });
-    book.bg.setDepth(45);
-    book.txt.setDepth(46);
+    const book = addSprite(this, 'iconBook', GAME_W - 22, HUD_H + 27).setDepth(45).setInteractive({ useHandCursor: true });
+    book.on('pointerdown', () => this.openRecipeBook());
     addMuteToggle(this, GAME_W - 62, HUD_H + 9, { size: 11 }).setDepth(45);
     this.pourBar = new PourBar(this, POUR_BAR_Y);
     this.refreshHud();
@@ -225,6 +227,7 @@ export default class StallScene extends Phaser.Scene {
       if (t.sprite) {
         const s = addSprite(this, t.sprite, 0, t.h / 2 - 12, t.spriteH);
         if (t.tint) s.setTint(t.tint); // a stand-in recoloured until its own art arrives
+        c.sprite = s;
         parts.push(s);
       }
       else {
@@ -450,7 +453,7 @@ export default class StallScene extends Phaser.Scene {
       tool.setAngle(target ? -25 : 0); // scoop / pump: one dose when you let go over the cup
     } else if (t.kind === 'pour') {
       this.pouring = target ? { tool, slot: target } : null;
-      tool.setAngle(target ? -38 : 0);
+      this.poseTool(tool, !!target);
     } else if (t.kind === 'stir' && target?.cup.base) {
       const x = p.worldX;
       if (tool.lastX !== null && Math.abs(x - tool.lastX) > 5) {
@@ -463,6 +466,17 @@ export default class StallScene extends Phaser.Scene {
     tool.hoverSlot = target;
   }
 
+  // Mid-pour: swap in the tool's tilted pour picture (or just tilt it when it has none).
+  poseTool(tool, pouring) {
+    const t = tool.tool;
+    if (!t.pourSprite || !tool.sprite) return tool.setAngle(pouring ? -38 : 0);
+    const key = pouring ? t.pourSprite : t.sprite;
+    if (tool.sprite.texture.key === key) return;
+    tool.sprite.setTexture(key);
+    const h = pouring ? displayHeight(key) : t.spriteH ?? displayHeight(key);
+    tool.sprite.setScale(h / tool.sprite.height);
+  }
+
   onToolDragEnd(tool, p) {
     this.dragging = Math.max(0, this.dragging - 1);
     const t = tool.tool;
@@ -472,6 +486,7 @@ export default class StallScene extends Phaser.Scene {
     if (t.kind === 'stir' && slot?.cup?.base) this.autoStir(slot); // drop the spoon on a cup: it stirs itself
     if (t.kind === 'rack' && slot && !slot.cup) this.placeCup(slot);
     this.pouring = null;
+    this.poseTool(tool, false);
     tool.setAngle(0);
     // While it glides home it passes BEHIND the cups (depth 14), so a quick tap on a cup still
     // grabs the cup, but the tool itself can be grabbed again straight away.
@@ -907,17 +922,17 @@ export default class StallScene extends Phaser.Scene {
     this.hudDay.setText(`Day ${this.day}/${MONTH_DAYS}   ${h12}:${mm}${h24 < 12 ? 'am' : 'pm'}`);
     // clock hands (smooth) and the day-bar marker
     const exact = OPEN_MIN + (this.clockMs / TUNING.dayMs) * (CLOSE_MIN - OPEN_MIN);
-    const { x: cx, y: cy } = this.clockCenter;
     const ha = ((exact / 60) % 12) / 12 * Math.PI * 2;
     const ma = ((exact % 60) / 60) * Math.PI * 2;
-    this.clockHands.clear()
-      .lineStyle(3, 0x2b2420, 1).lineBetween(cx, cy, cx + Math.sin(ha) * 8, cy - Math.cos(ha) * 8)
-      .lineStyle(1.6, 0xc8402c, 1).lineBetween(cx, cy, cx + Math.sin(ma) * 12, cy - Math.cos(ma) * 12)
-      .fillStyle(0x2b2420, 1).fillCircle(cx, cy, 2);
+    this.hourHand.setRotation(ha);
+    this.minuteHand.setRotation(ma);
+    const period = PERIODS.findIndex(([, a, b]) => exact - OPEN_MIN >= a && exact - OPEN_MIN < b);
+    this.periodIcon.setTexture(PERIOD_ICONS[Math.max(0, period)]).setX(this.hudDay.x + this.hudDay.width + 10);
     const mx = this.dayBar.x + (this.clockMs / TUNING.dayMs) * this.dayBar.w;
     this.dayMarker.clear().fillStyle(0xc8402c, 1).fillRect(mx - 1.5, this.dayBar.y - 3, 3, this.dayBar.h + 6);
     this.hudFame.setText(`名气 ${Math.floor(this.econ.fame)}`);
     this.hudMoney.setText(formatMoney(this.econ.money));
+    this.hudCoin.setX(GAME_W - 8 - this.hudMoney.width - 10);
   }
 
   update(time, delta) {
@@ -1114,6 +1129,26 @@ export default class StallScene extends Phaser.Scene {
     this.pauseFor((resume) => showRecipeCard(this, this.lesson, { showLine, onClose: () => (resume(), this.nextLesson()) }));
   }
 
+  // Everything bought in the night shop shows up at the stall (src/data/stallProps.js).
+  drawStallProps() {
+    for (const id of this.run.owned ?? []) {
+      for (const p of STALL_PROPS[id] ?? []) {
+        const s = addSprite(this, p.key, p.x, p.feet, p.h).setDepth(PROP_DEPTH[p.layer]);
+        if (p.sign) {
+          const name = addText(this, p.x + s.displayWidth * 0.1, p.feet - s.displayHeight * 0.38, `${this.owner.name}'s Kopi`, { size: 11, bold: true, color: '#ffe7a8', origin: 0.5 });
+          name.setStroke('#4a1a10', 3).setDepth(PROP_DEPTH[p.layer] + 0.1);
+        }
+        if (p.anim === 'sway') {
+          s.setOrigin(0.5, 0).setY(p.feet - s.displayHeight);
+          this.tweens.add({ targets: s, angle: { from: -4, to: 4 }, duration: 1600 + p.x * 3, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+        }
+        if (p.anim === 'flicker') this.tweens.add({ targets: s, alpha: { from: 1, to: 0.78 }, duration: 90, yoyo: true, repeat: -1, repeatDelay: 2600 + p.x * 7 });
+        if (p.anim === 'twinkle') this.tweens.add({ targets: s, alpha: { from: 1, to: 0.7 }, duration: 900, yoyo: true, repeat: -1, delay: p.x * 4, ease: 'Sine.inOut' });
+        if (p.anim === 'breathe') this.tweens.add({ targets: s, scaleY: s.scaleY * 1.04, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+      }
+    }
+  }
+
   // Wall Menu Board (night shop): today's drinks on a little board on the wall.
   drawMenuBoard() {
     const known = unlockedFeatures(this.day, this.perks.features);
@@ -1121,7 +1156,8 @@ export default class StallScene extends Phaser.Scene {
     const x = GAME_W - 76;
     const y = HUD_H + 34;
     const lines = names.slice(0, 9);
-    const board = this.add.rectangle(x, y, 70, 18 + lines.length * 10, 0x2b3a2f).setOrigin(0).setStrokeStyle(3, 0x8a5a2b).setDepth(1);
+    // the board art, nine-sliced so its frame stays crisp at any length (the texture is 3x display size)
+    const board = this.add.nineslice(x, y, 'propMenuBoard', null, 70 * 3, (18 + lines.length * 10) * 3, 18, 18, 18, 18).setOrigin(0).setScale(1 / 3).setDepth(1);
     addText(this, x + 35, y + 3, 'MENU 菜单', { size: 8, bold: true, color: '#ffd28a', origin: [0.5, 0] }).setDepth(1);
     lines.forEach((n, i) => addText(this, x + 6, y + 14 + i * 10, n, { size: 7.5, color: '#f4efe2' }).setDepth(1));
     return board;

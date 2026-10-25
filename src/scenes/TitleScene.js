@@ -20,14 +20,21 @@ export default class TitleScene extends Phaser.Scene {
     this.owner = load('owner', 'mei');
     if (!OWNERS[this.owner]) this.owner = 'mei';
 
-    this.add.rectangle(0, 0, GAME_W, GAME_H, COLORS.sky).setOrigin(0);
-    this.add.rectangle(0, 420, GAME_W, GAME_H - 420, COLORS.floorA).setOrigin(0);
+    // the corner kopitiam at sunrise, and the hand-painted sign with the name on it
+    const bg = this.add.image(cx, GAME_H / 2, 'openingSunrise');
+    bg.setScale(Math.max(GAME_W / bg.width, GAME_H / bg.height));
+    const sign = addSprite(this, 'titleSign', cx, 132);
+    this.tweens.add({ targets: sign, angle: { from: -1.2, to: 1.2 }, duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    const signX = cx + sign.displayWidth * 0.12; // the blank board, right of the cup emblem
+    const name = addText(this, signX, 92, 'Kopi Stall Empire', { size: 22, bold: true, color: '#ffe7a8', align: 'center', origin: 0.5 });
+    name.setStroke('#4a1a10', 4);
+    const zh = addText(this, signX, 115, '咖啡摊帝国', { size: 14, bold: true, color: '#ffe7a8', align: 'center', origin: 0.5 });
+    zh.setStroke('#4a1a10', 3);
 
-    addMuteToggle(this, GAME_W - 12, 12, { origin: [1, 0] });
-    addText(this, cx, 96, 'Kopi Stall\nEmpire', { size: 40, bold: true, align: 'center', origin: 0.5 });
-    addText(this, cx, 162, '咖啡摊帝国', { size: 18, align: 'center', origin: 0.5 });
-    addText(this, cx, 206, "Who's opening the stall today?", { size: 15, align: 'center', origin: 0.5 });
-    addText(this, cx, 228, '今天谁开档?', { size: 14, align: 'center', origin: 0.5, color: '#6b5a50' });
+    addMuteToggle(this, GAME_W - 12, 150, { origin: [1, 0], color: '#fff6dc' });
+    this.add.rectangle(cx, 222, 280, 52, COLORS.paper, 0.9).setStrokeStyle(2, COLORS.inkHex, 0.6);
+    addText(this, cx, 210, "Who's opening the stall today?", { size: 15, align: 'center', origin: 0.5 });
+    addText(this, cx, 232, '今天谁开档?', { size: 14, align: 'center', origin: 0.5, color: '#6b5a50' });
 
     this.picks = {};
     [['jun', 100], ['mei', 260]].forEach(([key, x]) => {
@@ -52,7 +59,8 @@ export default class TitleScene extends Phaser.Scene {
 
     // Returning players can replay Uncle Tan's Day-1 notes.
     if (load('tutorialDone', false)) {
-      const replay = addText(this, cx, 612, 'Replay intro + tutorial', { size: 13, color: '#8a5a1e', origin: 0.5 });
+      const replay = addText(this, cx, 612, 'Replay intro + tutorial', { size: 13, bold: true, color: '#fff6dc', origin: 0.5 });
+      replay.setStroke('#3a2414', 3);
       replay.setInteractive({ useHandCursor: true }).once('pointerdown', () => {
         save('tutorialDone', false);
         save('openingSeen', false);

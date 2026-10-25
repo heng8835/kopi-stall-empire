@@ -1,6 +1,7 @@
 // Stall tools. Positions are tool centres in logical px (360x640), laid out on the shelf of
 // the stall background (public/bg/stall.webp). sprite = HD sprite key (spriteSizes.json);
-// tools without a sprite are drawn as simple shapes. kind:
+// tools without a sprite are drawn as simple shapes. pourSprite = the tilted mid-pour picture swapped in
+// while pouring (tools without one just tilt). kind:
 //   pour  - hold over a cup to pour `ingredient` (meter shows how much)
 //   drop  - release over a cup to add once (ice / Milo powder)
 //   stir  - drop it on a cup and it stirs by itself (wiggling over the cup works too)
@@ -11,12 +12,12 @@ const SHELF = 534; // feet line of the tools standing on the metal shelf
 const RAIL = 626; // feet line of the tools on the bottom rail
 
 export const TOOLS = [
-  { id: 'kopi', label: 'Kopi', kind: 'pour', ingredient: 'kopi', sprite: 'toolKopiPot', x: 38, feet: SHELF, w: 64, h: 86 },
-  { id: 'teh', label: 'Teh', kind: 'pour', ingredient: 'teh', sprite: 'toolTehPot', x: 104, feet: SHELF, w: 70, h: 76 },
-  { id: 'sugar', label: 'Sugar', kind: 'pour', ingredient: 'sugar', sprite: 'toolSugar', x: 162, feet: SHELF, w: 48, h: 78 },
-  { id: 'condensed', label: 'Condensed', kind: 'pour', ingredient: 'condensed', sprite: 'toolCondensed', x: 212, feet: SHELF, w: 48, h: 66 },
-  { id: 'evap', label: 'Evap (C)', kind: 'pour', ingredient: 'evap', sprite: 'toolEvap', x: 264, feet: SHELF, w: 48, h: 66 },
-  { id: 'milo', label: 'Milo', kind: 'pour', ingredient: 'milo', sprite: 'toolMilo', x: 318, feet: SHELF, w: 52, h: 70 },
+  { id: 'kopi', label: 'Kopi', kind: 'pour', ingredient: 'kopi', sprite: 'toolKopiPot', pourSprite: 'pourKopiPot', x: 38, feet: SHELF, w: 64, h: 86 },
+  { id: 'teh', label: 'Teh', kind: 'pour', ingredient: 'teh', sprite: 'toolTehPot', pourSprite: 'pourTehPot', x: 104, feet: SHELF, w: 70, h: 76 },
+  { id: 'sugar', label: 'Sugar', kind: 'pour', ingredient: 'sugar', sprite: 'toolSugar', pourSprite: 'pourSugar', x: 162, feet: SHELF, w: 48, h: 78 },
+  { id: 'condensed', label: 'Condensed', kind: 'pour', ingredient: 'condensed', sprite: 'toolCondensed', pourSprite: 'pourCondensed', x: 212, feet: SHELF, w: 48, h: 66 },
+  { id: 'evap', label: 'Evap (C)', kind: 'pour', ingredient: 'evap', sprite: 'toolEvap', pourSprite: 'pourEvap', x: 264, feet: SHELF, w: 48, h: 66 },
+  { id: 'milo', label: 'Milo', kind: 'pour', ingredient: 'milo', sprite: 'toolMilo', pourSprite: 'pourMilo', x: 318, feet: SHELF, w: 52, h: 70 },
   { id: 'ice', label: 'Ice', kind: 'drop', apply: 'ice', sprite: 'toolIce', x: 122, feet: RAIL, w: 64, h: 66 },
   { id: 'stir', label: 'Spoon', kind: 'stir', sprite: 'toolStir', x: 172, feet: RAIL, w: 50, h: 72 },
   { id: 'rack', label: 'Cups', kind: 'rack', sprite: 'toolRack', x: 238, feet: RAIL, w: 76, h: 76 },
@@ -27,7 +28,7 @@ export const TOOLS = [
 // Tools that come with a night-shop machine (shown only when it's owned), keyed by shop item id.
 export const MACHINE_TOOLS = {
   kettle: { id: 'water', label: 'Hot water', kind: 'pour', ingredient: 'water', sprite: 'toolTehPot', tint: 0xf2c46b, spriteH: 50, x: 70, feet: RAIL, w: 44, h: 58 }, // brass stand-in until its own art
-  horlicksShelf: { id: 'horlicks', label: 'Horlicks', kind: 'pour', ingredient: 'horlicks', sprite: 'toolHorlicks', x: 22, feet: RAIL, w: 46, h: 58, color: 0xd9c49a },
+  horlicksShelf: { id: 'horlicks', label: 'Horlicks', kind: 'pour', ingredient: 'horlicks', sprite: 'toolHorlicks', pourSprite: 'pourHorlicks', x: 22, feet: RAIL, w: 46, h: 58, color: 0xd9c49a },
 };
 for (const t of Object.values(MACHINE_TOOLS)) t.y = t.feet - t.h / 2;
 

@@ -29,19 +29,19 @@ export const CAST = {
   jiaHui: { name: 'Jia Hui', sprite: 'jiaHui' },
   ahGong: { name: 'Ah Gong', sprite: 'ahGong' },
   oyen: { name: 'Oyen', sprite: 'oyen' },
-  makcik: { name: 'Makcik', sprite: 'makcik' },
+  makcik: { name: 'Makcik', sprite: 'makcikStand' },
   kenneth: { name: 'Kenneth', sprite: 'kenneth' },
   kai: { name: 'Kai', sprite: 'kai' },
   inspector: { name: 'Inspector', sprite: 'inspector' },
-  taxiUncle: { name: 'Taxi Uncle', sprite: 'taxiUncle' },
+  taxiUncle: { name: 'Taxi Uncle', sprite: 'taxiUncleStand' },
   aunties: { name: 'Qigong Aunties', sprite: 'exerciseAunties' },
   rainUncle: { name: 'Rain Uncle', sprite: 'rainUncle' },
-  uncleTan: { name: 'Uncle Tan', sprite: 'rainUncle' },
+  uncleTan: { name: 'Uncle Tan', sprite: 'uncleTan' },
 };
 
 // Where each speaker's face is across their sprite (0 = left edge, 1 = right), for the portrait
 // beside the dialogue box. Unlisted sprites use 0.48. The crop is a square from the top of the sprite.
-export const FACE_X = { makcik: 0.36, mei: 0.38, kai: 0.58, taxiUncle: 0.6, weiLing: 0.56, hafiz: 0.56, darren: 0.54, jiaHui: 0.54, marcus: 0.44, rainUncle: 0.42, jun: 0.44, exerciseAunties: 0.44 };
+export const FACE_X = { taxiUncleStand: 0.42, uncleTan: 0.52, sophie: 0.5, makcik: 0.36, mei: 0.38, kai: 0.58, taxiUncle: 0.6, weiLing: 0.56, hafiz: 0.56, darren: 0.54, jiaHui: 0.54, marcus: 0.44, rainUncle: 0.42, jun: 0.44, exerciseAunties: 0.44 };
 
 const N = (text, extra = {}) => ({ who: 'narrator', text, ...extra });
 

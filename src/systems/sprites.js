@@ -7,6 +7,8 @@ export const displayHeight = (key) => SIZES[key];
 export function preloadSprites(scene) {
   for (const key of SPRITE_KEYS) scene.load.image(key, `sprites/${key}.png`);
   scene.load.image('stallBg', 'bg/stall.webp'); // full-screen stall background (901x1600)
+  scene.load.image('stallNight', 'bg/stallNight.webp'); // the same stall after closing (night shop)
+  scene.load.image('openingSunrise', 'bg/openingSunrise.webp'); // title screen + the opening's last panel
   scene.load.image('iceCluster', 'sprites/iceCluster.png'); // code-drawn pixel ice (art/code/), drawn unsmoothed
 }
 

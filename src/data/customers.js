@@ -1,5 +1,6 @@
 // v0.1 cast. Orders are written in real kopitiam lingo and parsed by systems/order.js.
 //   regular     a story regular: comes once a day inside `window`, usually ordering their `usual`
+//   fromDay     a regular only from this day on (default 1)
 //   window      [from, to] in minutes after opening (7am = 0, lunch 240, teatime 420, 7pm = 720)
 //   usual       their usual order, oldest first: they drink the newest one the menu can make today
 //   weight      walk-ins: how often this kind shows up (relative)
@@ -97,39 +98,35 @@ export const CUSTOMERS = [
     ],
     lines: 'ahGong',
   },
-  {
-    id: 'tourist',
-    name: 'Tourist',
-    sprite: null, // waiting for Sophie's art
-    enabled: false,
-    weight: 1,
-    patience: 45,
-    groupSize: 1,
-    orders: [{ text: 'Kopi O kosong', weight: 1 }],
-    lines: 'tourist',
-  },
   // Recipe teachers (src/data/recipes.js), waiting for standing counter art (docs/art/ASSET_LIST.md 2.1, 2.2).
+  // Recipe teachers who become regulars from their lesson day (fromDay).
   {
     id: 'makcik',
     name: 'Makcik',
-    sprite: null,
-    enabled: false,
-    weight: 2,
+    sprite: 'makcikStand',
+    enabled: true,
+    regular: true,
+    fromDay: 5,
+    window: [120, 230], // mid-morning, between nasi lemak customers next door
+    usual: ['Kopi peng'],
     patience: 50,
     groupSize: 1,
-    orders: [{ text: 'Kopi peng', weight: 2 }, { text: 'Teh peng', weight: 1 }],
-    lines: 'auntyLim',
+    orders: [{ text: 'Kopi peng', weight: 3 }, { text: 'Teh peng', weight: 2 }, { text: 'Teh', weight: 1 }, { text: 'Kopi O peng', weight: 1 }],
+    lines: 'makcik',
   },
   {
     id: 'taxiUncle',
     name: 'Taxi Uncle',
-    sprite: null,
-    enabled: false,
-    weight: 2,
+    sprite: 'taxiUncleStand',
+    enabled: true,
+    regular: true,
+    fromDay: 8,
+    window: [560, 670], // between fares, before the evening jam
+    usual: ['Kopi ga dai'],
     patience: 35,
     groupSize: 1,
-    orders: [{ text: 'Kopi ga dai', weight: 2 }, { text: 'Kopi O ga dai', weight: 1 }],
-    lines: 'officeGuy',
+    orders: [{ text: 'Kopi ga dai', weight: 3 }, { text: 'Kopi O ga dai', weight: 2 }, { text: 'Kopi', weight: 1 }, { text: 'Kopi gao ga dai', weight: 2 }],
+    lines: 'taxiUncle',
   },
 ];
 
@@ -335,5 +332,15 @@ export const WALK_INS = [
     groupSize: 1,
     orders: [{ text: 'Teh O peng', weight: 3 }, { text: 'Kopi O peng', weight: 2 }, { text: 'Kopi', weight: 1 }],
     lines: 'uncle',
+  },
+  {
+    id: 'sophie',
+    name: 'Sophie',
+    sprite: 'sophie',
+    weight: 1,
+    patience: 50,
+    groupSize: 1,
+    orders: [{ text: 'Kopi O kosong', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Teh', weight: 1 }, { text: 'Milo Dinosaur', weight: 1 }],
+    lines: 'tourist',
   },
 ];
