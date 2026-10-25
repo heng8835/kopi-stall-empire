@@ -95,3 +95,71 @@ For all four: the bottom 40% of the screen is covered by the story text box, so 
   1) Taxi Uncle, the same man as in `taxiUncle` (attach that sprite too): standing, no taxi, holding a takeaway kopi bag, pointing and laughing.
   2) Makcik, the same lady as in `makcik` (attach that sprite too): standing, no stall and no sign, holding a small packet of nasi lemak wrapped in banana leaf, big laugh.
 - **Sophie fix**: the edit prompt in `docs/ART_BIBLE.md` (flag keychain → kopi-cup keychain, Merlion → coffee-cup doodle).
+
+---
+
+# Part 2: the rest of the must-have art (sittings 7–11)
+
+Same rules: one new chat per sitting, attach the files listed under the sitting **once** at the start,
+plain white background (I cut it out), save into `art/source/` with the name given, then tell me.
+Props share one opening line:
+> "Pixel-art game props in exactly the same style as the attached image (thick dark outline, soft 2–3 tone shading, warm light from the top-left). Each item separate, in a neat grid with wide clear gaps, none touching or overlapping, all at a similar size. Plain flat white background, no shadow, no text, no letters, no logos, no flags."
+
+## Sitting 7: pour poses (2 images)
+Attach: **`art/source/ref-tools-upright.png`** (our 6 tools upright). For image 13 also attach **`art/source/horlicks-tin.png`** (from sitting 1).
+
+### Image 12 → `art/source/pour-a.png`
+> Pixel-art game props: the SAME four objects as the first four in the attached image, keep their exact shapes, colours and style. Show each one tilted about 40 degrees, mid-pour, the spout or opening pointing down to the LEFT, as if pouring into a cup below. No liquid stream, no cup, no hand. Four items in one row, wide clear gaps, same size as each other. Landscape image. Plain flat white background, no shadow, no text, no logos.
+> 1) the kopi pot with the cloth coffee sock, 2) the teh kettle, 3) the cream condensed milk can (open top), 4) the blue-and-white evaporated milk can (open top).
+
+### Image 13 → `art/source/pour-b.png`
+> Same as before: the SAME objects as in the attached images, tilted about 40 degrees mid-pour, opening pointing down to the LEFT, no stream, no cup, no hand. Three items in one row, wide clear gaps. Plain flat white background, no shadow, no text, no logos.
+> 1) the glass sugar jar with its lid off (spoon still inside), 2) the green malt powder tin, 3) the cream malted drink tin with the brown lid off.
+
+## Sitting 8: things you buy, shown at the stall (2 images)
+Attach: **`art/source/owner-jun-mei.webp`** and **`art/source/stall-bg.webp`** (so they match the stall).
+
+### Image 14 → `art/source/stall-comfort.png`
+> (Props opening line.) Six items for a cosy kopitiam stall, 3 columns × 2 rows, front view:
+> 1) an old cream standing fan with a round metal grille, 2) a small retro radio with a round speaker and knobs, 3) a stainless steel cup warmer cabinet with a glass door and white cups inside, 4) a big glass tip jar with a few coins inside, 5) a small brass hand bell, 6) a round woven cat bed with a small cushion (no cat).
+
+### Image 15 → `art/source/stall-decor.png`
+> (Props opening line.) Six decorations for a cosy kopitiam stall, 3 columns × 2 rows, front view:
+> 1) a long blank wooden shop signboard, dark red with a gold border, **completely blank**, 2) a blank dark-green wall menu board with a wooden frame, **completely blank**, 3) two potted plants (a money plant and a small palm) side by side, 4) two round red paper lanterns with gold tassels, hanging from short strings, 5) a neon sign frame in the shape of a steaming coffee cup, glowing warm orange, **no letters**, 6) a short string of warm fairy lights hanging in a gentle curve.
+
+## Sitting 9: the HUD (2 images)
+Attach: **`art/source/owner-jun-mei.webp`**.
+
+### Image 16 → `art/source/hud-clock.png`
+> (Props opening line.) Three separate items in one row:
+> 1) a round kopitiam wall clock face: dark wooden rim, cream face, 12 simple tick marks (no numbers), **no hands**, no brand,
+> 2) an ornate black clock HOUR hand, pointing straight up, on its own,
+> 3) an ornate black clock MINUTE hand, longer and thinner, pointing straight up, on its own.
+
+### Image 17 → `art/source/hud-icons.png`
+> (Props opening line.) Seven small game icons, all the same size, in one row, simple and readable when small:
+> 1) morning: a rising sun over a little rooftop, 2) lunch: a rice bowl with a small sun behind, 3) teatime: a cup of tea with an afternoon sun, 4) closing: a half-down metal shutter with a crescent moon, 5) a round red rosette badge with a gold star (no text), 6) a shiny gold coin (no letters or numbers), 7) a small worn brown notebook with a rubber band, slightly open.
+
+## Sitting 10: title screen sign + night stall (2 images)
+
+### Image 18 → `art/source/title-sign.png`
+Attach: **`art/source/owner-jun-mei.webp`**.
+> (Props opening line, but "one item, centred".) A big hand-painted wooden kopitiam shop sign for a game title: wide rectangle, dark red board with a carved gold border, **completely blank in the middle** (I add the words), a cute steaming kopi cup emblem on the left end and a small hanging chain on each top corner. Landscape image.
+
+### Image 19 → `art/source/stall-night.webp` (an edit)
+Attach: **`art/source/stall-bg.webp`**.
+> Edit this image: the same kopitiam, exact same layout and camera, but at night after closing. The street outside the window is dark blue with a few lit windows, the room is dim, one warm hanging bulb glows over the counter, the chairs are stacked on the tables. Keep everything else the same. No people, no text.
+
+## Sitting 11: Uncle Tan + Sophie fix (2 images)
+
+### Image 20 → `art/source/uncle-tan.png`
+Attach: **`art/source/owner-jun-mei.webp`** and **`public/sprites/rainUncle.png`** (he IS the Rain Uncle, so the face must match).
+> Chibi pixel-art game character in exactly the same style as the first attached image. The SAME old man as in the second attached image (same face, same hair, same white singlet and towel), but without the umbrella: proud and happy, holding a steaming kopi pot in one hand and giving a thumbs-up with the other. Full body, standing, 3/4 view facing right. Plain flat white background, no shadow, no text, no logos. One character only, centred.
+
+### Image 21 → `art/source/sophie-fixed.png`
+Attach: **`art/source/stall-assets.webp`**, and say which one is Sophie (the "tourist", bottom-left area).
+> Edit only the tourist girl with the sun hat in the attached image, and show her alone: replace the "SG" print and anything flag-like on her bag with a cute coffee-cup doodle, remove any landmark or lion drawing. Keep her face, hat, outfit and pose exactly the same. Full body, standing, plain flat white background, no shadow, no text, no flags, no logos.
+
+---
+
+**Total for part 2: 10 images in 5 sittings.** With part 1 that is 20 images (+1 optional). After these, the whole game has its must-have art.
