@@ -58,12 +58,25 @@ Days with no episode are quiet days: pure serving, plus the odd ambient one-line
 
 ---
 
+## Prologue · One Month to Try 《一个月的约定》 (opening cutscene, `src/data/opening.js`)
+Plays once before Day 1. Uncle Tan is only heard, or seen as hands and phone messages: his face must stay hidden
+until Day 28 (he is the Rain Uncle).
+- Estate at dawn. **Narrator:** Every estate has one. A corner kopitiam, a kopi stall, and an uncle who knows your order.
+- Flashback, the back table. **Little {name}:** "Uncle Tan! One day I also want my own kopi stall. Like you!"
+  **Uncle Tan:** "Wah, big dream. Can lah. But study hard first." **Little {name}:** "Promise! Then I come back and make kopi for you."
+- Office. **Narrator:** The office kopi tasted like sadness. The dream was still there, under the spreadsheets.
+- Phone chat. **Uncle Tan:** I retire liao, knee pain. Last time you say want your own stall, still want or not?
+  Come try one month lah, 30 days, after that you decide. **You:** Uncle… OK! I try! **Uncle Tan:** Tomorrow 6am. Oyen hungry.
+- Sunrise. {name} rolls up the shutter. One month. Thirty days. Then Day 1.
+
+The one-month trial is why the tin is for Day 30, and it frames the finale's decision.
+
 ## Ep 1 · Day 1 · The Note on the Pot 《壶上的字条》
 **Cast:** narrator, Oyen, Aunty Lim · **When:** start, then end
 
 *start*
 - **Narrator:** A note is taped to the old kopi pot.
-- **Note (Uncle Tan):** "{owner} — stall is yours now. The tin is for Day 30. Don't open. Don't let Oyen sit on it. — Tan"
+- **Note (Uncle Tan):** "{owner} — stall is yours for one month. The tin is for Day 30. Don't open. Don't let Oyen sit on it. — Tan"
 - **Narrator:** Oyen is already sitting on it.
 - **Oyen:** Meow. *(does not move)*
 - **Aunty Lim:** Uncle Tan's teh: 9 out of 10. Yours ah… 我们看看.
