@@ -72,14 +72,19 @@ until Day 28 (he is the Rain Uncle).
 The one-month trial is why the tin is for Day 30, and it frames the finale's decision.
 
 ## Ep 1 · Day 1 · The Note on the Pot 《壶上的字条》
-**Cast:** narrator, Oyen, Aunty Lim · **When:** start, then end
+**Cast:** narrator, Oyen, Aunty Lim (guest) · **When:** start, then end
 
 *start*
 - **Narrator:** A note is taped to the old kopi pot.
 - **Note (Uncle Tan):** "{owner} — stall is yours for 1 month. Tin for Day 30. Don't open. Don't let Oyen sit on it. — Tan"
 - **Narrator:** Oyen is already sitting on it.
 - **Oyen:** Meow. *(does not move)*
-- **Aunty Lim:** Uncle Tan's teh: 9 out of 10. Yours ah… 我们看看.
+- **Narrator:** Then the first customer of your life walks in. *(Aunty Lim is the guest: she walks in first)*
+- **Aunty Lim:** Eh! So you are the {owner} Uncle Tan pass his stall to ah?
+- **Aunty Lim:** First day ah? Don't kan cheong. Here everybody very nice one.
+- **Aunty Lim:** We all look after you. I'm Aunty Lim. Every morning I come for teh.
+- **Aunty Lim:** Uncle Tan's teh: 9 out of 10. Yours ah… 我们看看. One teh, please.
+  *(On Day 1 her teh is the tutorial's first order: a ghost hand shows how, then you serve.)*
 
 *end*
 - **Aunty Lim:** Today: 5 out of 10. 有进步空间 lah.

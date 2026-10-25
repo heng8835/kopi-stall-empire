@@ -34,7 +34,8 @@ import { EVENTS } from '../data/events.js';
 import { startDay, logEvent, finishDay, summarize } from '../systems/playlog.js';
 import { Tutorial } from '../systems/tutorial.js';
 import { TUTORIAL_STEPS, TOOL_IDS } from '../data/tutorial.js';
-import { load } from '../systems/save.js';
+import { load, save } from '../systems/save.js';
+import { demoSteps, MEASURE } from '../systems/demo.js';
 
 // The kopi stall, seen from behind the counter: customers across the counter at the top,
 // a tray of 3 cup spots in the middle, and the tools along the bottom. Drinks are made by
@@ -142,8 +143,9 @@ export default class StallScene extends Phaser.Scene {
 
     this.tutorial = new Tutorial(this, TUTORIAL_STEPS);
     if (data?.morning) this.openShutter();
-    if (this.day === 1 && !load('tutorialDone', false)) this.tutorial.start();
-    else this.time.delayedCall(data?.morning ? 1900 : 500, () => this.playStory('start'));
+    // Day 1, first time: Episode 1 first (Aunty Lim walks in and says hello), then the tutorial
+    this.pendingTutorial = this.day === 1 && !load('tutorialDone', false);
+    this.time.delayedCall(data?.morning ? 1900 : 500, () => this.playStory('start'));
 
     if (import.meta.env.DEV) window.__stall = this;
   }
@@ -315,6 +317,7 @@ export default class StallScene extends Phaser.Scene {
   // The owner murmurs: the next step for the cup last worked on, else what the latest
   // customer wants and how to make it.
   updateCoach(delta) {
+    if (this.demo) return this.setCoach(this.demo.say);
     this.coachIn -= delta;
     if (this.coachIn > 0) return;
     this.coachIn = 200;
@@ -615,6 +618,93 @@ export default class StallScene extends Phaser.Scene {
     this.tweens.add({ targets: slot.container, angle: { from: -3, to: 3 }, duration: 60, yoyo: true, onComplete: () => slot.container.setAngle(0) });
   }
 
+  // ---------- "watch first": a ghost hand makes an order with the real tools ----------
+
+  // Plays systems/demo.js steps for customer c. onDone(made) runs after (made = the cup is ready).
+  async runDemo(c, onDone = () => {}) {
+    if (this.demo || this.ended || load('demosOff', false)) return onDone(false);
+    const demo = (this.demo = { c, say: '', cancelled: false, tool: null });
+    const wasTutorial = c.tutorial;
+    c.tutorial = true; // their patience waits while we watch
+    const depth = 58;
+    const block = this.add.rectangle(0, HUD_H, GAME_W, GAME_H - HUD_H, 0x000000, 0.001).setOrigin(0).setDepth(depth).setInteractive();
+    const label = addText(this, 10, HUD_H + 66, 'Watch first 先看一次', { size: 12, bold: true, color: '#fff6dc' }).setDepth(depth + 2);
+    label.setStroke('#3a2414', 3);
+    const skip = makeButton(this, GAME_W - 134, HUD_H + 62, 62, 24, 'Skip ▸', () => (demo.cancelled = true), { size: 11, bold: true, fill: 0xbfe3c0 });
+    const skipAll = makeButton(this, GAME_W - 68, HUD_H + 62, 62, 24, 'Skip all', () => (save('demosOff', true), (demo.cancelled = true)), { size: 11 });
+    // the ghost hand: the fingertip sits on the point it's "touching"
+    const hand = addText(this, GAME_W / 2, GAME_H, '👆', { size: 34, origin: [0.32, 0.05] }).setDepth(depth + 1).setAlpha(0);
+    const objs = [block, label, skip.bg, skip.txt, skipAll.bg, skipAll.txt, hand];
+    [skip.bg, skipAll.bg].forEach((o) => o.setDepth(depth + 2));
+    [skip.txt, skipAll.txt].forEach((o) => o.setDepth(depth + 3));
+    this.tweens.add({ targets: hand, alpha: 0.95, duration: 250 });
+
+    const wait = (ms) => new Promise((r) => this.time.delayedCall(ms, r));
+    const until = async (done, ms = 12000) => {
+      for (let t = 0; t < ms && !done() && !demo.cancelled && !this.ended; t += 40) await wait(40);
+    };
+    const glide = (from, to, ms, each) => new Promise((r) => {
+      const p = { x: from.x, y: from.y };
+      this.tweens.add({ targets: p, x: to.x, y: to.y, duration: ms, ease: 'Sine.inOut', onUpdate: () => each(p), onComplete: r });
+    });
+    const touch = (p) => hand.setPosition(p.x, p.y);
+    let slot = null;
+    let made = false;
+    const steps = demoSteps(c.spec);
+    for (const [i, s] of steps.entries()) {
+      if (demo.cancelled || this.ended) break;
+      demo.say = `${i + 1}/${steps.length} ${s.say}`;
+      if (s.do === 'serve') {
+        made = true;
+        demo.say = `Your turn! Drag the cup to ${c.def.short ?? c.def.name}`;
+        await glide(hand, { x: slot.x, y: CUP_BOTTOM - 30 }, 400, touch);
+        await glide(hand, { x: this.centerX(c), y: FEET_Y - 70 }, 700, touch);
+        await wait(700);
+        break;
+      }
+      const tool = this.tools[{ cup: 'rack', stir: 'stir', ice: 'ice', powder: 'powder' }[s.do] ?? s.tool];
+      const target = slot ?? this.freeSlot();
+      if (!tool || !target) break; // e.g. a tool the stall doesn't own
+      // the hand reaches for the tool, picks it up and carries it over the cup
+      const home = { x: tool.home.x, y: tool.home.y + LIFT };
+      const over = { x: target.x + (s.do === 'pour' ? 14 : 0), y: CUP_BOTTOM - CUP_H - 4 + LIFT - tool.tool.h / 2 };
+      await glide(hand, home, 420, touch);
+      if (demo.cancelled) break;
+      demo.tool = tool;
+      this.onToolDragStart(tool);
+      await glide(home, over, 650, (p) => (touch(p), this.onToolDrag(tool, { worldX: p.x, worldY: p.y })));
+      if (s.do === 'pour') {
+        if (this.dosed(tool.tool)) {
+          // scoop / pump: one dose per drop
+          await until(() => {
+            if (MEASURE[s.measure](target.cup) < s.until && !this.demoDosing) {
+              this.demoDosing = true;
+              this.dose(target, tool.tool.ingredient);
+              this.time.delayedCall(450, () => (this.demoDosing = false));
+            }
+            return MEASURE[s.measure](target.cup) >= s.until;
+          });
+        } else {
+          demo.stop = { measure: s.measure, until: s.until };
+          await until(() => MEASURE[s.measure](target.cup) >= s.until);
+          demo.stop = null;
+        }
+        this.onToolDragEnd(tool, { worldX: home.x, worldY: home.y }); // let go away from the cup
+      } else {
+        this.onToolDragEnd(tool, { worldX: over.x, worldY: over.y }); // drop it on the cup (or the rack's cup on the tray)
+        if (s.do === 'cup') slot = target;
+        await wait(s.do === 'stir' ? (this.perks.stirMs ?? TUNING.autoStirMs) + 250 : 450);
+      }
+      demo.tool = null;
+      await wait(250);
+    }
+    if (demo.tool) this.onToolDragEnd(demo.tool, { worldX: demo.tool.home.x, worldY: demo.tool.home.y + LIFT });
+    this.tweens.add({ targets: objs, alpha: 0, duration: 200, onComplete: () => objs.forEach((o) => o.destroy()) });
+    c.tutorial = wasTutorial;
+    this.demo = null;
+    onDone(made && !demo.cancelled);
+  }
+
   // ---------- customers ----------
 
   waitingCustomers() {
@@ -770,13 +860,14 @@ export default class StallScene extends Phaser.Scene {
     this.showBubble(c, c.orderLine, 'order');
     for (const sl of this.slots) if (sl.cup && !sl.ticket) this.assignCup(sl);
     if (c.lesson) this.time.delayedCall(500, () => !this.ended && this.showLesson(c.lessonLine));
+    if (c.demoNext) this.time.delayedCall(700, () => this.runDemo(c, c.demoNext));
     if (c.episode) {
       this.time.delayedCall(900, () => {
         if (this.ended) return; // closing time plays it instead
         this.storyCue(c, () => {
           if (this.ended) return;
           this.guestEpisode = null;
-          this.playEpisode(c.episode);
+          this.playEpisode(c.episode, () => this.startPendingTutorial());
         });
       });
     }
@@ -1031,7 +1122,11 @@ export default class StallScene extends Phaser.Scene {
     if (this.pouring) {
       const { tool, slot } = this.pouring;
       const ing = tool.tool.ingredient;
-      this.pourInto(slot, ing, delta);
+      // the demo's hand stops on the exact frame its target is reached
+      const stop = this.demo?.stop;
+      const need = stop ? Math.max(0, ((stop.until - MEASURE[stop.measure](slot.cup)) / (TUNING.pourPerSec[ing] * (['kopi', 'teh', ...MALT].includes(ing) ? this.perks.pourMult : 1))) * 1000) : delta;
+      this.pourInto(slot, ing, Math.min(delta, need + 1));
+      if (stop && MEASURE[stop.measure](slot.cup) >= stop.until) this.pouring = null;
       const gap = ing === 'sugar' ? 220 : 900;
       if (time - this.lastPourSound > gap) {
         play(ing === 'sugar' ? 'sugar' : ['condensed', 'evap'].includes(ing) ? 'milk' : 'pour');
@@ -1042,7 +1137,7 @@ export default class StallScene extends Phaser.Scene {
     this.updateCoach(delta);
 
     // The tutorial is a calm intro: the day clock and random spawns wait for it.
-    const teaching = this.tutorial?.active;
+    const teaching = this.tutorial?.active || this.pendingTutorial;
     if (!teaching) this.clockMs = Math.min(TUNING.dayMs, this.clockMs + delta);
     this.refreshHud();
     if (this.clockMs >= TUNING.dayMs) {
@@ -1092,6 +1187,12 @@ export default class StallScene extends Phaser.Scene {
   }
 
   // Called by the tutorial when it finishes or is skipped.
+  startPendingTutorial() {
+    if (!this.pendingTutorial) return;
+    this.pendingTutorial = false;
+    this.time.delayedCall(500, () => this.tutorial.start());
+  }
+
   onTutorialDone() {
     this.time.delayedCall(1200, () => this.playStory('start'));
   }
@@ -1210,7 +1311,16 @@ export default class StallScene extends Phaser.Scene {
     if (this.lessonState === 'done') return;
     this.lessonState = 'done';
     logEvent(this.log, 'lesson', { day: this.day, features: this.lesson.features.join(',') }, this.clockMs);
-    this.pauseFor((resume) => showRecipeCard(this, this.lesson, { showLine, onClose: () => (resume(), this.nextLesson()) }));
+    this.pauseFor((resume) => showRecipeCard(this, this.lesson, { showLine, onClose: () => (resume(), this.nextLesson(), this.demoLessonOrder()) }));
+  }
+
+  // After a new-recipe card: the teacher's order is made once by the ghost hand (once per recipe ever).
+  demoLessonOrder() {
+    const c = this.allCustomers().find((x) => x.lesson && x.state === 'waiting' && !x.served);
+    const seen = load('demosSeen', []);
+    if (!c || seen.includes(c.orderText)) return;
+    save('demosSeen', [...seen, c.orderText]);
+    this.time.delayedCall(400, () => this.runDemo(c));
   }
 
   // Everything bought in the night shop shows up at the stall (src/data/stallProps.js).

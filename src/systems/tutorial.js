@@ -33,16 +33,27 @@ export class Tutorial {
       this.clearGlows();
       return this.showNote(step.note, true, () => this.next());
     }
-    this.showNote(step.note);
-    this.highlight(step.highlight);
+    this.clearNote();
+    this.clearGlows();
     this.trySpawn(step);
   }
 
+  // The step's customer: already at the counter (Aunty Lim, from Episode 1) or walking in now.
+  // First a ghost hand makes their order (Skip-able); then the note says "your turn".
   trySpawn(step) {
     if (!this.active) return;
-    const c = this.scene.spawnCustomer(step.customer, step.order);
-    if (c) c.tutorial = true;
-    else this.scene.time.delayedCall(500, () => this.trySpawn(step)); // slot still busy
+    const s = this.scene;
+    const here = s.allCustomers().find((x) => x.def.id === step.customer && x.state === 'waiting' && !x.served && x.orderText === step.order);
+    const c = here ?? s.spawnCustomer(step.customer, step.order);
+    if (!c) return s.time.delayedCall(500, () => this.trySpawn(step)); // slot still busy
+    c.tutorial = true;
+    const after = (made) => {
+      if (!this.active) return;
+      this.showNote(made ? step.after : step.note);
+      this.highlight(made ? [] : step.highlight);
+    };
+    if (here) s.time.delayedCall(500, () => s.runDemo(c, after));
+    else c.demoNext = after;
   }
 
   // Called by StallScene.serveCup() for every serve.
@@ -62,6 +73,7 @@ export class Tutorial {
   }
 
   skip() {
+    if (this.scene.demo) this.scene.demo.cancelled = true;
     this.active = false;
     save('tutorialDone', true);
     this.clearGlows();

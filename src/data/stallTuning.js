@@ -6,7 +6,7 @@ export const TUNING = {
   // customers already at the counter (closingGraceMs at most).
   dayMs: 120_000, // 2 real minutes, 7am -> 7pm
   closingGraceMs: 60_000,
-  firstSpawnMs: 3000,
+  firstSpawnMs: 1800, // the first customer walks in as the shutter goes up
   lastSpawnBeforeEndMs: 18_000,
   spawnJitter: 0.35, // each arrival lands within +-35% of its even share of the day
   queueRetryMs: 3000, // queue full: try that arrival again this much later

@@ -336,19 +336,67 @@ export class DrinkArt {
       g.imageSmoothingEnabled = true;
     }
 
-    // Milo powder mountain
+    // The powder mountain (Milo / Horlicks Dinosaur), drawn like the sprites: a lumpy heap with a thick
+    // dark outline, light from the top-left, a shaded right side, granules and a few loose crumbs.
     if (this.powder > 0) {
       const o = oval(IN.top);
-      const w = o.rx * 1.24 * (0.6 + 0.4 * this.powder);
-      const top = o.cy - 4;
-      const h = 62 * this.powder;
-      const malt = cup.base === 'horlicks'; // Horlicks powder is pale cream, Milo is chocolate
-      g.fillStyle = malt ? '#e8d6b0' : '#5a3a28';
-      g.beginPath(); g.moveTo(o.cx - w, top + 6); g.quadraticCurveTo(o.cx - w * 0.5, top - h * 0.6, o.cx, top - h); g.quadraticCurveTo(o.cx + w * 0.5, top - h * 0.6, o.cx + w, top + 6); g.closePath(); g.fill();
-      g.fillStyle = malt ? '#f6ead0' : '#7a5038';
-      g.beginPath(); g.moveTo(o.cx - w * 0.55, top); g.quadraticCurveTo(o.cx - w * 0.3, top - h * 0.65, o.cx - w * 0.05, top - h * 0.9); g.lineTo(o.cx - w * 0.2, top); g.fill();
-      g.fillStyle = 'rgba(40,24,14,.55)';
-      for (let i = 0; i < 18; i++) g.fillRect(o.cx + Math.sin(i * 12.9) * w * 0.7, top - Math.abs(Math.cos(i * 7.3)) * h * 0.7, 3, 3);
+      const k = this.powder;
+      const w = o.rx * 1.22 * (0.6 + 0.4 * k);
+      const base = o.cy + 4;
+      const h = 64 * k;
+      const malt = cup.base === 'horlicks';
+      const C = malt
+        ? { ink: '#5e4a2c', mid: '#e3cd9f', light: '#f7ebcc', dark: '#c4a66f', speck: '#a8884f' }
+        : { ink: '#24150c', mid: '#6a4128', light: '#93603c', dark: '#4a2c1a', speck: '#2e1a10' };
+      // silhouette: a rounded mound with a few clumps along its edge (fixed, so it doesn't wobble)
+      const pts = [];
+      const N = 22;
+      for (let i = 0; i <= N; i++) {
+        const t = i / N; // 0..1 left to right
+        const u = t * 2 - 1;
+        const lump = 1 + 0.07 * Math.sin(i * 2.7) + 0.05 * Math.sin(i * 5.3);
+        const y = base - h * Math.pow(Math.max(0, 1 - u * u), 0.75) * lump;
+        pts.push([o.cx + u * w, y]);
+      }
+      const heap = () => {
+        g.beginPath();
+        g.moveTo(o.cx - w, base);
+        for (const [x, y] of pts) g.lineTo(x, y);
+        g.lineTo(o.cx + w, base);
+        g.quadraticCurveTo(o.cx, base + 6, o.cx - w, base);
+        g.closePath();
+      };
+      g.save();
+      heap();
+      g.fillStyle = C.mid;
+      g.fill();
+      g.clip();
+      // shaded right flank, lit left shoulder
+      g.fillStyle = C.dark;
+      g.beginPath(); g.ellipse(o.cx + w * 0.55, base - h * 0.2, w * 0.6, h * 0.95, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = C.light;
+      g.beginPath(); g.ellipse(o.cx - w * 0.32, base - h * 0.62, w * 0.36, h * 0.42, -0.5, 0, Math.PI * 2); g.fill();
+      // granules: chunky 3px pixels, light ones on the lit side, dark ones everywhere
+      for (let i = 0; i < 46; i++) {
+        const gx = o.cx + Math.sin(i * 12.9898) * w * 0.9;
+        const gy = base - Math.abs(Math.cos(i * 78.233)) * h * 0.95;
+        g.fillStyle = i % 3 === 0 && gx < o.cx ? C.light : C.speck;
+        g.fillRect(Math.round(gx), Math.round(gy), 3, 3);
+      }
+      g.restore();
+      // thick outline like the character art
+      heap();
+      g.lineJoin = 'round';
+      g.strokeStyle = C.ink;
+      g.lineWidth = 4;
+      g.stroke();
+      // a few crumbs that rolled onto the rim
+      g.fillStyle = C.mid;
+      for (const [dx, dy] of [[-1.08, 2], [1.12, 1], [0.86, 5], [-0.8, 6]]) {
+        const cx = o.cx + dx * w;
+        g.fillRect(Math.round(cx), Math.round(base + dy), 5, 4);
+        g.strokeStyle = C.ink; g.lineWidth = 1.5; g.strokeRect(Math.round(cx), Math.round(base + dy), 5, 4);
+      }
     }
 
     // the spoon going round while it stirs (two turns), handle resting on the rim

@@ -1,6 +1,7 @@
-// Day-1 tutorial: "Uncle Tan's notes". Each step brings one scripted customer whose order
-// teaches the next hands-on action. highlight = tool ids (TOOL_IDS below) that pulse while
-// the step is active.
+// Day-1 tutorial: "Uncle Tan's notes". Each step brings one scripted customer (the first is Aunty
+// Lim, who walked in during Episode 1). A ghost hand first makes their order step by step
+// (systems/demo.js, Skip-able); then `after` says "your turn". If the demo is skipped, `note`
+// explains the steps instead and the `highlight` tools (TOOL_IDS below) pulse.
 
 // Tool ids the tutorial can highlight. StallScene registers its tools under these ids.
 export const TOOL_IDS = ['kopi', 'teh', 'sugar', 'condensed', 'evap', 'milo', 'ice', 'powder', 'stir', 'rack', 'bin'];
@@ -10,6 +11,7 @@ export const TUTORIAL_STEPS = [
     customer: 'auntyLim',
     order: 'Teh',
     highlight: ['rack', 'teh', 'condensed', 'stir'],
+    after: { en: 'That is how Uncle Tan made teh. Your turn: drag the cup to Aunty Lim!', zh: '陈伯就是这样泡茶的。轮到你了：把杯子拖给林阿姨！' },
     note: {
       en: 'Tap the Cups rack for a cup. HOLD the teh pot to the ★, condensed milk to the ★ (it IS the sweetness), drop the spoon on the cup, drag to Aunty! Your thought bubble below says each step.',
       zh: '点杯架拿杯子。按住茶壶到 ★，炼奶到 ★（炼奶就是甜度），把汤匙放到杯上，拖给阿姨！下面的小泡泡会提示每一步。',
@@ -19,6 +21,7 @@ export const TUTORIAL_STEPS = [
     customer: 'officeGuy',
     order: 'Kopi',
     highlight: ['kopi', 'condensed', 'stir'],
+    after: { en: 'Kopi = same steps, kopi pot. Drag it to Marcus, fast fast!', zh: 'Kopi 步骤一样，用咖啡壶。快快拖给 Marcus！' },
     note: {
       en: 'Kopi = coffee + condensed milk. Same steps with the kopi pot. Fast fast, he is rushing!',
       zh: 'Kopi = 咖啡 + 炼奶。步骤一样，这次用咖啡壶。他赶时间！',
@@ -28,6 +31,7 @@ export const TUTORIAL_STEPS = [
     customer: 'auntyLim',
     order: 'Kopi O',
     highlight: ['kopi', 'sugar', 'stir'],
+    after: { en: "'O' = no milk, so the sugar can is the sweetness. Serve it, then you're on your own!", zh: 'O = 不加奶，所以用糖罐加甜。端给她吧，接下来靠你自己了！' },
     note: {
       en: "'O' = no milk. Use the sugar can instead, to NORMAL, then drop the spoon on it.",
       zh: 'O = 不加奶。改用糖罐，加到 NORMAL，再搅一搅。',

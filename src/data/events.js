@@ -49,12 +49,17 @@ export const EVENTS = [
   {
     id: 'ep1-note', day: 1, when: 'start', ep: 1,
     title: { en: 'The Note on the Pot', zh: '壶上的字条' },
+    guest: { id: 'auntyLim', order: 'Teh' }, // she walks in first; on Day 1 she is also the tutorial's first order
     beats: [
       N('A note is taped to the old kopi pot.'),
       { who: 'note', name: 'Uncle Tan', text: '"{owner} — stall is yours for 1 month. Tin for Day 30. Don\'t open. Don\'t let Oyen sit on it. — Tan"' },
       N('Oyen is already sitting on it.'),
       { who: 'oyen', text: 'Meow. (does not move)' },
-      { who: 'auntyLim', text: 'Uncle Tan\'s teh: 9 out of 10. Yours ah… 我们看看.' },
+      N('Then the first customer of your life walks in.'),
+      { who: 'auntyLim', text: 'Eh! So you are the {owner} Uncle Tan pass his stall to ah?' },
+      { who: 'auntyLim', text: 'First day ah? Don\'t kan cheong. Here everybody very nice one.' },
+      { who: 'auntyLim', text: 'We all look after you. I\'m Aunty Lim. Every morning I come for teh.' },
+      { who: 'auntyLim', text: 'Uncle Tan\'s teh: 9 out of 10. Yours ah… 我们看看. One teh, please.' },
     ],
   },
   {
