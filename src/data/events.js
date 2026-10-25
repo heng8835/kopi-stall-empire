@@ -51,7 +51,7 @@ export const EVENTS = [
     title: { en: 'The Note on the Pot', zh: '壶上的字条' },
     beats: [
       N('A note is taped to the old kopi pot.'),
-      { who: 'note', name: 'Uncle Tan', text: '"{owner} — stall is yours for one month. The tin is for Day 30. Don\'t open. Don\'t let Oyen sit on it. — Tan"' },
+      { who: 'note', name: 'Uncle Tan', text: '"{owner} — stall is yours for 1 month. Tin for Day 30. Don\'t open. Don\'t let Oyen sit on it. — Tan"' },
       N('Oyen is already sitting on it.'),
       { who: 'oyen', text: 'Meow. (does not move)' },
       { who: 'auntyLim', text: 'Uncle Tan\'s teh: 9 out of 10. Yours ah… 我们看看.' },

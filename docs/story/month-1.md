@@ -76,7 +76,7 @@ The one-month trial is why the tin is for Day 30, and it frames the finale's dec
 
 *start*
 - **Narrator:** A note is taped to the old kopi pot.
-- **Note (Uncle Tan):** "{owner} — stall is yours for one month. The tin is for Day 30. Don't open. Don't let Oyen sit on it. — Tan"
+- **Note (Uncle Tan):** "{owner} — stall is yours for 1 month. Tin for Day 30. Don't open. Don't let Oyen sit on it. — Tan"
 - **Narrator:** Oyen is already sitting on it.
 - **Oyen:** Meow. *(does not move)*
 - **Aunty Lim:** Uncle Tan's teh: 9 out of 10. Yours ah… 我们看看.
