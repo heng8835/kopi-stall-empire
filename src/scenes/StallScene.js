@@ -141,8 +141,9 @@ export default class StallScene extends Phaser.Scene {
     this.feedback.setStroke('#3a2414', 3);
 
     this.tutorial = new Tutorial(this, TUTORIAL_STEPS);
+    if (data?.morning) this.openShutter();
     if (this.day === 1 && !load('tutorialDone', false)) this.tutorial.start();
-    else this.time.delayedCall(500, () => this.playStory('start'));
+    else this.time.delayedCall(data?.morning ? 1900 : 500, () => this.playStory('start'));
 
     if (import.meta.env.DEV) window.__stall = this;
   }
@@ -1267,16 +1268,35 @@ export default class StallScene extends Phaser.Scene {
   }
 
   // A rolling shutter comes down with "收档啦!", then the end-of-day story and the summary.
-  closeShutter(then) {
-    const depth = 66;
+  // The stall's metal roller shutter (below the HUD), as a container at y.
+  makeShutter(y, depth) {
     const h = GAME_H - HUD_H;
-    const shutter = this.add.container(0, -h).setDepth(depth);
+    const shutter = this.add.container(0, y).setDepth(depth);
     const g = this.add.graphics();
     g.fillStyle(0x8a96a2, 1).fillRect(0, HUD_H, GAME_W, h);
-    for (let y = HUD_H + 6; y < GAME_H; y += 12) g.fillStyle(0x6c7782, 1).fillRect(0, y, GAME_W, 3).fillStyle(0xb3bdc6, 1).fillRect(0, y + 3, GAME_W, 1);
+    for (let yy = HUD_H + 6; yy < GAME_H; yy += 12) g.fillStyle(0x6c7782, 1).fillRect(0, yy, GAME_W, 3).fillStyle(0xb3bdc6, 1).fillRect(0, yy + 3, GAME_W, 1);
     g.fillStyle(0x4b545c, 1).fillRect(0, GAME_H - 14, GAME_W, 14);
     g.fillStyle(0x2b2b2b, 1).fillRoundedRect(GAME_W / 2 - 22, GAME_H - 26, 44, 10, 4); // handle
     shutter.add(g);
+    return shutter;
+  }
+
+  // Morning after the night: fade in on the closed shutter, "Day N · 早安!", then it rolls up.
+  openShutter() {
+    const depth = 66;
+    const shutter = this.makeShutter(0, depth);
+    const big = addText(this, GAME_W / 2, GAME_H / 2 - 40, `Day ${this.day}`, { size: 40, bold: true, color: '#fff6dc', origin: 0.5 }).setDepth(depth + 1);
+    const small = addText(this, GAME_W / 2, GAME_H / 2 + 6, '早安! Good morning · 开档啦', { size: 16, bold: true, color: '#fff6dc', origin: 0.5 }).setDepth(depth + 1);
+    big.setStroke('#3a2414', 6);
+    small.setStroke('#3a2414', 4);
+    this.cameras.main.fadeIn(500, 11, 20, 48);
+    this.tweens.add({ targets: [big, small], alpha: 0, duration: 250, delay: 1000 });
+    this.tweens.add({ targets: shutter, y: -(GAME_H - HUD_H), duration: 750, delay: 1100, ease: 'Cubic.in', onStart: () => play('pickup'), onComplete: () => [shutter, big, small].forEach((o) => o.destroy()) });
+  }
+
+  closeShutter(then) {
+    const depth = 66;
+    const shutter = this.makeShutter(-(GAME_H - HUD_H), depth);
     this.tweens.add({ targets: shutter, y: 0, duration: 950, ease: 'Bounce.out', onComplete: () => play('clink') });
     const big = addText(this, GAME_W / 2, GAME_H / 2 - 40, '收档啦!', { size: 40, bold: true, color: '#fff6dc', origin: 0.5 }).setDepth(depth + 1).setScale(0);
     const small = addText(this, GAME_W / 2, GAME_H / 2 + 6, `Stall closed · Day ${this.day} done`, { size: 16, bold: true, color: '#fff6dc', origin: 0.5 }).setDepth(depth + 1).setAlpha(0);

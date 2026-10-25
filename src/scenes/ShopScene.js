@@ -28,6 +28,7 @@ export default class ShopScene extends Phaser.Scene {
     this.run = data.run;
     this.aisle = data.aisle ?? 'machine';
     this.scroll = 0;
+    this.leaving = false; // Phaser reuses this scene object every night
 
     // the stall at night, chairs up, one warm bulb; dimmed a little so the catalogue reads
     this.add.image(0, 0, 'stallNight').setOrigin(0).setDisplaySize(GAME_W, GAME_H);
@@ -64,7 +65,7 @@ export default class ShopScene extends Phaser.Scene {
     this.input.on('wheel', (p, over, dx, dy) => this.setScroll(this.scroll + dy * 0.5));
 
     this.note = addText(this, GAME_W / 2, LIST.bottom + 4, '', { size: 11, color: '#ffd28a', origin: [0.5, 0], align: 'center', wrap: 330 });
-    const open = makeButton(this, GAME_W / 2 - 120, GAME_H - 54, 240, 46, `Open stall ▸  Day ${this.run.day}`, () => this.scene.start('Day', { run: this.run }), { size: 17, bold: true, fill: 0xbfe3c0 });
+    const open = makeButton(this, GAME_W / 2 - 120, GAME_H - 54, 240, 46, `Open stall ▸  Day ${this.run.day}`, () => this.openStall(), { size: 17, bold: true, fill: 0xbfe3c0 });
     open.bg.setDepth(DEPTH);
     open.txt.setDepth(DEPTH + 1);
     // cover strips so cards scrolled out of the list can't be tapped through the header or footer
@@ -84,11 +85,19 @@ export default class ShopScene extends Phaser.Scene {
     ];
     card.forEach((o, i) => {
       o.setAlpha(0);
-      this.tweens.add({ targets: o, alpha: 1, duration: 500, delay: 400 + i * 120 });
+      this.tweens.add({ targets: o, alpha: 1, duration: 400, delay: 150 + i * 90 });
     });
-    const open = makeButton(this, cx - 120, GAME_H - 54, 240, 46, `Open stall ▸  Day ${this.run.day}`, () => this.scene.start('Day', { run: this.run }), { size: 17, bold: true, fill: 0xbfe3c0 });
+    const open = makeButton(this, cx - 120, GAME_H - 54, 240, 46, `Open stall ▸  Day ${this.run.day}`, () => this.openStall(), { size: 17, bold: true, fill: 0xbfe3c0 });
     open.bg.setDepth(DEPTH);
     open.txt.setDepth(DEPTH + 1);
+  }
+
+  // Morning: fade out of the night, the stall's shutter rolls up in StallScene.
+  openStall() {
+    if (this.leaving) return;
+    this.leaving = true;
+    this.cameras.main.fadeOut(450, 11, 20, 48);
+    this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Day', { run: this.run, morning: true }));
   }
 
   showAisle(id) {
