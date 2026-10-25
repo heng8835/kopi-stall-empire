@@ -9,6 +9,7 @@ import { layoutLine, showGlossary } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
 import { fill } from '../systems/story.js';
 import { load, save } from '../systems/save.js';
+import { playMusic } from '../systems/music.js';
 
 // The opening cutscene, the month's prologue (src/data/opening.js): an episode-style title card,
 // full-screen backgrounds that slowly drift, narration and spoken lines in a box at the bottom,
@@ -58,6 +59,7 @@ export default class OpeningScene extends Phaser.Scene {
       e?.stopPropagation?.();
       this.finish();
     });
+    playMusic('finale'); // One Month to Try
     this.cameras.main.fadeIn(600, 0, 0, 0);
     this.nextPanel();
   }

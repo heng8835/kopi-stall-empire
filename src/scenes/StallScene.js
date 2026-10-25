@@ -36,7 +36,8 @@ import { Tutorial } from '../systems/tutorial.js';
 import { TUTORIAL_STEPS, TOOL_IDS } from '../data/tutorial.js';
 import { load, save } from '../systems/save.js';
 import { demoSteps, MEASURE } from '../systems/demo.js';
-import { playMusic, stopMusic, duckMusic } from '../systems/music.js';
+import { playMusic, storyMusic, endStoryMusic } from '../systems/music.js';
+import { EPISODE_MUSIC } from '../data/music.js';
 
 // The kopi stall, seen from behind the counter: customers across the counter at the top,
 // a tray of 3 cup spots in the middle, and the tools along the bottom. Drinks are made by
@@ -1226,7 +1227,7 @@ export default class StallScene extends Phaser.Scene {
     this.pouring = null;
     this.tweens.killTweensOf(this.feedback);
     this.feedback.setAlpha(0);
-    duckMusic(true);
+    storyMusic(EPISODE_MUSIC[ep.ep]);
     this.scene.launch('Drama', {
       ep,
       flags: this.flags,
@@ -1236,7 +1237,7 @@ export default class StallScene extends Phaser.Scene {
       onChoice: (opt) => this.applyStoryChoice(opt),
       onEnding: (e) => (this.ending = e.id),
       onDone: () => {
-        duckMusic(false);
+        endStoryMusic();
         this.scene.stop('Drama');
         this.scene.resume();
         if (ep.fame) this.econ.fame = clampFame(this.econ.fame + ep.fame);
@@ -1452,6 +1453,7 @@ export default class StallScene extends Phaser.Scene {
   }
 
   showSummary() {
+    playMusic('night'); // the shutters are down: the evening music, on into the night shop
     const e = this.econ;
     let tomorrow = nextDay(this.run, { money: e.money, fame: e.fame, flags: this.flags, rating: this.rating, ending: this.ending ?? this.run.ending });
     const gifted = GIFTS[this.day];
@@ -1514,7 +1516,6 @@ export default class StallScene extends Phaser.Scene {
   toNight(run) {
     if (this.leaving) return;
     this.leaving = true;
-    stopMusic(0.9);
     this.cameras.main.fadeOut(700, 11, 20, 48);
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Shop', { run }));
   }

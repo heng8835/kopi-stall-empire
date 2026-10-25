@@ -1,13 +1,15 @@
-// Background music: one track at a time (src/data/music.js), decoded once, looped with a cross-fade.
+// Background music (src/data/music.js): decoded once, looped with a cross-fade. Two channels:
+//   bg     the scene's music (title, stall day, night, prologue)
+//   story  an episode's music, laid over the scene; bg dips under it and comes back after
 // Plays through the sound effects' master volume, so the ♪ on/off toggle mutes it too. Safe
 // everywhere: no audio, a failed download or a decode error just means silence.
-import { MUSIC, DUCK } from '../data/music.js';
+import { MUSIC, DUCK, DUCK_UNDER_STORY } from '../data/music.js';
 import { audioOut, onAudioReady } from './sfx.js';
 
 const buffers = {}; // key -> Promise<AudioBuffer>
-let current = null; // { key, gain, sources, timer, stopped }
-let wanted = null; // the track to play once audio is unlocked
-let ducked = false;
+const channels = { bg: null, story: null }; // channel -> { key, gain, sources, timer, stopped }
+const wanted = { bg: null, story: null }; // what to play once audio is unlocked
+let ducked = false; // a story is on
 
 function decode(key) {
   const out = audioOut();
@@ -21,16 +23,22 @@ function decode(key) {
 // Equal-power fade curves (fading one pass out while the next fades in keeps the loudness steady).
 const curve = (up) => Float32Array.from({ length: 64 }, (_, i) => Math.sin(((up ? i : 63 - i) / 63) * Math.PI / 2));
 
-const level = (key) => MUSIC[key].volume * (ducked ? DUCK : 1);
+function level(channel) {
+  const t = channels[channel];
+  if (!t) return 0;
+  const v = MUSIC[t.key].volume;
+  if (channel !== 'bg' || !ducked) return v;
+  return v * (channels.story ? DUCK_UNDER_STORY : DUCK);
+}
 
-export function playMusic(key) {
-  if (current?.key === key) return;
-  stopMusic();
-  wanted = key;
+function start(key, channel) {
+  if (channels[channel]?.key === key) return;
+  halt(channel);
+  wanted[channel] = key;
   const out = audioOut();
-  if (!out) return onAudioReady(() => wanted === key && !current && playMusic(key));
+  if (!out) return onAudioReady(() => wanted[channel] === key && !channels[channel] && start(key, channel));
   const track = { key, sources: [], timer: null, stopped: false };
-  current = track;
+  channels[channel] = track;
   const { ctx, master } = out;
   track.gain = ctx.createGain();
   track.gain.gain.value = 0;
@@ -38,9 +46,17 @@ export function playMusic(key) {
   decode(key)
     ?.then((buf) => {
       if (track.stopped) return;
-      const { loopStart, loopEnd, crossfade: xf } = MUSIC[key];
+      const { loopStart, loopEnd, crossfade: xf = 2, loop = true } = MUSIC[key];
+      track.gain.gain.setTargetAtTime(level(channel), ctx.currentTime, 0.6);
+      if (!loop) {
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(track.gain);
+        src.start(ctx.currentTime + 0.05);
+        track.sources.push(src);
+        return;
+      }
       const end = Math.min(loopEnd, buf.duration);
-      track.gain.gain.setTargetAtTime(level(key), ctx.currentTime, 0.6);
       // one pass: from `from` to the loop end; the next pass starts xf early and fades in over it
       const pass = (when, from) => {
         if (track.stopped) return;
@@ -63,12 +79,11 @@ export function playMusic(key) {
     .catch(() => {});
 }
 
-// Fade the music out (e.g. leaving the stall for the night).
-export function stopMusic(fade = 0.8) {
-  wanted = null;
-  const track = current;
+// Fade a channel out and forget it.
+function halt(channel, fade = 0.8) {
+  const track = channels[channel];
   if (!track) return;
-  current = null;
+  channels[channel] = null;
   track.stopped = true;
   clearTimeout(track.timer);
   try {
@@ -84,15 +99,45 @@ export function stopMusic(fade = 0.8) {
   }
 }
 
-// A story over the stall: the music dips under it, and comes back after.
-export function duckMusic(on) {
-  ducked = on;
+function relevel() {
   try {
-    if (current) current.gain.gain.setTargetAtTime(level(current.key), audioOut().ctx.currentTime, 0.4);
+    const { ctx } = audioOut();
+    for (const ch of ['bg', 'story']) channels[ch]?.gain.gain.setTargetAtTime(level(ch), ctx.currentTime, 0.4);
   } catch {
     /* ignore */
   }
 }
 
-// For debugging / playtests: what's playing and how many passes are scheduled.
-export const musicState = () => (current ? { key: current.key, passes: current.sources.length, ducked } : null);
+// The scene's music (the same key keeps playing across scenes without restarting). A new scene
+// never inherits a story's music: any left over fades out.
+export function playMusic(key) {
+  if (channels.story || ducked) endStoryMusic();
+  start(key, 'bg');
+}
+
+export function stopMusic(fade = 0.8) {
+  wanted.bg = null;
+  halt('bg', fade);
+}
+
+// A story starts: its own music over the scene's (which dips), or just the dip if it has none.
+export function storyMusic(key) {
+  ducked = true;
+  if (key) start(key, 'story');
+  relevel();
+}
+
+// The story is over: its music fades and the scene's comes back up.
+export function endStoryMusic() {
+  ducked = false;
+  wanted.story = null;
+  halt('story', 1.2);
+  relevel();
+}
+
+// For debugging / playtests: what's playing on each channel.
+export const musicState = () => ({
+  bg: channels.bg && { key: channels.bg.key, passes: channels.bg.sources.length },
+  story: channels.story && { key: channels.story.key, passes: channels.story.sources.length },
+  ducked,
+});

@@ -10,6 +10,7 @@ import { play } from '../systems/sfx.js';
 import { formatMoney } from '../systems/economy.js';
 import { shopState, buy } from '../systems/shop.js';
 import { saveRun } from '../systems/run.js';
+import { playMusic } from '../systems/music.js';
 
 // The night shop: Uncle Tan's Supplier Catalogue, between a day's summary and the next morning.
 // Started with { run } = tomorrow's run; purchases are saved straight into it.
@@ -29,6 +30,7 @@ export default class ShopScene extends Phaser.Scene {
     this.aisle = data.aisle ?? 'machine';
     this.scroll = 0;
     this.leaving = false; // Phaser reuses this scene object every night
+    playMusic('night');
 
     // the stall at night, chairs up, one warm bulb; dimmed a little so the catalogue reads
     this.add.image(0, 0, 'stallNight').setOrigin(0).setDisplaySize(GAME_W, GAME_H);
