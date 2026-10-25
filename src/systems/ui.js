@@ -70,7 +70,7 @@ export function layoutLine(scene, text, x, y, maxW, onTerm, opts = {}) {
     const t = addText(scene, 0, 0, tok.text, {
       size,
       bold: !!tok.glossaryKey,
-      color: tok.glossaryKey ? TERM_COLOR : COLORS.ink,
+      color: tok.glossaryKey ? opts.termColor ?? TERM_COLOR : opts.color ?? COLORS.ink,
     });
     if (cx > 0 && cx + t.width > maxW) {
       cx = 0;

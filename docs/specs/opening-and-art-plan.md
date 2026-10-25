@@ -1,6 +1,6 @@
 # Plan: opening cutscene, 20 walk-ins, Horlicks tin, music (2026-10-23)
 
-Status: PLAN. Art comes first (user makes it in ChatGPT), then I build the cutscene + swap the walk-ins in.
+Status: §1 opening cutscene, §2 walk-ins and §3 Horlicks tin BUILT 2026-10-25 (scenes/OpeningScene.js, data/opening.js). §4 music: later.
 Art rules as always: `docs/ART_BIBLE.md`, no brand logos/text, no flags, no landmark mascots.
 
 ## 1. Opening cutscene (first time only, after picking Jun/Mei, before the tutorial)

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { openingSeen } from './OpeningScene.js';
 import { GAME_W, GAME_H, COLORS } from '../config.js';
 import { addText } from '../systems/text.js';
 import { fitCamera } from '../systems/view.js';
@@ -51,10 +52,11 @@ export default class TitleScene extends Phaser.Scene {
 
     // Returning players can replay Uncle Tan's Day-1 notes.
     if (load('tutorialDone', false)) {
-      const replay = addText(this, cx, 612, "Replay tutorial (Uncle Tan's notes)", { size: 13, color: '#8a5a1e', origin: 0.5 });
+      const replay = addText(this, cx, 612, 'Replay intro + tutorial', { size: 13, color: '#8a5a1e', origin: 0.5 });
       replay.setInteractive({ useHandCursor: true }).once('pointerdown', () => {
         save('tutorialDone', false);
-        replay.setText('Tutorial will play on Day 1 ✓');
+        save('openingSeen', false);
+        replay.setText('Intro + tutorial will play on Day 1 ✓');
       });
     }
   }
@@ -74,6 +76,8 @@ export default class TitleScene extends Phaser.Scene {
     const jump = runFromQuery(window.location.search);
     const today = jump ?? run;
     saveRun(today);
+    // A brand-new month: the opening cutscene plays once first.
+    if (!jump && today.day === 1 && !openingSeen()) return this.scene.start('Opening', { run: today });
     this.scene.start('Day', { run: today });
   }
 }

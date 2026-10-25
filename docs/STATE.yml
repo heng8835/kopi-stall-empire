@@ -1,12 +1,12 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-23
 phase: development
-next: "Waiting on art (opening bgs, 20 walk-ins, Horlicks tin: docs/specs/opening-and-art-plan.md). Then build the opening cutscene + swap walk-ins in. Else: phase D drink mechanics."
+next: "Part 2 art from user (docs/art/PROMPTS_2026-10.md sittings 7-11): pour poses, stall props for bought items (needs code), HUD, title sign, night stall, Uncle Tan, Sophie. Else phase D drink mechanics."
 tier_hint: 1
 blockers: ["Sophie flag/Merlion fix (user)"]
-touched: [src/scenes/DramaScene.js, src/systems/story.js, src/data/events.js, docs/specs/opening-and-art-plan.md, docs/art/ASSET_LIST.md]
+touched: [src/scenes/OpeningScene.js, src/data/opening.js, src/scenes/TitleScene.js, src/data/customers.js, src/i18n/lines.js, src/data/glossary.js]
 validation: passing
 open_decisions: ["Walk-frame route (IDEAS.md)"]
 spec: "docs/specs/opening-and-art-plan.md"
 board_task: ""
-notes: "StallScene is reused by Phaser every day: reset per-day state in create (closing, towelUsed…). Jump to a day: ?day=N&fame=F&money=CENTS&flags=a,b. Pane testing: another project's vite may own localhost:5174, use 127.0.0.1; fake Date.now + game.step; renderer.snapshot for screenshots (pane rAF often frozen: drive g.step by hand; POST snapshots to a tiny local receiver to view them)."
+notes: "StallScene is reused by Phaser every day: reset per-day state in create (closing, towelUsed…). Jump to a day: ?day=N&fame=F&money=CENTS&flags=a,b. Pane testing: another project's vite may own localhost:5174, use 127.0.0.1; g.loop.sleep() + fake Date.now (tweens read it) + game.step; renderer.snapshot for screenshots (pane rAF often frozen: drive g.step by hand; POST snapshots to a tiny local receiver to view them)."
