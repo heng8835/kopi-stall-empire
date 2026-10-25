@@ -6,7 +6,7 @@ folk (xinyao), a hint of Malay keroncong strumming, a touch of erhu or guzheng o
 movie music". Cozy, sunny, a little bittersweet, never sleepy.
 
 ## How to make them (and keep your usage low)
-- **Instrumental ON** for every track. Paste the **Style** text into the style box and the **Lyrics** text
+- **Instrumental ON** for every track. Paste the **Exclude styles** line from track 1 into every track too. Paste the **Style** text into the style box and the **Lyrics** text
   (just the section tags) into the lyrics box. Use the title given.
 - Suno makes 2 versions per go. Pick the better one; only re-roll a track you really don't like.
 - **Download as WAV if your plan allows it, else MP3.** Save into `art/audio/` with the file name given, then tell me.
@@ -22,20 +22,34 @@ movie music". Cozy, sunny, a little bittersweet, never sleepy.
 **For:** the whole serving day, looping for the full day. **Feeling:** warm, sunny, busy-but-easy, a smile while you work.
 **File:** `art/audio/day.wav` · **Title:** `Corner Kopitiam`
 
-**Style**
-> chill lo-fi hip hop, Singapore neighbourhood morning, warm Rhodes electric piano, nylon guitar, soft brushed drums, light shaker, mellow bass, gentle erhu accents, sunny, cozy, nostalgic but modern, 85 bpm, steady groove, seamless loop, instrumental
+*Why the first try sounded wrong:* "lo-fi hip hop" makes Suno write a playlist song (long intro, a beat that
+builds, a fade at the end). Game background music is different: a short, catchy melody that repeats, a steady
+bouncy pulse from the first second, lots of space so it never tires you out, and no big moments. So these
+prompts say **video game background music** and describe it like a cozy shop game's BGM.
+
+**Style (version A: cozy and bouncy, try this first)**
+> cozy video game background music, shop management game BGM, cheerful and relaxed, ukulele, marimba, soft pizzicato strings, light hand percussion, warm electric piano chords, simple catchy repeating melody, steady bouncy rhythm from the start, Southeast Asian neighbourhood morning, gentle erhu phrase, 100 bpm, loopable, no build-up, no ending, instrumental
+
+**Style (version B: more Singapore, a little nostalgic)**
+> cozy video game BGM, sunny Singapore kopitiam morning, nylon guitar and ukulele strumming, glockenspiel melody, soft xinyao campus folk feeling, light keroncong rhythm, brushed snare and shaker, warm bass, cheerful, nostalgic, simple repeating 8-bar theme, steady tempo, 96 bpm, loopable game soundtrack, instrumental
+
+**Exclude styles** *(the box under the style box; if your Suno version has it)*
+> vocals, choir, lo-fi hip hop, ambient, cinematic, epic, fade out, slow intro, drum solo
 
 **Lyrics box**
 ```
 [Instrumental]
-[Groove]
-[Main Theme]
-[Groove]
-[Main Theme]
-[Groove]
+[Theme A]
+[Theme B]
+[Theme A]
+[Theme B]
+[Theme A]
 ```
 
-*(Optional later: a `day-lunch` version with the same style plus "busier, 95 bpm, extra percussion" for the
+**Pick the version where:** the tune starts within the first 2–3 seconds, you could hum the melody after one
+listen, and nothing suddenly gets louder or slower. It's fine if it's 2–3 minutes long; I cut one clean loop out of it.
+
+*(Optional later: a `day-lunch` version with the same style plus "busier, 112 bpm, extra percussion" for the
 lunch rush. I'd crossfade into it at 11am and back out at 2pm. Only if you like the idea after hearing the first.)*
 
 ## 2. Title theme
@@ -43,7 +57,7 @@ lunch rush. I'd crossfade into it at 11am and back out at 2pm. Only if you like 
 **File:** `art/audio/title.wav` · **Title:** `Kopi at Sunrise`
 
 **Style**
-> nostalgic Singapore campus folk meets modern lo-fi, warm acoustic guitar, soft electric piano, light glockenspiel, gentle brushed drums, hopeful, sunrise over HDB blocks, bittersweet and warm, 80 bpm, steady, seamless loop, instrumental
+> video game title screen music, cozy and nostalgic, Singapore campus folk feeling, warm acoustic guitar, glockenspiel melody, soft electric piano, gentle brushed drums, hopeful, sunrise over HDB blocks, bittersweet and warm, memorable simple theme, 84 bpm, loopable, instrumental
 
 **Lyrics box**
 ```
@@ -60,7 +74,7 @@ lunch rush. I'd crossfade into it at 11am and back out at 2pm. Only if you like 
 **File:** `art/audio/night.wav` · **Title:** `Shutters Down`
 
 **Style**
-> late night lo-fi, Singapore HDB void deck at night, soft muted electric piano, warm upright bass, slow brushed drums, distant city hum, gentle vibraphone, calm, content, a little lonely but cozy, 72 bpm, steady groove, seamless loop, instrumental
+> cozy video game night shop music, calm evening BGM, Singapore HDB void deck at night, soft vibraphone melody, muted electric piano, warm upright bass, slow brushed drums, content and a little sleepy, simple repeating theme, 76 bpm, loopable, no ending, instrumental
 
 **Lyrics box**
 ```
@@ -77,7 +91,7 @@ lunch rush. I'd crossfade into it at 11am and back out at 2pm. Only if you like 
 **File:** `art/audio/story-warm.wav` · **Title:** `Uncle Tan's Teh`
 
 **Style**
-> tender nostalgic instrumental, solo fingerpicked nylon guitar, soft piano, warm erhu melody, light strings, Singapore 1980s campus folk feeling, heartfelt, gentle, bittersweet, 70 bpm, steady, no big climax, seamless loop, instrumental
+> heartfelt video game story music, tender cutscene BGM, fingerpicked nylon guitar, soft piano, warm erhu melody, light strings, Singapore 1980s campus folk feeling, gentle, bittersweet, simple repeating theme, 72 bpm, no big climax, loopable, instrumental
 
 **Lyrics box**
 ```
@@ -94,7 +108,7 @@ lunch rush. I'd crossfade into it at 11am and back out at 2pm. Only if you like 
 **File:** `art/audio/story-comic.wav` · **Title:** `Kopi Ninja`
 
 **Style**
-> playful sneaky comedy instrumental, pizzicato strings, plucky bass, muted trumpet, woodblock and light percussion, cheeky, mischievous, light drama, cartoon caper, Southeast Asian kampung flavour, 100 bpm, steady groove, seamless loop, instrumental
+> funny sneaky video game cutscene music, comedy caper BGM, pizzicato strings, plucky bass, bassoon, woodblock and light percussion, cheeky, mischievous, light drama, Southeast Asian kampung flavour, simple repeating theme, 104 bpm, loopable, instrumental
 
 **Lyrics box**
 ```
