@@ -559,7 +559,10 @@ export default class StallScene extends Phaser.Scene {
   spawnCustomer(forcedId = null, forcedOrder = null) {
     if (this.ended || this.closing) return null;
     const forced = forcedId && CUSTOMERS.find((c) => c.id === forcedId);
-    const pool = WALK_INS.filter((w) => this.menuOf(w).length && this.placeFor(w)); // walk-ins may repeat
+    const here = new Set([...this.allCustomers(), ...this.queue].map((c) => c.def.id));
+    const open = WALK_INS.filter((w) => this.menuOf(w).length && this.placeFor(w));
+    const fresh = open.filter((w) => !here.has(w.id));
+    const pool = fresh.length ? fresh : open; // no twins at the counter unless every kind is already here
     const def = forcedId ? (forced && this.placeFor(forced) ? forced : null) : pool.length ? weightedPick(pool) : null;
     if (!def) return null;
 
@@ -589,14 +592,11 @@ export default class StallScene extends Phaser.Scene {
       this.tweens.add({ targets: c.sprites, alpha: 1, duration: 500, onComplete: () => this.arrive(c) });
       return c;
     }
-    const keys = n > 1 ? (def.sprites ?? Array(n).fill(def.sprite)).slice(0, n) : [this.spriteFor(def)];
-    const tint = def.tints && this.tintFor(def);
+    const keys = n > 1 ? (def.sprites ?? Array(n).fill(def.sprite)).slice(0, n) : [def.sprite];
     c.sprites = keys.map((key, i) => {
       const s = addSprite(this, key, ENTRY.x - i * 18, ENTRY.feetY - (i % 2) * 3).setDepth(2);
-      if (tint) s.setTint(tint);
       return s.setScale(s.baseScale * this.scaleAt(s.y));
     });
-    c.tint = tint;
     if (place === 'counter') this.takeSpot(c);
     else {
       c.state = 'queued';
@@ -604,18 +604,6 @@ export default class StallScene extends Phaser.Scene {
       this.walkToQueue(c, this.queue.length - 1);
     }
     return c;
-  }
-
-  // A walk-in's own art once it exists (spriteSizes.json), else the stand-in.
-  spriteFor(def) {
-    return this.textures.exists(def.sprite) ? def.sprite : def.standIn ?? def.sprite;
-  }
-
-  // A colour variant not already standing at the stall, so two of a kind never look like twins.
-  tintFor(def) {
-    const used = new Set([...this.allCustomers(), ...this.queue].filter((c) => c.def === def).map((c) => c.tint));
-    const free = def.tints.filter((t) => !used.has(t));
-    return Phaser.Utils.Array.GetRandom(free.length ? free : def.tints);
   }
 
   // Send a customer (walking in, or the front of the queue) to a free counter spot.

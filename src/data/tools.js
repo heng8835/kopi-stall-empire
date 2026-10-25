@@ -26,7 +26,7 @@ export const TOOLS = [
 
 // Tools that come with a night-shop machine (shown only when it's owned), keyed by shop item id.
 export const MACHINE_TOOLS = {
-  horlicksShelf: { id: 'horlicks', label: 'Horlicks', kind: 'pour', ingredient: 'horlicks', x: 44, feet: RAIL, w: 46, h: 58, color: 0xd9c49a },
+  horlicksShelf: { id: 'horlicks', label: 'Horlicks', kind: 'pour', ingredient: 'horlicks', sprite: 'toolHorlicks', x: 44, feet: RAIL, w: 46, h: 58, color: 0xd9c49a },
 };
 for (const t of Object.values(MACHINE_TOOLS)) t.y = t.feet - t.h / 2;
 

@@ -48,10 +48,12 @@ describe('regulars and walk-ins', () => {
       for (const u of r.usual) expect(r.orders.some((o) => o.text === u), `${r.id} ${u}`).toBe(true);
     }
     for (const w of WALK_INS) {
-      expect(SIZES[w.standIn], w.id).toBeTruthy();
+      expect(SIZES[w.sprite], w.id).toBeTruthy();
       expect(LINES[w.lines]?.order?.length, w.id).toBeGreaterThan(0);
-      expect(ordersFor(w.orders, 1).length, w.id).toBeGreaterThan(0); // something to order on Day 1
+      expect(ordersFor(w.orders, 30).length, w.id).toBeGreaterThan(0); // comes once their drinks are taught
       expect(CUSTOMERS.some((c) => c.id === w.id), w.id).toBe(false);
     }
+    // a decent crowd from Day 1 (the iced-drink people turn up once peng is taught)
+    expect(WALK_INS.filter((w) => ordersFor(w.orders, 1).length).length).toBeGreaterThanOrEqual(10);
   });
 });
