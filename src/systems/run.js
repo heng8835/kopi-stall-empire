@@ -34,7 +34,7 @@ export function loadRun() {
 
 export const saveRun = (run) => save(KEY, run);
 
-// Testing shortcut: ?day=14&fame=60&flags=kidsOwe,humble&money=2000 starts straight on that day.
+// Testing shortcut: ?day=14&fame=60&flags=kidsOwe,humble&money=2000&owned=kettle,fan starts straight on that day.
 export function runFromQuery(search) {
   const q = new URLSearchParams(search);
   if (!q.has('day')) return null;
@@ -46,6 +46,7 @@ export function runFromQuery(search) {
     fame: Math.max(0, Math.min(100, num('fame', TUNING.fameStart))),
     money: num('money', 0),
     flags: (q.get('flags') ?? '').split(',').map((f) => f.trim()).filter(Boolean),
+    owned: (q.get('owned') ?? '').split(',').map((f) => f.trim()).filter(Boolean),
     ratings: Array(day - 1).fill(6),
   };
 }

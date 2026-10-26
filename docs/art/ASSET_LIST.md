@@ -40,8 +40,8 @@ Reaction faces happy/sad for the 6 counter regulars (2.3, 6 edits) · story expr
 twists: Aunty Lim, Kenneth, Uncle Tan, Marcus (7) · Oyen idle + knock-cup (2.6) · Ah Gong page-turn (2.5) ·
 recipe card + NEW burst + pointer hand (4.1, 4.3, 4.4) · ceramic kopi cup (1.4) · bin lid (1.6) · spoon stir frames (1.2).
 
-**C. Comes with phase D (new drinks), not before**
-Shop machine pictures for the "coming soon" machines (5.4) and the new-drink bits (6).
+**C. Phase D (built 2026-10-26): prompts ready in PROMPTS_2026-10 part 5**
+Counter machines, drink toppings + tapau bag, 4-plate tray, bin + demo hand, night-shop catalogue pictures (6 images).
 
 **Not art, still missing:** music (9), walk cycles (2.4, needs a video route: IDEAS.md).
 
@@ -120,7 +120,7 @@ a takeaway bag with a red string handle, and two tarik mugs mid-pour (2 frames).
 ## 7. Still blocked or nice to have
 
 - Sophie without the flag keychain / Merlion print (blocked since v0.1).
-- A delivery rider with no logo (for tapau bulk orders).
+- ~~A delivery rider with no logo~~ done (`walkRider`, used for the bulk tapau orders too).
 - Story portraits with expressions (shocked / crying / laughing) for the big twists: Aunty Lim, Kenneth, Uncle Tan, Marcus. 1–2 each.
 
 ## Phase A needs only these (everything else can wait)

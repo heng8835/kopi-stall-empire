@@ -5,6 +5,9 @@
 //   kosong, siewDai, gaDai sweetness      peng        iced          miloDino   Milo Dinosaur
 //   gao, poh               strength (hot water from the Big Brass Kettle)
 //   tarik                  pulled until frothy (Tarik Mugs)
+//   halia, limau, guYou    ginger, calamansi, butter dropped in (Halia Pot, Limau Squeezer, Butter Dish)
+//   miloGodzilla           a Dinosaur + ice cream (Mini Freezer) · tehCSpecial three layers (Gula Melaka Station)
+//   tapau                  takeaway: bag it (Tapau Station)
 //
 // Lesson fields:
 //   day        the day it's taught (and unlocked from then on)
@@ -151,6 +154,80 @@ export const MACHINE_LESSONS = {
       zone: '¾ PENG',
     },
   },
+  haliaPot: {
+    features: ['halia'],
+    teacher: 'auntyLim',
+    order: 'Teh halia',
+    card: {
+      title: 'Halia = ginger',
+      zh: '姜',
+      line: 'Aunty Lim: "Teh halia please. My throat itchy since the karaoke last night."',
+      steps: ['Teh pot to FULL, condensed milk as usual', 'Drop the halia (counter) on the cup', 'Stir, serve', 'Teh halia tarik: pull it instead of stirring'],
+      zone: 'FULL',
+    },
+  },
+  limau: {
+    features: ['limau'],
+    teacher: 'officeGuy',
+    order: 'Teh O limau peng',
+    card: {
+      title: 'Limau = calamansi lime',
+      zh: '酸柑',
+      line: 'Marcus: "Teh O limau peng, boss. Need vitamin C, got three meetings today."',
+      steps: ['Teh pot (¾ for peng)', 'Sugar to NORMAL, no milk', 'Squeeze the limau (counter) in, stir', 'Ice in for peng'],
+      zone: '¾ PENG',
+    },
+  },
+  butter: {
+    features: ['guYou'],
+    teacher: 'ahGong',
+    order: 'Kopi gu you',
+    card: {
+      title: 'Gu you = butter',
+      zh: '牛油',
+      line: 'Ah Gong: "Kopi gu you. Last time in Hainan coffee shop, everybody drink like that."',
+      steps: ['Kopi pot to FULL', 'Condensed milk as usual', 'Drop one butter cube (counter) in', 'Stir, serve'],
+      zone: 'FULL',
+    },
+  },
+  freezer: {
+    features: ['miloGodzilla'],
+    teacher: 'schoolKids',
+    order: 'Milo Godzilla',
+    card: {
+      title: 'Milo Godzilla',
+      zh: '美禄哥斯拉',
+      line: 'Darren: "Boss, Dinosaur is old already. Now got GODZILLA! Ice cream on top!"',
+      steps: ['Milo tin to the ¾ line', 'Ice in', 'Powder mountain on top', 'Ice cream scoop (counter) on the mountain'],
+      zone: '¾ PENG',
+    },
+  },
+  gulaMelaka: {
+    features: ['tehCSpecial'],
+    teacher: 'makcik',
+    fallback: 'auntyLim',
+    order: 'Teh C Special',
+    card: {
+      title: 'Teh C Special: three layers',
+      zh: '三层茶',
+      line: 'Makcik: "Teh C Special! Gula melaka, susu, teh. Three layers, cantik like kuih lapis."',
+      steps: ['Gula melaka (counter) FIRST: drop it on the cup twice = NORMAL', 'Evap milk to C · NORMAL', 'Teh pot gently to FULL', 'Never stir: the layers must show!'],
+      zone: 'NORMAL',
+    },
+  },
+  tapau: {
+    features: ['tapau'],
+    teacher: 'taxiUncle',
+    fallback: 'officeGuy',
+    order: 'Kopi tapau',
+    card: {
+      title: 'Tapau = takeaway',
+      zh: '打包',
+      line: 'Taxi Uncle: "Kopi tapau! Meter running, I drink in the cab."',
+      steps: ['Make the drink as usual', 'Last: drop a bag (counter) on the cup', 'Delivery riders now come with bulk orders', 'Bag every cup!'],
+      zone: 'FULL',
+    },
+  },
 };
 
 // What each feature means, for the recipe book.
@@ -171,4 +248,10 @@ export const BOOK = {
   gao: { name: 'Gao', zh: '浓', text: 'Strong: the pot only, no hot water at all.' },
   poh: { name: 'Poh', zh: '淡', text: 'Weak: pot to about half, then hot water from the kettle to FULL.' },
   horlicksDino: { name: 'Horlicks Dinosaur', zh: '好立克恐龙', text: 'Iced Horlicks with a mountain of powder on top.' },
+  halia: { name: 'Halia', zh: '姜', text: 'Ginger: drop the halia from the counter on the cup, then stir (or tarik).' },
+  limau: { name: 'Limau', zh: '酸柑', text: 'Calamansi lime, for Teh O: squeeze one in, then stir.' },
+  guYou: { name: 'Gu you', zh: '牛油', text: 'Butter: drop one cube in the kopi, then stir. Hainanese style.' },
+  miloGodzilla: { name: 'Milo Godzilla', zh: '美禄哥斯拉', text: 'A Milo Dinosaur with a scoop of ice cream on the mountain.' },
+  tehCSpecial: { name: 'Teh C Special', zh: '三层茶', text: 'Three layers: gula melaka to NORMAL, evap to C, then teh to FULL. Never stir.' },
+  tapau: { name: 'Tapau', zh: '打包', text: 'Takeaway: make it as usual, then drop a bag on the cup last.' },
 };

@@ -2,9 +2,11 @@
 // glass's own resolution (3x logical), so it stays as sharp as the art. Ported from the approved
 // preview (docs/plan/pour-prototype.src.html): mug-perspective surface, slosh, pour stream,
 // milk layer / clouds, sugar grains, ice splash, soft steam, condensation, Milo powder.
+// Phase D: Teh C Special's three layers, ginger slices, a calamansi half, a melting butter cube,
+// an ice-cream scoop on the Godzilla's mountain and the tapau bag.
 // Units below are glass-sprite pixels (cupGlass.png is 150 x 186).
 import { ZONES } from '../data/stallTuning.js';
-import { milkAmount, needsStir } from './cup.js';
+import { milkAmount, needsStir, isLayered } from './cup.js';
 
 const M = 26; // side margin (spill, steam drift)
 const TOP = 170; // room above the glass for the stream, steam and the Milo mountain
@@ -40,7 +42,8 @@ const WITH_MILK = {
   evap: { kopi: [168, 124, 84], teh: [206, 152, 106], milo: [150, 112, 84], cham: [176, 124, 84] },
 };
 const MILK = { condensed: [243, 226, 192], evap: [247, 240, 228] };
-export const STREAM = { kopi: [52, 30, 18], teh: [140, 66, 22], milo: [94, 61, 43], horlicks: [214, 188, 147], condensed: [243, 226, 192], evap: [250, 245, 236] };
+export const STREAM = { kopi: [52, 30, 18], teh: [140, 66, 22], milo: [94, 61, 43], horlicks: [214, 188, 147], condensed: [243, 226, 192], evap: [250, 245, 236], gula: [92, 50, 22] };
+const GULA = [92, 50, 22];
 
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 const shade = (c, k) => c.map((v) => Math.max(0, Math.min(255, Math.round(v * k))));
@@ -133,7 +136,7 @@ export class DrinkArt {
     if (ing === 'sugar') {
       if (Math.random() < 0.7) this.spawn('grain');
     } else if (ing) {
-      this.stream = { color: STREAM[ing] ?? STREAM.kopi, w: ['condensed', 'evap'].includes(ing) ? 17 : 24 }; // chunky, easy to see at game size
+      this.stream = { color: STREAM[ing] ?? STREAM.kopi, w: ['condensed', 'evap', 'gula'].includes(ing) ? 17 : 24 }; // chunky, easy to see at game size
       this.wob = Math.max(this.wob, 0.55);
       if (['kopi', 'teh', 'milo', 'horlicks'].includes(ing) && Math.random() < 0.5) this.spawn('bub');
       if (ing === 'evap' && Math.random() < 0.6) this.spawn('cloud');
@@ -194,6 +197,120 @@ export class DrinkArt {
     this.dirty = true;
   }
 
+  // Teh C Special: dark gula melaka at the bottom, a cream band of evap on it, teh above (drawn by the body).
+  drawLayers(cup) {
+    const g = this.g;
+    const gula = Math.min(0.26, cup.gula * 0.28);
+    const gulaTop = levelY(gula);
+    const evapTop = levelY(gula + Math.min(0.28, cup.evap * 0.3));
+    if (cup.evap > 0.02) {
+      this.columnPath(evapTop);
+      g.fillStyle = rgb([238, 226, 204], 0.97);
+      g.fill();
+    }
+    this.columnPath(gulaTop);
+    const o = oval(gulaTop);
+    const grad = g.createLinearGradient(0, o.cy, 0, Y(IN.bottom));
+    grad.addColorStop(0, rgb(shade(GULA, 1.25), 0.98));
+    grad.addColorStop(1, rgb(shade(GULA, 0.8), 0.99));
+    g.fillStyle = grad;
+    g.fill();
+  }
+
+  // Things floating on the surface: ginger slices, a calamansi half, a melting cube of butter.
+  drawFloaters(cup, o, dy, tilt) {
+    const g = this.g;
+    const at = (fx, fy) => [o.cx + fx * o.rx, o.cy + dy + fy * o.ry];
+    g.lineWidth = 2.5;
+    g.strokeStyle = '#3a2e2a';
+    if (cup.halia) {
+      for (const [fx, fy, r] of [[-0.4, -0.15, 17], [0.3, 0.25, 14]]) {
+        const [x, y] = at(fx, fy);
+        g.fillStyle = '#f1d98a';
+        g.beginPath(); g.ellipse(x, y, r, r * 0.45, tilt, 0, Math.PI * 2); g.fill(); g.stroke();
+        g.fillStyle = 'rgba(200,160,80,0.8)';
+        g.beginPath(); g.ellipse(x, y, r * 0.45, r * 0.2, tilt, 0, Math.PI * 2); g.fill();
+      }
+    }
+    if (cup.limau) {
+      const [x, y] = at(-0.5, 0.2); // off to the side, clear of the ice
+      g.fillStyle = '#5f9e2f';
+      g.beginPath(); g.ellipse(x, y, 21, 10, tilt, 0, Math.PI * 2); g.fill(); g.stroke();
+      g.fillStyle = '#f5a623';
+      g.beginPath(); g.ellipse(x, y - 1, 16, 7, tilt, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = 'rgba(255,240,200,0.9)'; g.lineWidth = 1.2;
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI;
+        g.beginPath(); g.moveTo(x, y - 1); g.lineTo(x + Math.cos(a) * 15, y - 1 + Math.sin(a) * 6); g.stroke();
+      }
+      g.strokeStyle = '#3a2e2a'; g.lineWidth = 2.5;
+    }
+    if (cup.butter) {
+      // a golden sheen spreading round a little cube
+      const [x, y] = at(0.05, -0.05);
+      g.fillStyle = 'rgba(255,214,90,0.45)';
+      g.beginPath(); g.ellipse(x, y + 2, 30, 9, tilt, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#f7d860';
+      g.beginPath(); g.rect(x - 10, y - 12, 20, 14); g.fill(); g.stroke();
+      g.fillStyle = '#fff3b0';
+      g.fillRect(x - 8, y - 10, 16, 4);
+    }
+  }
+
+  // Godzilla: a round scoop of vanilla on the powder mountain (or on the drink if there's no mountain).
+  drawScoop(cup, ly) {
+    const g = this.g;
+    const o = oval(cup.powder ? IN.top : ly);
+    const R = 36;
+    const y = o.cy - (cup.powder ? 64 * this.powder : 4) - 10; // sitting in the top of the mountain
+    const dome = () => {
+      g.beginPath();
+      g.arc(o.cx, y, R, Math.PI, Math.PI * 2);
+      for (let i = 0; i <= 10; i++) g.lineTo(o.cx + R - i * (R / 5), y + 4 + (i % 2 ? 7 : 0)); // the wavy edge where it sits
+      g.closePath();
+    };
+    dome();
+    g.fillStyle = '#fff6e4';
+    g.fill();
+    g.fillStyle = '#f1e2c2';
+    g.beginPath(); g.ellipse(o.cx + R * 0.35, y - 4, R * 0.5, R * 0.45, 0, 0, Math.PI * 2); g.fill(); // shaded right side
+    dome();
+    g.lineJoin = 'round';
+    g.strokeStyle = '#5e4a2c'; g.lineWidth = 4;
+    g.stroke();
+    g.fillStyle = 'rgba(255,255,255,0.95)';
+    g.beginPath(); g.ellipse(o.cx - 12, y - 18, 9, 5, -0.4, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#3a2416';
+    for (const [dx, dy] of [[8, -10], [-6, -4], [16, -2], [-16, -12]]) g.fillRect(o.cx + dx, y + dy, 3, 3); // vanilla specks
+  }
+
+  // Tapau: a clear plastic bag round the glass, tied at the top with a red string loop.
+  drawBag() {
+    const g = this.g;
+    const l = X(-6);
+    const r = X(128);
+    const top = Y(-20);
+    const bottom = Y(184);
+    g.fillStyle = 'rgba(235,244,250,0.35)';
+    g.strokeStyle = 'rgba(120,140,155,0.9)';
+    g.lineWidth = 3;
+    g.beginPath();
+    g.moveTo(X(48), top);
+    g.quadraticCurveTo(l, Y(20), l + 4, bottom - 10);
+    g.quadraticCurveTo(X(61), bottom + 6, r - 4, bottom - 10);
+    g.quadraticCurveTo(r, Y(20), X(74), top);
+    g.closePath();
+    g.fill(); g.stroke();
+    g.fillStyle = 'rgba(255,255,255,0.55)';
+    g.fillRect(l + 12, Y(40), 6, 90);
+    // the knot and its red string handle
+    g.strokeStyle = '#d8322a';
+    g.lineWidth = 5;
+    g.beginPath(); g.ellipse(X(61), top - 22, 20, 24, 0, Math.PI * 0.15, Math.PI * 2.85); g.stroke();
+    g.fillStyle = '#d8322a';
+    g.beginPath(); g.ellipse(X(61), top, 10, 6, 0, 0, Math.PI * 2); g.fill();
+  }
+
   spawn(kind) {
     const fill = this.cup?.fill ?? 0;
     const o = oval(levelY(fill));
@@ -250,7 +367,16 @@ export class DrinkArt {
     const fill = cup.fill;
     const ly = levelY(fill);
     const lc = drinkColor(cup);
-    const mixed = needsStir(cup) ? cup.stir : 1;
+    const layered = isLayered(cup); // Teh C Special: gula melaka, evap, teh, never stirred
+    const mixed = layered ? 1 : needsStir(cup) ? cup.stir : 1;
+    if (layered && !cup.base) {
+      // just the bottom layers so far
+      g.save();
+      this.insidePath();
+      g.clip();
+      this.drawLayers(cup);
+      g.restore();
+    }
     if (cup.base && fill > 0.01) {
       g.save();
       this.insidePath();
@@ -259,7 +385,7 @@ export class DrinkArt {
       const tilt = Math.sin(this.t / 170) * 0.07 * this.wob;
       const dy = Math.sin(this.t / 120) * 2 * this.wob;
       // body: the unstirred drink shows the plain base with milk sitting at the bottom
-      const body = mixed < 1 ? mix(NO_MILK[cup.base] ?? NO_MILK.kopi, lc, 0.25 + 0.75 * mixed) : lc;
+      const body = layered ? NO_MILK[cup.base] ?? NO_MILK.teh : mixed < 1 ? mix(NO_MILK[cup.base] ?? NO_MILK.kopi, lc, 0.25 + 0.75 * mixed) : lc;
       this.columnPath(ly, tilt, dy);
       const grad = g.createLinearGradient(0, o.cy, 0, Y(IN.bottom) + oval(IN.bottom).ry);
       grad.addColorStop(0, rgb(shade(body, 1.08), 0.97));
@@ -267,6 +393,7 @@ export class DrinkArt {
       grad.addColorStop(1, rgb(shade(body, 0.72), 0.99));
       g.fillStyle = grad;
       g.fill();
+      if (layered) this.drawLayers(cup);
       if (mixed < 1 && cup.condensed > 0.05) {
         const h = Math.min(30, cup.condensed * 24) * (1 - mixed);
         g.fillStyle = rgb(mix(MILK.condensed, body, 0.18), 0.92);
@@ -308,6 +435,7 @@ export class DrinkArt {
           g.beginPath(); g.arc(o.cx + Math.cos(a) * o.rx * r * 0.9, o.cy + dy - 3 * f + Math.sin(a) * o.ry * r, 2 + (i % 3), 0, Math.PI * 2); g.fill();
         }
       }
+      this.drawFloaters(cup, o, dy, tilt);
       g.restore();
     }
 
@@ -413,6 +541,8 @@ export class DrinkArt {
       }
     }
 
+    if (cup.scoop) this.drawScoop(cup, ly);
+
     // the spoon going round while it stirs (two turns), handle resting on the rim
     if (this.stirMs && cup.base) {
       const k = Math.min(1, this.stirT / this.stirMs);
@@ -495,6 +625,8 @@ export class DrinkArt {
       g.fillStyle = rg;
       g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); g.fill();
     }
+
+    if (cup.tapau) this.drawBag();
 
     // condensation on cold glasses
     if (this.cold > 0) {

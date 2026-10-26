@@ -9,6 +9,8 @@
 //   lines       key into src/i18n/lines.js
 //   sprite      HD sprite key (src/data/spriteSizes.json); groups may list one per member in sprites
 //   slot        'counter' (default, queues at the counter) or 'table' (sits at the side table)
+//   sits        walk-ins: may sit at the second table instead, once it's bought (Second Table)
+//   bulk        one person ordering groupSize cups (a delivery rider): one counter spot, not the whole counter
 //   enabled     false = defined but not in the spawn pool yet (waiting for art)
 
 export const CUSTOMERS = [
@@ -34,6 +36,8 @@ export const CUSTOMERS = [
       { text: 'Horlicks', weight: 1 },
       { text: 'Teh poh', weight: 1 },
       { text: 'Teh tarik siew dai', weight: 1 },
+      { text: 'Teh halia', weight: 2 },
+      { text: 'Teh C Special', weight: 1 },
     ],
     lines: 'auntyLim',
   },
@@ -56,6 +60,8 @@ export const CUSTOMERS = [
       { text: 'Cham C kosong', weight: 2 },
       { text: 'Kopi gao', weight: 2 },
       { text: 'Horlicks peng', weight: 1 },
+      { text: 'Teh O limau peng', weight: 2 },
+      { text: 'Kopi C kosong tapau', weight: 2 },
     ],
     lines: 'officeGuy',
   },
@@ -76,6 +82,7 @@ export const CUSTOMERS = [
       { text: 'Milo', weight: 1 },
       { text: 'Milo peng', weight: 1 },
       { text: 'Horlicks Dinosaur', weight: 3 },
+      { text: 'Milo Godzilla', weight: 3 },
     ],
     lines: 'schoolKids',
   },
@@ -96,6 +103,8 @@ export const CUSTOMERS = [
       { text: 'Cham O', weight: 1 },
       { text: 'Kopi O gao', weight: 2 },
       { text: 'Kopi O poh', weight: 2 },
+      { text: 'Kopi gu you', weight: 2 },
+      { text: 'Kopi O gu you', weight: 1 },
     ],
     lines: 'ahGong',
   },
@@ -112,7 +121,7 @@ export const CUSTOMERS = [
     usual: ['Kopi peng'],
     patience: 50,
     groupSize: 1,
-    orders: [{ text: 'Kopi peng', weight: 3 }, { text: 'Teh peng', weight: 2 }, { text: 'Teh', weight: 1 }, { text: 'Kopi O peng', weight: 1 }, { text: 'Teh tarik', weight: 3 }],
+    orders: [{ text: 'Kopi peng', weight: 3 }, { text: 'Teh peng', weight: 2 }, { text: 'Teh', weight: 1 }, { text: 'Kopi O peng', weight: 1 }, { text: 'Teh tarik', weight: 3 }, { text: 'Teh C Special', weight: 3 }, { text: 'Teh halia tarik', weight: 2 }],
     lines: 'makcik',
   },
   {
@@ -126,7 +135,7 @@ export const CUSTOMERS = [
     usual: ['Kopi ga dai'],
     patience: 35,
     groupSize: 1,
-    orders: [{ text: 'Kopi ga dai', weight: 3 }, { text: 'Kopi O ga dai', weight: 2 }, { text: 'Kopi', weight: 1 }, { text: 'Kopi gao ga dai', weight: 2 }],
+    orders: [{ text: 'Kopi ga dai', weight: 3 }, { text: 'Kopi O ga dai', weight: 2 }, { text: 'Kopi', weight: 1 }, { text: 'Kopi gao ga dai', weight: 2 }, { text: 'Kopi ga dai tapau', weight: 2 }, { text: 'Kopi gu you', weight: 1 }],
     lines: 'taxiUncle',
   },
 ];
@@ -141,7 +150,7 @@ export const WALK_INS = [
     weight: 3,
     patience: 25,
     groupSize: 1,
-    orders: [{ text: 'Kopi C kosong', weight: 3 }, { text: 'Teh C siew dai', weight: 2 }, { text: 'Kopi C', weight: 1 }, { text: 'Teh C peng', weight: 1 }, { text: 'Kopi O', weight: 1 }],
+    orders: [{ text: 'Kopi C kosong', weight: 3 }, { text: 'Teh C siew dai', weight: 2 }, { text: 'Kopi C', weight: 1 }, { text: 'Teh C peng', weight: 1 }, { text: 'Kopi O', weight: 1 }, { text: 'Teh O limau peng', weight: 1 }, { text: 'Kopi C kosong tapau', weight: 2 }],
     lines: 'officeWorker',
   },
   {
@@ -151,7 +160,7 @@ export const WALK_INS = [
     weight: 3,
     patience: 25,
     groupSize: 1,
-    orders: [{ text: 'Kopi O', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Kopi peng', weight: 2 }, { text: 'Kopi C', weight: 1 }, { text: 'Kopi O gao', weight: 1 }],
+    orders: [{ text: 'Kopi O', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Kopi peng', weight: 2 }, { text: 'Kopi C', weight: 1 }, { text: 'Kopi O gao', weight: 1 }, { text: 'Kopi O tapau', weight: 2 }],
     lines: 'officeWorker',
   },
   {
@@ -161,7 +170,8 @@ export const WALK_INS = [
     weight: 3,
     patience: 40,
     groupSize: 1,
-    orders: [{ text: 'Kopi O', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Kopi ga dai', weight: 2 }, { text: 'Kopi O kosong', weight: 1 }, { text: 'Cham', weight: 1 }, { text: 'Kopi O gao', weight: 2 }, { text: 'Teh tarik', weight: 1 }],
+    sits: true, // may take the second table
+    orders: [{ text: 'Kopi O', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Kopi ga dai', weight: 2 }, { text: 'Kopi O kosong', weight: 1 }, { text: 'Cham', weight: 1 }, { text: 'Kopi O gao', weight: 2 }, { text: 'Teh tarik', weight: 1 }, { text: 'Kopi gu you', weight: 1 }],
     lines: 'uncle',
   },
   {
@@ -171,7 +181,7 @@ export const WALK_INS = [
     weight: 3,
     patience: 45,
     groupSize: 1,
-    orders: [{ text: 'Teh', weight: 3 }, { text: 'Teh siew dai', weight: 2 }, { text: 'Teh C', weight: 2 }, { text: 'Kopi siew dai', weight: 1 }, { text: 'Horlicks', weight: 1 }],
+    orders: [{ text: 'Teh', weight: 3 }, { text: 'Teh siew dai', weight: 2 }, { text: 'Teh C', weight: 2 }, { text: 'Kopi siew dai', weight: 1 }, { text: 'Horlicks', weight: 1 }, { text: 'Teh halia', weight: 1 }, { text: 'Teh C Special', weight: 1 }],
     lines: 'auntie',
   },
   {
@@ -181,7 +191,7 @@ export const WALK_INS = [
     weight: 2,
     patience: 35,
     groupSize: 1,
-    orders: [{ text: 'Milo', weight: 2 }, { text: 'Milo peng', weight: 3 }, { text: 'Milo Dinosaur', weight: 2 }, { text: 'Teh O', weight: 1 }],
+    orders: [{ text: 'Milo', weight: 2 }, { text: 'Milo peng', weight: 3 }, { text: 'Milo Dinosaur', weight: 2 }, { text: 'Teh O', weight: 1 }, { text: 'Milo Godzilla', weight: 1 }],
     lines: 'student',
   },
   {
@@ -191,7 +201,7 @@ export const WALK_INS = [
     weight: 2,
     patience: 35,
     groupSize: 1,
-    orders: [{ text: 'Teh peng', weight: 3 }, { text: 'Horlicks peng', weight: 2 }, { text: 'Milo peng', weight: 1 }, { text: 'Teh', weight: 1 }],
+    orders: [{ text: 'Teh peng', weight: 3 }, { text: 'Horlicks peng', weight: 2 }, { text: 'Milo peng', weight: 1 }, { text: 'Teh', weight: 1 }, { text: 'Teh O limau peng', weight: 2 }],
     lines: 'student',
   },
   {
@@ -201,7 +211,7 @@ export const WALK_INS = [
     weight: 2,
     patience: 35,
     groupSize: 1,
-    orders: [{ text: 'Milo Dinosaur', weight: 3 }, { text: 'Kopi peng', weight: 2 }, { text: 'Horlicks Dinosaur', weight: 2 }, { text: 'Milo', weight: 1 }, { text: 'Teh tarik', weight: 2 }],
+    orders: [{ text: 'Milo Dinosaur', weight: 3 }, { text: 'Kopi peng', weight: 2 }, { text: 'Horlicks Dinosaur', weight: 2 }, { text: 'Milo', weight: 1 }, { text: 'Teh tarik', weight: 2 }, { text: 'Milo Godzilla', weight: 2 }],
     lines: 'nsf',
   },
   {
@@ -211,7 +221,7 @@ export const WALK_INS = [
     weight: 2,
     patience: 35,
     groupSize: 1,
-    orders: [{ text: 'Kopi C', weight: 2 }, { text: 'Kopi O kosong', weight: 2 }, { text: 'Kopi', weight: 1 }, { text: 'Kopi peng', weight: 1 }],
+    orders: [{ text: 'Kopi C', weight: 2 }, { text: 'Kopi O kosong', weight: 2 }, { text: 'Kopi', weight: 1 }, { text: 'Kopi peng', weight: 1 }, { text: 'Kopi O kosong tapau', weight: 1 }],
     lines: 'student',
   },
   {
@@ -221,7 +231,8 @@ export const WALK_INS = [
     weight: 2,
     patience: 45,
     groupSize: 1,
-    orders: [{ text: 'Teh O', weight: 3 }, { text: 'Teh', weight: 2 }, { text: 'Kopi O', weight: 1 }, { text: 'Teh O peng', weight: 1 }, { text: 'Teh tarik', weight: 4 }],
+    sits: true, // may take the second table
+    orders: [{ text: 'Teh O', weight: 3 }, { text: 'Teh', weight: 2 }, { text: 'Kopi O', weight: 1 }, { text: 'Teh O peng', weight: 1 }, { text: 'Teh tarik', weight: 4 }, { text: 'Teh halia tarik', weight: 2 }],
     lines: 'pakcik',
   },
   {
@@ -231,7 +242,8 @@ export const WALK_INS = [
     weight: 2,
     patience: 45,
     groupSize: 1,
-    orders: [{ text: 'Teh C', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Teh', weight: 1 }, { text: 'Kopi siew dai', weight: 1 }, { text: 'Teh poh', weight: 1 }, { text: 'Teh tarik', weight: 2 }],
+    sits: true, // may take the second table
+    orders: [{ text: 'Teh C', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Teh', weight: 1 }, { text: 'Kopi siew dai', weight: 1 }, { text: 'Teh poh', weight: 1 }, { text: 'Teh tarik', weight: 2 }, { text: 'Kopi gu you', weight: 1 }],
     lines: 'uncle',
   },
   {
@@ -241,7 +253,8 @@ export const WALK_INS = [
     weight: 2,
     patience: 60,
     groupSize: 1,
-    orders: [{ text: 'Horlicks', weight: 3 }, { text: 'Teh siew dai', weight: 3 }, { text: 'Milo', weight: 1 }, { text: 'Teh', weight: 1 }, { text: 'Teh poh', weight: 2 }],
+    sits: true, // may take the second table
+    orders: [{ text: 'Horlicks', weight: 3 }, { text: 'Teh siew dai', weight: 3 }, { text: 'Milo', weight: 1 }, { text: 'Teh', weight: 1 }, { text: 'Teh poh', weight: 2 }, { text: 'Teh halia', weight: 2 }],
     lines: 'ahMa',
   },
   {
@@ -251,7 +264,7 @@ export const WALK_INS = [
     weight: 2,
     patience: 40,
     groupSize: 1,
-    orders: [{ text: 'Teh siew dai', weight: 3 }, { text: 'Milo', weight: 2 }, { text: 'Kopi C siew dai', weight: 1 }, { text: 'Teh C', weight: 1 }],
+    orders: [{ text: 'Teh siew dai', weight: 3 }, { text: 'Milo', weight: 2 }, { text: 'Kopi C siew dai', weight: 1 }, { text: 'Teh C', weight: 1 }, { text: 'Milo peng tapau', weight: 1 }, { text: 'Teh C Special', weight: 1 }],
     lines: 'mum',
   },
   {
@@ -261,7 +274,7 @@ export const WALK_INS = [
     weight: 2,
     patience: 30,
     groupSize: 1,
-    orders: [{ text: 'Kopi peng', weight: 3 }, { text: 'Kopi ga dai', weight: 2 }, { text: 'Kopi O peng', weight: 2 }, { text: 'Teh peng', weight: 1 }, { text: 'Kopi gao peng', weight: 1 }, { text: 'Teh tarik peng', weight: 2 }],
+    orders: [{ text: 'Kopi peng', weight: 3 }, { text: 'Kopi ga dai', weight: 2 }, { text: 'Kopi O peng', weight: 2 }, { text: 'Teh peng', weight: 1 }, { text: 'Kopi gao peng', weight: 1 }, { text: 'Teh tarik peng', weight: 2 }, { text: 'Kopi peng tapau', weight: 2 }],
     lines: 'worker',
   },
   {
@@ -271,8 +284,20 @@ export const WALK_INS = [
     weight: 2,
     patience: 20,
     groupSize: 1,
-    orders: [{ text: 'Kopi peng', weight: 3 }, { text: 'Kopi O peng', weight: 1 }, { text: 'Teh peng', weight: 1 }, { text: 'Milo peng', weight: 1 }, { text: 'Teh tarik peng', weight: 1 }],
+    orders: [{ text: 'Kopi peng', weight: 3 }, { text: 'Kopi O peng', weight: 1 }, { text: 'Teh peng', weight: 1 }, { text: 'Milo peng', weight: 1 }, { text: 'Teh tarik peng', weight: 1 }, { text: 'Kopi peng tapau', weight: 3 }],
     lines: 'rider',
+  },
+  {
+    id: 'riderBulk',
+    name: 'Delivery rider',
+    short: 'Rider',
+    sprite: 'walkRider',
+    weight: 2,
+    patience: 55,
+    groupSize: 3,
+    bulk: true, // an office order: 3 takeaway cups (Tapau Station)
+    orders: [{ text: 'Kopi peng tapau', weight: 3 }, { text: 'Kopi O tapau', weight: 2 }, { text: 'Teh tarik peng tapau', weight: 2 }, { text: 'Milo peng tapau', weight: 1 }, { text: 'Teh C Special tapau', weight: 1 }],
+    lines: 'riderBulk',
   },
   {
     id: 'guard',
@@ -291,7 +316,7 @@ export const WALK_INS = [
     weight: 2,
     patience: 30,
     groupSize: 1,
-    orders: [{ text: 'Kopi C ga dai', weight: 2 }, { text: 'Milo', weight: 2 }, { text: 'Kopi C', weight: 2 }, { text: 'Teh siew dai', weight: 1 }, { text: 'Kopi C gao', weight: 1 }],
+    orders: [{ text: 'Kopi C ga dai', weight: 2 }, { text: 'Milo', weight: 2 }, { text: 'Kopi C', weight: 2 }, { text: 'Teh siew dai', weight: 1 }, { text: 'Kopi C gao', weight: 1 }, { text: 'Kopi C tapau', weight: 1 }],
     lines: 'nurse',
   },
   {
@@ -301,7 +326,7 @@ export const WALK_INS = [
     weight: 1,
     patience: 30,
     groupSize: 1,
-    orders: [{ text: 'Kopi O kosong peng', weight: 3 }, { text: 'Kopi O kosong', weight: 2 }, { text: 'Teh O peng', weight: 1 }],
+    orders: [{ text: 'Kopi O kosong peng', weight: 3 }, { text: 'Kopi O kosong', weight: 2 }, { text: 'Teh O peng', weight: 1 }, { text: 'Teh O limau peng', weight: 2 }],
     lines: 'jogger',
   },
   {
@@ -311,7 +336,7 @@ export const WALK_INS = [
     weight: 1,
     patience: 35,
     groupSize: 1,
-    orders: [{ text: 'Kopi O kosong', weight: 4 }, { text: 'Kopi O', weight: 1 }, { text: 'Teh O kosong', weight: 1 }, { text: 'Kopi O gao kosong', weight: 2 }],
+    orders: [{ text: 'Kopi O kosong', weight: 4 }, { text: 'Kopi O', weight: 1 }, { text: 'Teh O kosong', weight: 1 }, { text: 'Kopi O gao kosong', weight: 2 }, { text: 'Kopi O gu you', weight: 1 }],
     lines: 'hipster',
   },
   {
@@ -321,7 +346,8 @@ export const WALK_INS = [
     weight: 1,
     patience: 50,
     groupSize: 1,
-    orders: [{ text: 'Kopi', weight: 3 }, { text: 'Teh', weight: 2 }, { text: 'Milo Dinosaur', weight: 2 }, { text: 'Teh peng', weight: 1 }, { text: 'Teh tarik', weight: 2 }],
+    sits: true, // may take the second table
+    orders: [{ text: 'Kopi', weight: 3 }, { text: 'Teh', weight: 2 }, { text: 'Milo Dinosaur', weight: 2 }, { text: 'Teh peng', weight: 1 }, { text: 'Teh tarik', weight: 2 }, { text: 'Teh C Special', weight: 1 }, { text: 'Milo Godzilla', weight: 1 }],
     lines: 'backpacker',
   },
   {
@@ -331,7 +357,7 @@ export const WALK_INS = [
     weight: 1,
     patience: 30,
     groupSize: 1,
-    orders: [{ text: 'Teh O peng', weight: 3 }, { text: 'Kopi O peng', weight: 2 }, { text: 'Kopi', weight: 1 }],
+    orders: [{ text: 'Teh O peng', weight: 3 }, { text: 'Kopi O peng', weight: 2 }, { text: 'Kopi', weight: 1 }, { text: 'Teh O limau peng', weight: 1 }],
     lines: 'uncle',
   },
   {
@@ -341,7 +367,7 @@ export const WALK_INS = [
     weight: 1,
     patience: 50,
     groupSize: 1,
-    orders: [{ text: 'Kopi O kosong', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Teh', weight: 1 }, { text: 'Milo Dinosaur', weight: 1 }],
+    orders: [{ text: 'Kopi O kosong', weight: 3 }, { text: 'Kopi', weight: 2 }, { text: 'Teh', weight: 1 }, { text: 'Milo Dinosaur', weight: 1 }, { text: 'Teh C Special', weight: 1 }],
     lines: 'tourist',
   },
   // Pairs: two walk-ins who come together and order the same thing (one cup each). Like the kids,

@@ -12,6 +12,9 @@ import { shopState, buy } from '../systems/shop.js';
 import { saveRun } from '../systems/run.js';
 import { playMusic } from '../systems/music.js';
 
+// Catalogue pictures borrowed from stall art until their own (docs/art/PROMPTS_2026-10.md part 5); the rest show their emoji.
+const SHOP_ART = { menuBoard: 'propMenuBoard', cupRack: 'toolRack', markedGlass: 'cupGlass' };
+
 // The night shop: Uncle Tan's Supplier Catalogue, between a day's summary and the next morning.
 // Started with { run } = tomorrow's run; purchases are saved straight into it.
 
@@ -138,7 +141,7 @@ export default class ShopScene extends Phaser.Scene {
     const h = Math.max(CARD_H, 27 + text.height + 22);
     const bg = this.add.rectangle(x, y, w, h, state === 'owned' ? 0xe6f2e1 : COLORS.paper, dim ? 0.82 : 1).setOrigin(0).setStrokeStyle(2, state === 'owned' ? 0x2f7a3a : COLORS.inkHex, 0.9);
     // the item's own art when it has some (stall props, machine tools), else its emoji
-    const art = STALL_PROPS[item.id]?.[0]?.key ?? MACHINE_TOOLS[item.id]?.sprite ?? (item.id === 'menuBoard' ? 'propMenuBoard' : null);
+    const art = STALL_PROPS[item.id]?.[0]?.key ?? MACHINE_TOOLS[item.id]?.sprite ?? SHOP_ART[item.id] ?? null;
     const icon = art ? this.add.image(x + 26, y + h / 2, art) : addText(this, x + 26, y + h / 2, item.icon, { size: 26, origin: 0.5 });
     if (art) icon.setScale(Math.min(40 / icon.width, 40 / icon.height));
     if (art && MACHINE_TOOLS[item.id]?.tint) icon.setTint(MACHINE_TOOLS[item.id].tint);

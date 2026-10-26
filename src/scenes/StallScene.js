@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../config.js';
 import { CUSTOMERS, WALK_INS } from '../data/customers.js';
 import { OWNERS } from '../data/owners.js';
-import { TOOLS, SLOT_X, SPOT_X, MACHINE_TOOLS, layoutRail } from '../data/tools.js';
+import { TOOLS, SLOT_X, SLOT_X4, SPOT_X, MACHINE_TOOLS, COUNTER, layoutRail, layoutCounter } from '../data/tools.js';
 import { TUNING } from '../data/stallTuning.js';
 import { pickLine, UI } from '../i18n/lines.js';
 import { addText } from '../systems/text.js';
@@ -11,7 +11,7 @@ import { addSprite, displayHeight } from '../systems/sprites.js';
 import { makeButton, layoutLine, showGlossary, addMuteToggle } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
 import { parseOrder, plainOrder } from '../systems/order.js';
-import { newCup, pour, addIce, addPowder, stirStep, tarikStep, gradeCup, formatCup } from '../systems/cup.js';
+import { newCup, pour, addIce, addPowder, addExtra, stirStep, tarikStep, gradeCup, formatCup } from '../systems/cup.js';
 import { DRINKS } from '../data/drinks.js';
 import { DrinkArt, ART_ORIGIN } from '../systems/drinkArt.js';
 import { PourBar } from '../systems/pourBar.js';
@@ -60,6 +60,11 @@ const CUP_H = 62;
 // Ah Gong's seat at a table in the background (between counter spots, so nobody hides him); he walks
 // in from the street and sits. h = his height up close (he's small, far back). Bubble above him.
 const TABLE = { x: 238, feetY: 176, h: 112, bubble: { y: 50, w: 176 } };
+// With the Second Table: a walk-in who likes to sit takes the left table, and the two bubbles share the top
+// (lean = how far left of the guest the bubble starts, as a share of its width).
+const TABLES = [TABLE, { x: 104, feetY: 176, h: 112, bubble: { y: 50, w: 120, lean: 0.8 } }];
+const TABLE_PAIR_BUBBLE = { y: 50, w: 154, lean: 0.7 }; // Ah Gong's, when the second table is in use too
+const SIT_CHANCE = 0.4; // a walk-in who likes to sit takes the free second table this often
 const GROUP_X = [40, 130, 220, 310];
 const GROUP_XS = { 2: [112, 250], 3: [64, 180, 296], 4: GROUP_X }; // where a group of n stands
 const BUBBLE_BOTTOM = 172;
@@ -101,7 +106,7 @@ export default class StallScene extends Phaser.Scene {
     this.clockMs = 0;
     this.spots = [null, null, null]; // counter customers by spot
     this.queue = []; // customers waiting behind the counter, front first
-    this.tableGuest = null;
+    this.tableGuests = Array(this.perks.tables).fill(null); // sit-down guests by table (Ah Gong's first)
     this.storyDone = new Set(); // 'start' / 'mid' / 'end' already played today
     this.midWaitMs = 0;
     this.dragging = 0;
@@ -214,8 +219,10 @@ export default class StallScene extends Phaser.Scene {
   }
 
   drawTray() {
-    this.slots = SLOT_X.map((x, i) => {
-      const label = addText(this, x, CUP_BOTTOM + 6, '', { size: 10, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: 112 }).setDepth(16);
+    const four = this.perks.plates >= 4;
+    if (four) this.drawFourPlates();
+    this.slots = (four ? SLOT_X4 : SLOT_X).map((x, i) => {
+      const label = addText(this, x, CUP_BOTTOM + 6, '', { size: 10, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: four ? 86 : 112 }).setDepth(16);
       label.setStroke('#3a2414', 3);
       const container = this.add.container(x, CUP_BOTTOM).setDepth(14);
       // the cup, its drink, stream, steam and ice: drawn on a canvas at the glass art's resolution
@@ -241,14 +248,34 @@ export default class StallScene extends Phaser.Scene {
     });
   }
 
+  // Fourth Tray Plate: a 4-plate steel tray laid over the background's three (drawn in code until its art).
+  drawFourPlates() {
+    const g = this.add.graphics().setDepth(11); // over the background's front layer (depth 10)
+    const top = 322;
+    const bottom = 396;
+    g.fillStyle(0xbf5e21, 1).fillRect(6, top, GAME_W - 12, bottom - top);
+    g.fillStyle(0x9c4a1a, 1).fillRect(6, top, GAME_W - 12, 4).fillRect(6, bottom - 5, GAME_W - 12, 5);
+    for (const x of SLOT_X4) {
+      g.fillStyle(0x2b2420, 0.35).fillRoundedRect(x - 41, top + 8, 84, 64, 7); // soft shadow
+      g.fillStyle(0xc9ced4, 1).fillRoundedRect(x - 42, top + 5, 84, 64, 7);
+      g.fillStyle(0x4a3d36, 1).fillRoundedRect(x - 37, top + 10, 74, 54, 5);
+      g.fillStyle(0xffffff, 0.12).fillRect(x - 33, top + 13, 66, 6);
+      g.lineStyle(2, 0x2b2420, 0.9).strokeRoundedRect(x - 42, top + 5, 84, 64, 7);
+    }
+  }
+
   drawTools() {
     this.tools = {};
     const extra = (this.run.owned ?? []).map((id) => MACHINE_TOOLS[id]).filter(Boolean);
-    const rail = layoutRail([...TOOLS, ...extra]);
+    // counter machines fill the counter between the tip jar / bell (left end) and the fan (right end)
+    const owns = (id) => this.run.owned?.includes(id);
+    const rail = { ...layoutRail([...TOOLS, ...extra]), ...layoutCounter(extra, owns('tipJar') || owns('bell') ? 58 : 6, owns('fan') ? 322 : 354) };
     for (const def of [...TOOLS, ...extra]) {
       const spot = rail[def.id];
       const t = spot ? { ...def, x: spot.x, w: def.w * spot.scale } : def;
-      const c = this.add.container(t.x, t.y).setDepth(20);
+      // counter-top machines stand behind the cups, so a tall Godzilla or a tapau knot stays in view
+      const c = this.add.container(t.x, t.y).setDepth(t.feet === COUNTER ? 12 : 20);
+      c.homeDepth = c.depth;
       c.homeScale = spot?.scale ?? 1;
       c.setScale(c.homeScale);
       const parts = [];
@@ -284,11 +311,13 @@ export default class StallScene extends Phaser.Scene {
     if (import.meta.env.DEV) TOOL_IDS.filter((id) => !this.tools[id]).forEach((id) => console.warn('[tutorial] no tool for id', id));
   }
 
-  // Shape for tools without art yet: a tin for pouring tools (Horlicks), else the bin.
+  // Shape for tools without art yet: the counter machines (t.shape), the tarik mugs, a tin for pouring
+  // tools (Horlicks), else the bin.
   drawToolShape(g, t) {
     const w = t.w - 10;
     const h = t.h - 18;
     const top = -t.h / 2 + 2;
+    if (t.shape) return this.drawCounterShape(g, t, w, h, top);
     if (t.kind === 'tarik') {
       const mug = (x, y, mw, mh) => {
         g.fillStyle(0x3a2e2a, 1).fillRoundedRect(x - 2, y - 2, mw + 4, mh + 4, 5);
@@ -310,6 +339,56 @@ export default class StallScene extends Phaser.Scene {
     g.fillStyle(t.color ?? 0x6c757d, 1).fillRoundedRect(-w / 2, top + 6, w, h - 6, 6).lineStyle(2, 0x2b2b2b, 0.8).strokeRoundedRect(-w / 2, top + 6, w, h - 6, 6);
     g.fillStyle(0x4a4f55, 1).fillRoundedRect(-w / 2 - 3, top, w + 6, 8, 3);
     g.lineStyle(2, 0x3a3a3a).lineBetween(-7, top + 14, -7, top + h - 6).lineBetween(0, top + 14, 0, top + h - 6).lineBetween(7, top + 14, 7, top + h - 6);
+  }
+
+  // The counter-top machines, drawn in code until their art (docs/art/PROMPTS_2026-10.md part 5), with a
+  // thick dark outline like the sprites.
+  drawCounterShape(g, t, w, h, top) {
+    const ink = 0x3a2e2a;
+    const bot = top + h + 4; // just above the name tag
+    const out = (fn) => (g.lineStyle(2, ink, 1), fn());
+    if (t.shape === 'bottle') {
+      // gula melaka: a dark syrup bottle with a cork
+      g.fillStyle(t.color, 1).fillRoundedRect(-w / 2 + 3, top + 12, w - 6, bot - top - 12, 6);
+      g.fillRect(-5, top + 2, 10, 12);
+      g.fillStyle(0xc89a5a, 1).fillRect(-4, top - 2, 8, 6);
+      g.fillStyle(0xf2d9a6, 1).fillRect(-w / 2 + 6, top + 20, w - 12, 9); // plain label
+      g.fillStyle(0xffffff, 0.25).fillRect(-w / 2 + 6, top + 32, 3, bot - top - 36);
+      out(() => g.strokeRoundedRect(-w / 2 + 3, top + 12, w - 6, bot - top - 12, 6).strokeRect(-5, top + 2, 10, 12));
+    } else if (t.shape === 'pot') {
+      // halia: a small clay pot with ginger slices peeking out
+      g.fillStyle(0xf0d27a, 1).fillCircle(-6, top + 12, 6).fillCircle(5, top + 10, 5);
+      g.fillStyle(0xa0522d, 1).fillRoundedRect(-w / 2, top + 14, w, bot - top - 14, 9);
+      g.fillStyle(0x8a4322, 1).fillRect(-w / 2 - 2, top + 13, w + 4, 6);
+      out(() => g.strokeRoundedRect(-w / 2, top + 14, w, bot - top - 14, 9).strokeCircle(-6, top + 12, 6));
+    } else if (t.shape === 'bowl') {
+      // limau: a bowl of calamansi
+      for (const [dx, dy] of [[-9, 6], [0, 2], [9, 6], [-4, 9], [5, 10]]) {
+        g.fillStyle(t.color, 1).fillCircle(dx, top + 14 + dy, 6).lineStyle(1.5, ink, 1).strokeCircle(dx, top + 14 + dy, 6);
+        g.fillStyle(0xf2a33a, 1).fillCircle(dx - 1, top + 13 + dy, 2);
+      }
+      g.fillStyle(0xe8edf0, 1).fillRoundedRect(-w / 2, top + 20, w, bot - top - 20, { tl: 2, tr: 2, bl: 12, br: 12 });
+      out(() => g.strokeRoundedRect(-w / 2, top + 20, w, bot - top - 20, { tl: 2, tr: 2, bl: 12, br: 12 }));
+    } else if (t.shape === 'dish') {
+      // butter: a block of butter on a small saucer
+      g.fillStyle(0xffffff, 1).fillEllipse(0, bot - 5, w + 6, 12);
+      g.fillStyle(t.color, 1).fillRoundedRect(-w / 2 + 6, top + 12, w - 12, bot - top - 18, 3);
+      g.fillStyle(0xfff3b0, 1).fillRect(-w / 2 + 8, top + 14, w - 16, 4);
+      out(() => g.strokeEllipse(0, bot - 5, w + 6, 12).strokeRoundedRect(-w / 2 + 6, top + 12, w - 12, bot - top - 18, 3));
+    } else if (t.shape === 'tub') {
+      // ice cream: a little white chest freezer with a cone of vanilla on its lid
+      g.fillStyle(0xe8f1f5, 1).fillRoundedRect(-w / 2, top + 14, w, bot - top - 14, 5);
+      g.fillStyle(0x9fc6d8, 1).fillRect(-w / 2 + 4, top + 22, w - 8, 3);
+      g.fillStyle(0xfff4dc, 1).fillCircle(0, top + 6, 8);
+      g.fillStyle(0xd9a066, 1).fillTriangle(-6, top + 10, 6, top + 10, 0, top + 18);
+      out(() => g.strokeRoundedRect(-w / 2, top + 14, w, bot - top - 14, 5).strokeCircle(0, top + 6, 8));
+    } else if (t.shape === 'bag') {
+      // tapau: a stack of clear plastic bags with red strings
+      g.lineStyle(2.5, 0xd8322a, 1).strokeEllipse(-4, top + 8, 14, 12).strokeEllipse(5, top + 6, 14, 12);
+      g.fillStyle(t.color, 0.95).fillRoundedRect(-w / 2 + 2, top + 12, w - 4, bot - top - 12, 6);
+      g.fillStyle(0xffffff, 0.7).fillRect(-w / 2 + 6, top + 16, 3, bot - top - 22);
+      out(() => g.strokeRoundedRect(-w / 2 + 2, top + 12, w - 4, bot - top - 12, 6));
+    }
   }
 
   // The drink itself is drawn every frame by slot.art (systems/drinkArt.js); this updates the label.
@@ -448,7 +527,8 @@ export default class StallScene extends Phaser.Scene {
   }
 
   slotAt(x, y) {
-    return this.slots.find((s) => Math.abs(x - s.x) < 52 && y > CUP_BOTTOM - CUP_H - 46 && y < CUP_BOTTOM + 18);
+    const half = this.slots.length > 3 ? 44 : 52;
+    return this.slots.find((s) => Math.abs(x - s.x) < half && y > CUP_BOTTOM - CUP_H - 46 && y < CUP_BOTTOM + 18);
   }
 
   onCupDragStart(slot) {
@@ -611,7 +691,10 @@ export default class StallScene extends Phaser.Scene {
   onToolDragEnd(tool, p) {
     this.dragging = Math.max(0, this.dragging - 1);
     const t = tool.tool;
-    const slot = this.slotAt(p.worldX, p.worldY - LIFT + t.h / 2);
+    // the counter machines stand right above the cups: a tap, or letting go back at its own spot, adds nothing
+    const atHome = Math.hypot(p.worldX - tool.home.x, p.worldY - LIFT - tool.home.y) < 6;
+    const tapped = t.feet === COUNTER && ((p.getDistance && p.getDistance() < 8) || atHome);
+    const slot = tapped ? null : this.slotAt(p.worldX, p.worldY - LIFT + t.h / 2);
     if (t.kind === 'drop' && slot?.cup) this.dropOnCup(slot, t.apply);
     if (t.kind === 'pour' && this.dosed(t) && slot?.cup) this.dose(slot, t.ingredient);
     if (t.kind === 'stir' && slot?.cup?.base) this.autoStir(slot); // drop the spoon on a cup: it stirs itself
@@ -624,7 +707,7 @@ export default class StallScene extends Phaser.Scene {
     // While it glides home it passes BEHIND the cups (depth 14), so a quick tap on a cup still
     // grabs the cup, but the tool itself can be grabbed again straight away.
     tool.setDepth(13);
-    this.tweens.add({ targets: tool, x: tool.home.x, y: tool.home.y, scale: tool.homeScale ?? 1, duration: 160, ease: 'Quad.out', onComplete: () => tool.setDepth(20) });
+    this.tweens.add({ targets: tool, x: tool.home.x, y: tool.home.y, scale: tool.homeScale ?? 1, duration: 160, ease: 'Quad.out', onComplete: () => tool.setDepth(tool.homeDepth ?? 20) });
   }
 
   // Shared by the drag UI, the tutorial and tests (window.__stall in dev).
@@ -640,14 +723,16 @@ export default class StallScene extends Phaser.Scene {
   dropOnCup(slot, what) {
     this.focusSlot = slot;
     if (what === 'ice') addIce(slot.cup);
-    else addPowder(slot.cup);
-    play('ice');
+    else if (what === 'powder') addPowder(slot.cup);
+    else addExtra(slot.cup, what); // halia, limau, butter, ice cream (scoop), the tapau bag
+    play({ ice: 'ice', powder: 'ice', scoop: 'ice', tapau: 'tap' }[what] ?? 'sugar');
     this.recheckCup(slot);
   }
 
-  // Sugar Scoop / Milk Pump (night shop): these pour in fixed doses, one zone each.
+  // Sugar Scoop / Milk Pump (night shop): these pour in fixed doses, one zone each. The gula melaka
+  // bottle always does (it stands on the counter right above the cups, so it can't pour while carried).
   dosed(t) {
-    return (t.ingredient === 'sugar' && this.perks.sugarScoop) || (['condensed', 'evap'].includes(t.ingredient) && this.perks.milkPump);
+    return t.ingredient === 'gula' || (t.ingredient === 'sugar' && this.perks.sugarScoop) || (['condensed', 'evap'].includes(t.ingredient) && this.perks.milkPump);
   }
 
   dose(slot, ingredient) {
@@ -831,6 +916,8 @@ export default class StallScene extends Phaser.Scene {
       if (tool === 'water') return { key: 'toolTehPot', tint: 0xf2c46b, zone: `hot water ${zone}` };
       if (tool === 'powder') return { key: c.spec.base === 'horlicks' ? 'toolHorlicks' : 'toolMilo', zone };
       if (tool === 'tarik') return { label: 'Tarik\nmugs', zone };
+      const machine = { gula: 'Gula\nmelaka', halia: 'Halia', limau: 'Limau', butter: 'Butter', icecream: 'Ice\ncream', bag: 'Tapau\nbag' }[tool];
+      if (machine) return { label: machine, zone };
       return { key: ART[tool], zone };
     });
     // what the new words mean (the recipe book's lines), skipping the plain bases
@@ -841,11 +928,11 @@ export default class StallScene extends Phaser.Scene {
   // ---------- customers ----------
 
   waitingCustomers() {
-    return [...new Set([...this.spots, this.tableGuest])].filter((c) => c?.state === 'waiting');
+    return [...new Set([...this.spots, ...this.tableGuests])].filter((c) => c?.state === 'waiting');
   }
 
   allCustomers() {
-    return [...new Set([...this.spots, this.tableGuest])].filter(Boolean);
+    return [...new Set([...this.spots, ...this.tableGuests])].filter(Boolean);
   }
 
   freeSpots() {
@@ -854,9 +941,10 @@ export default class StallScene extends Phaser.Scene {
 
   // Where this customer would go right now: 'table', 'counter', 'queue' or null (no room).
   placeFor(def) {
-    if (def.slot === 'table') return this.tableGuest ? null : 'table';
-    const group = def.groupSize > 1;
-    return placeArrival({ freeSpots: this.freeSpots().length, totalSpots: this.spots.length, lineLength: this.queue.length, max: this.queueMax, group });
+    if (def.slot === 'table') return this.tableGuests[0] ? null : 'table';
+    const group = def.groupSize > 1 && !def.bulk; // a bulk rider takes one spot
+    const place = placeArrival({ freeSpots: this.freeSpots().length, totalSpots: this.spots.length, lineLength: this.queue.length, max: this.queueMax, group });
+    return place ?? (def.sits && this.tableGuests[1] === null ? 'table' : null); // no room at the counter: the second table
   }
 
   // What this customer could order today (the recipe calendar + machines bought).
@@ -876,7 +964,9 @@ export default class StallScene extends Phaser.Scene {
     const def = forcedId ? (forced && this.placeFor(forced) ? forced : null) : pool.length ? weightedPick(pool) : null;
     if (!def) return null;
 
-    const place = this.placeFor(def);
+    let place = this.placeFor(def);
+    const seat = def.slot === 'table' ? 0 : 1;
+    if (def.sits && this.tableGuests[1] === null && Math.random() < SIT_CHANCE) place = 'table'; // Second Table, sometimes by choice
     const orderText = forcedOrder ?? (def.regular ? regularOrder(def.usual, this.menuOf(def), TUNING.regularVariety) : weightedPick(this.menuOf(def)).text);
     if (!orderText) return null;
     this.cameToday.add(def.id);
@@ -893,20 +983,23 @@ export default class StallScene extends Phaser.Scene {
       patienceMax: 0,
       patienceMs: 0,
       bubble: null,
+      whole: n > 1 && !def.bulk, // needs the whole counter (a group); a bulk rider is one person with n cups
     };
     c.patienceMax = c.patienceMs = def.patience * 1000 * TUNING.patienceScale * this.perks.patienceMult * friendPatience(c.hearts);
     c.orderLine = pickLine(def.lines, 'order', this.lineVars({ order: orderText, n, plain: plainOrder(c.spec) }));
 
     if (place === 'table') {
       c.spot = 'table';
-      this.tableGuest = c;
-      const s = addSprite(this, def.sprite, ENTRY.x, ENTRY.feetY, TABLE.h).setDepth(1.8); // behind counter customers
+      c.table = seat;
+      this.tableGuests[seat] = c;
+      const t = TABLES[seat];
+      const s = addSprite(this, def.sprite, ENTRY.x, ENTRY.feetY, t.h).setDepth(1.8); // behind counter customers
       s.setScale(s.baseScale * this.scaleAt(s.y));
       c.sprites = [s];
-      this.walk(s, TABLE.x, TABLE.feetY, 0, () => this.arrive(c));
+      this.walk(s, t.x, t.feetY, 0, () => this.arrive(c));
       return c;
     }
-    const keys = n > 1 ? (def.sprites ?? Array(n).fill(def.sprite)).slice(0, n) : [def.sprite];
+    const keys = c.whole ? (def.sprites ?? Array(n).fill(def.sprite)).slice(0, n) : [def.sprite];
     c.sprites = keys.map((key, i) => {
       const s = addSprite(this, key, ENTRY.x - i * 18, ENTRY.feetY - (i % 2) * 3).setDepth(2);
       return s.setScale(s.baseScale * this.scaleAt(s.y));
@@ -922,11 +1015,11 @@ export default class StallScene extends Phaser.Scene {
 
   // Send a customer (walking in, or the front of the queue) to a free counter spot.
   takeSpot(c) {
-    c.spot = c.n > 1 ? 'all' : Phaser.Utils.Array.GetRandom(this.freeSpots());
-    if (c.n > 1) this.spots = this.spots.map(() => c);
+    c.spot = c.whole ? 'all' : Phaser.Utils.Array.GetRandom(this.freeSpots());
+    if (c.whole) this.spots = this.spots.map(() => c);
     else this.spots[c.spot] = c;
     c.state = 'walking';
-    const xs = c.n > 1 ? GROUP_XS[c.n] : [SPOT_X[c.spot]];
+    const xs = c.whole ? GROUP_XS[c.n] : [SPOT_X[c.spot]];
     let walking = c.sprites.length;
     c.sprites.forEach((s, i) => {
       s.setDepth(3 + (i % 2 ? 0 : 0.5));
@@ -1025,16 +1118,17 @@ export default class StallScene extends Phaser.Scene {
   }
 
   centerX(c) {
-    return c.spot === 'table' ? TABLE.x : c.spot === 'all' ? GAME_W / 2 : SPOT_X[c.spot];
+    return c.spot === 'table' ? TABLES[c.table ?? 0].x : c.spot === 'all' ? GAME_W / 2 : SPOT_X[c.spot];
   }
 
   showBubble(c, text, kind) {
     this.clearBubble(c);
     const pad = 6;
     const table = c.spot === 'table';
-    const w = table ? TABLE.bubble.w : c.spot === 'all' || kind === 'say' ? 200 : 114; // what someone says (teaching) gets a wide, short bubble
-    // (Ah Gong's bubble leans left, clear of the sound button)
-    const x = Phaser.Math.Clamp(this.centerX(c) - w * (table ? 0.8 : 0.5), 4, GAME_W - w - 4);
+    // (Ah Gong's bubble leans left, clear of the sound button; with two tables both bubbles narrow so they never meet)
+    const tb = table && (c.table ? TABLES[c.table].bubble : this.tableGuests.length > 1 ? TABLE_PAIR_BUBBLE : TABLE.bubble);
+    const w = table ? tb.w : c.spot === 'all' || kind === 'say' ? 200 : 114; // what someone says (teaching) gets a wide, short bubble
+    const x = Phaser.Math.Clamp(this.centerX(c) - w * (table ? tb.lean ?? 0.8 : 0.5), 4, GAME_W - w - 4);
     const words = layoutLine(this, text, x + pad, 0, w - pad * 2, (key) => this.openGlossary(key), { size: 11 });
     const extras = [];
     let h = words.height + pad * 2;
@@ -1043,7 +1137,7 @@ export default class StallScene extends Phaser.Scene {
     }
     if (kind === 'order') h += 8; // patience bar
     h += extras.reduce((sum, o) => sum + o.height + 1, 0);
-    const y = table ? TABLE.bubble.y : BUBBLE_BOTTOM - h;
+    const y = table ? tb.y : BUBBLE_BOTTOM - h;
     words.objects.forEach((o) => o.setY(o.y + y + pad));
     let ey = y + pad + words.height;
     for (const o of extras) {
@@ -1213,7 +1307,7 @@ export default class StallScene extends Phaser.Scene {
     if (c.state === 'gone') return;
     c.state = 'gone';
     this.clearBubble(c);
-    if (c === this.tableGuest) this.tableGuest = null;
+    this.tableGuests = this.tableGuests.map((g) => (g === c ? null : g));
     this.spots = this.spots.map((s) => (s === c ? null : s));
     for (const sl of this.slots) if (sl.ticket?.c === c && sl.cup) this.assignCup(sl);
     c.sprites.forEach((s) => this.tweens.add({ targets: s, alpha: 0, y: s.y - 12, duration: 450, onComplete: () => s.destroy() }));
@@ -1526,8 +1620,10 @@ export default class StallScene extends Phaser.Scene {
 
   // Everything bought in the night shop shows up at the stall (src/data/stallProps.js).
   drawStallProps() {
+    const machines = (this.run.owned ?? []).some((id) => MACHINE_TOOLS[id]?.feet === COUNTER); // they take the counter top
     for (const id of this.run.owned ?? []) {
-      for (const p of STALL_PROPS[id] ?? []) {
+      for (const d of STALL_PROPS[id] ?? []) {
+        const p = machines && d.back ? { ...d, ...d.back, layer: 'wall' } : d;
         const s = addSprite(this, p.key, p.x, p.feet, p.h).setDepth(PROP_DEPTH[p.layer]);
         if (p.sign) {
           const name = addText(this, p.x + s.displayWidth * 0.1, p.feet - s.displayHeight * 0.38, `${this.owner.name}'s Kopi`, { size: 11, bold: true, color: '#ffe7a8', origin: 0.5 });
@@ -1638,7 +1734,7 @@ export default class StallScene extends Phaser.Scene {
     }
     this.spots = [null, null, null];
     this.queue = [];
-    this.tableGuest = null;
+    this.tableGuests = this.tableGuests.map(() => null);
     this.setFeedback(UI.closing);
     this.rating = this.todayRating();
     // tonight's story first (with the stall still open behind it), then the shutter, then the summary

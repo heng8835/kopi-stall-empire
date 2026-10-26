@@ -4,7 +4,7 @@
 //   tier    fame needed before it can be bought
 //   effect  what it does (read by systems/shop.js perks())
 //   unlocks recipe features a machine adds (systems/menu.js)
-//   soon    shown in the catalogue but not buyable yet (needs phase D mechanics)
+//   soon    shown in the catalogue but not buyable yet (none right now)
 //   icon    placeholder until the catalogue art arrives (docs/art/ASSET_LIST.md 5.4-5.7)
 
 export const AISLES = [
@@ -21,13 +21,13 @@ export const SHOP = [
   { id: 'iceMachine', aisle: 'machine', name: 'Ice Machine', zh: '制冰机', price: 6000, tier: 25, icon: '🧊', text: 'Crystal-clear ice. Iced drinks earn +20¢.', effect: { icedTip: 20 } },
   { id: 'kettle', aisle: 'machine', name: 'Big Brass Kettle', zh: '大铜壶', price: 4500, tier: 0, icon: '🫖', text: 'Hot water on the rail. Kopi / teh poh (weak) and gao (strong): new orders the regulars love.', effect: {}, unlocks: ['gao', 'poh'] },
   { id: 'tarikMugs', aisle: 'machine', name: 'Tarik Mugs', zh: '拉茶杯', price: 4000, tier: 25, icon: '🍵', text: 'Pull teh between two mugs from up high until frothy: Teh tarik. The pakciks will love you.', effect: {}, unlocks: ['tarik'] },
-  { id: 'haliaPot', aisle: 'machine', name: 'Halia Pot', zh: '姜茶壶', price: 3500, tier: 25, icon: '🫚', text: 'Ginger tea: Teh Halia.', soon: true },
-  { id: 'limau', aisle: 'machine', name: 'Limau Squeezer', zh: '酸柑榨汁器', price: 3000, tier: 0, icon: '🍋', text: 'Calamansi lime tea: Teh O Limau.', soon: true },
-  { id: 'freezer', aisle: 'machine', name: 'Mini Freezer', zh: '小冰柜', price: 7000, tier: 50, icon: '🍨', text: 'Ice cream for Milo Godzilla.', soon: true },
-  { id: 'gulaMelaka', aisle: 'machine', name: 'Gula Melaka Station', zh: '椰糖站', price: 5000, tier: 50, icon: '🍯', text: 'Three-layer Teh C Special.', soon: true },
-  { id: 'butter', aisle: 'machine', name: 'Butter Dish', zh: '牛油碟', price: 2000, tier: 25, icon: '🧈', text: 'Kopi Gu You, Hainanese style.', soon: true },
-  { id: 'tapau', aisle: 'machine', name: 'Tapau Station', zh: '打包站', price: 4000, tier: 50, icon: '🛍️', text: 'Takeaway bags and strings.', soon: true },
-  { id: 'fourthPlate', aisle: 'machine', name: 'Fourth Tray Plate', zh: '第四个杯位', price: 6500, tier: 50, icon: '🍽️', text: 'Make 4 cups at once.', soon: true },
+  { id: 'haliaPot', aisle: 'machine', name: 'Halia Pot', zh: '姜茶壶', price: 3500, tier: 25, icon: '🫚', text: 'A pot of ginger brew on the counter. Teh halia, and Teh halia tarik for the pakciks.', effect: {}, unlocks: ['halia'] },
+  { id: 'limau', aisle: 'machine', name: 'Limau Squeezer', zh: '酸柑榨汁器', price: 3000, tier: 0, icon: '🍋', text: 'Calamansi and a squeezer on the counter: Teh O limau, hot or peng.', effect: {}, unlocks: ['limau'] },
+  { id: 'freezer', aisle: 'machine', name: 'Mini Freezer', zh: '小冰柜', price: 7000, tier: 50, icon: '🍨', text: 'Vanilla ice cream. A scoop on a Milo Dinosaur makes a Milo Godzilla!', effect: {}, unlocks: ['miloGodzilla'] },
+  { id: 'gulaMelaka', aisle: 'machine', name: 'Gula Melaka Station', zh: '椰糖站', price: 5000, tier: 50, icon: '🍯', text: 'Palm sugar syrup for the three-layer Teh C Special. Pour it first, never stir!', effect: {}, unlocks: ['tehCSpecial'] },
+  { id: 'butter', aisle: 'machine', name: 'Butter Dish', zh: '牛油碟', price: 2000, tier: 25, icon: '🧈', text: 'A cube of butter in the kopi: Kopi gu you, Hainanese style.', effect: {}, unlocks: ['guYou'] },
+  { id: 'tapau', aisle: 'machine', name: 'Tapau Station', zh: '打包站', price: 4000, tier: 50, icon: '🛍️', text: 'Takeaway bags with a red string. Tapau orders, and delivery riders with bulk orders.', effect: {}, unlocks: ['tapau'] },
+  { id: 'fourthPlate', aisle: 'machine', name: 'Fourth Tray Plate', zh: '第四个杯位', price: 6500, tier: 50, icon: '🍽️', text: 'Make 4 cups at once.', effect: { plates: 4 } },
   // tools
   { id: 'longSpout', aisle: 'tool', name: 'Long-Spout Pot', zh: '长嘴壶', price: 2500, tier: 0, icon: '🫗', text: 'Kopi, teh and malt drinks pour 25% faster.', effect: { pourMult: 1.25 } },
   { id: 'sugarScoop', aisle: 'tool', name: 'Sugar Scoop', zh: '糖匙', price: 1500, tier: 0, icon: '🥄', text: 'Drop sugar on a cup: each scoop is one zone. 1 = siew dai, 2 = normal, 3 = ga dai.', effect: { sugarScoop: true } },
@@ -44,7 +44,7 @@ export const SHOP = [
   { id: 'bell', aisle: 'comfort', name: 'Queue Bell', zh: '铃铛', price: 1000, tier: 0, icon: '🔔', text: 'One more spot in the queue.', effect: { queueBonus: 1 } },
   { id: 'catBed', aisle: 'comfort', name: "Oyen's Cat Bed", zh: '猫床', price: 1500, tier: 0, icon: '🐈', text: 'A happy Oyen is good for business. +1 fame a day.', effect: { famePerDay: 1 } },
   { id: 'tissues', aisle: 'comfort', name: 'Tissue Packets', zh: '纸巾包', price: 800, tier: 0, icon: '🧻', text: 'Free chope packets for regulars. +0.3 fame a day.', effect: { famePerDay: 0.3 } },
-  { id: 'secondTable', aisle: 'comfort', name: 'Second Table', zh: '第二张桌子', price: 6000, tier: 50, icon: '🪑', text: 'A second sit-down guest.', soon: true },
+  { id: 'secondTable', aisle: 'comfort', name: 'Second Table', zh: '第二张桌子', price: 6000, tier: 50, icon: '🪑', text: 'A second sit-down guest: the uncles and aunties who like to sit.', effect: { tables: 2 } },
   // decor
   { id: 'signboard', aisle: 'decor', name: 'Hand-Painted Signboard', zh: '手绘招牌', price: 5000, tier: 25, icon: '🪧', text: 'Your stall name in red letters. +1 fame a day.', effect: { famePerDay: 1 } },
   { id: 'menuBoard', aisle: 'decor', name: 'Wall Menu Board', zh: '菜单板', price: 2000, tier: 0, icon: '📋', text: "A board on the wall listing today's drinks.", effect: { menuBoard: true } },

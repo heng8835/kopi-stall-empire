@@ -29,7 +29,7 @@ export const TUNING = {
 
   // Pour speeds, in "units per second" while holding a tool over a cup.
   // 1.0 = a full cup of base / a normal amount of sugar or milk.
-  pourPerSec: { kopi: 0.9, teh: 0.9, milo: 0.9, horlicks: 0.9, sugar: 1.0, condensed: 1.0, evap: 1.0, water: 0.9 },
+  pourPerSec: { kopi: 0.9, teh: 0.9, milo: 0.9, horlicks: 0.9, sugar: 1.0, gula: 0.8, condensed: 1.0, evap: 1.0, water: 0.9 },
 
   stirWigglesNeeded: 6,
   tarikPullsNeeded: 4, // up-and-down pulls of the tarik mugs until it's frothy
@@ -64,4 +64,5 @@ export const LIQUID = {
   cham: 0x6a3a1e, // kopi + teh mixed by accident
   condensed: 0xf3e2c0,
   evap: 0xf7efe2,
+  gula: 0x5c3216, // gula melaka (palm sugar syrup)
 };

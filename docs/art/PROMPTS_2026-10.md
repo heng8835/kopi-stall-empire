@@ -226,3 +226,53 @@ Right now these are drawn in code or borrowed. Same rules as before; attach `art
 
 ### Also: Tarik Mugs → add to Image 26 (sitting 15, with the kettle)
 > 3) two steel tarik mugs side by side, one slightly taller, simple handles; 4) the same two mugs mid-pull: one held high, a long stream of tea pouring down into the other.
+
+---
+
+# Part 5: phase D machines, drink toppings and the last gaps (sittings 17–19, 6 images)
+
+Everything below is drawn in code or shown as an emoji right now. The game works without these images, and each
+one gets swapped in when it arrives. Same rules as before: start a new chat for each sitting, attach the reference once,
+save the result with the given name, then tell me. **Do Part 3 sitting 12 first if you can**, because its `tools-shelf-hd.png`
+makes the best style reference here. Until then, attach **`art/source/ref-tools-upright.png`**.
+
+## Sitting 17: the counter-top machines (2 images)
+Attach: **`art/source/tools-shelf-hd.png`** (or `ref-tools-upright.png`)
+
+### Image 29 → `art/source/counter-machines.png`
+> Pixel-art game props in exactly the same style as the attached image (thick dark outline, soft 2–3 tone shading, light from the top-left). SIX small kopitiam counter items in one row, left to right, evenly spaced with wide clear gaps, none touching, all standing upright on the same base line, front 3/4 view: 1) a squat glass bottle of dark brown palm-sugar syrup (gula melaka) with a cork and a plain cream paper label (no writing); 2) a small brown clay pot with a lid tilted open, slices of pale yellow ginger peeking out; 3) a white enamel bowl heaped with small round green calamansi limes, one cut in half showing orange flesh, a little metal hand squeezer beside it; 4) a small white saucer with a block of pale yellow butter, one corner cut off; 5) a little white chest freezer, lid closed, with a round scoop of vanilla ice cream in a metal scoop resting on top; 6) a short stack of clear plastic takeaway bags with red plastic string handles looped on top. Landscape image. Plain flat white background, no shadow, no text, no labels, no logos.
+
+### Image 30 → `art/source/drink-toppings.png` (same chat; also attach `public/sprites/cupGlass.png`)
+> Same style as before. SIX small items in one row with wide gaps, all the same scale as the glass mug in the second attached image: 1) one round scoop of vanilla ice cream with a wavy bottom edge and tiny dark vanilla specks, side view; 2) half a calamansi lime, cut side up, seen from slightly above, bright orange flesh with segments and a green rind; 3) two thin round slices of fresh ginger, pale yellow, slightly overlapping; 4) one small cube of butter, slightly melting at the bottom; 5) the glass mug from the second image, full of iced brown tea, inside a clear plastic takeaway bag that is tied at the top with a red plastic string loop handle; 6) the same bag, empty and flat. Landscape image. Plain flat white background, no shadow, no text, no logos.
+*(1–4 float on or sit in the drink; 5 replaces the code bag on a tapau cup.)*
+
+## Sitting 18: the 4-plate tray, the bin and the demo hand (2 images)
+
+### Image 31 → `art/source/tray-4.png` (attach `art/source/stall-bg.webp`)
+> Look at the wooden counter ledge with three square stainless-steel tray plates in the lower middle of the attached image. Draw ONLY that ledge as a separate wide strip, in exactly the same style, colours and straight-on camera, but with FOUR identical square steel tray plates in a row instead of three, evenly spaced, filling the whole width. Nothing on the plates. Wide landscape strip, plain flat white above and below it, no shadow, no text.
+*(It sits over the background's 3 plates when you own the Fourth Tray Plate. I'll line it up in code.)*
+
+### Image 32 → `art/source/bin-hand.png` (attach `art/source/tools-shelf-hd.png` or `ref-tools-upright.png`)
+> Pixel-art game props in exactly the same style as the attached image. FOUR items in one row with wide gaps: 1) a small grey metal kitchen bin with a pedal, lid closed; 2) the SAME bin with the lid flipped open; 3) a cute cartoon pointing hand (index finger pointing down, white glove-free skin, thick dark outline), for a tutorial; 4) the SAME hand pressing down, finger slightly bent. Landscape image. Plain flat white background, no shadow, no text, no logos.
+*(The bin is a grey box drawn in code today; the demo's hand is an emoji.)*
+
+## Sitting 19: night-shop catalogue pictures (2 images)
+These items show as emoji in the night shop. Everything else in the shop already has art.
+Attach: **`art/source/stall-comfort.png`** (so they match the bought-item art)
+
+### Image 33 → `art/source/shop-icons-a.png`
+> Pixel-art game props in exactly the same style as the attached image. SIX items in one row with wide clear gaps, same scale, front 3/4 view: 1) a twin coffee-sock stand: a small metal frame holding two cloth coffee socks (strainer bags) side by side over a pot; 2) a compact stainless-steel ice machine with a small door showing clear ice cubes; 3) a tall stainless-steel coffee pot with an extra-long thin curved spout; 4) a small stainless-steel sugar scoop with a short handle; 5) a little countertop pump dispenser bottle for milk; 6) a shiny brass teaspoon. Landscape image. Plain flat white background, no shadow, no text, no logos.
+
+### Image 34 → `art/source/shop-icons-b.png` (same chat)
+> Same style. FOUR items in one row with wide clear gaps: 1) a white kitchen towel folded over a hook; 2) three small packets of pocket tissues in pastel colours, stacked; 3) a round white marble kopitiam table with a dark metal base and one red plastic stool beside it; 4) a long stainless-steel tray with four square plates. Landscape image. Plain flat white background, no shadow, no text, no logos.
+
+## Already asked for, not repeated here
+Kettle + tarik mugs (Image 26, sitting 15) · tin + Oyen and Ah Gong walking (Part 4) · the 17 sharper sprites (Part 3).
+The delivery rider for bulk tapau orders already has clean art (`walkRider`, no logo), and the second-table guests
+reuse the walk-in art.
+
+## Later (not needed to finish phase D)
+Sitting poses for the walk-ins who take the second table (they stand at it for now) · reaction faces · story
+portraits · Oyen idle · spoon stir frames (ASSET_LIST section B).
+
+**Total for part 5: 6 images in 3 sittings.**

@@ -27,7 +27,7 @@ describe('parseOrder', () => {
 });
 
 describe('formatOrder round-trip', () => {
-  const coffeeTea = Object.values(DRINKS).filter((d) => d.milk !== null); // kopi / teh / cham grammar
+  const coffeeTea = Object.values(DRINKS).filter((d) => d.milk !== null && !d.layered); // kopi / teh / cham grammar
   const mods = ['', ' kosong', ' siew dai', ' ga dai', ' peng', ' kosong peng', ' siew dai peng'];
 
   for (const d of coffeeTea) {

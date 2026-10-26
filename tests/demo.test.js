@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { demoSteps, MEASURE } from '../src/systems/demo.js';
 import { parseOrder } from '../src/systems/order.js';
-import { newCup, pour, addIce, addPowder, stirStep, tarikStep, gradeCup } from '../src/systems/cup.js';
+import { newCup, pour, addIce, addPowder, addExtra, stirStep, tarikStep, gradeCup } from '../src/systems/cup.js';
 import { TUNING } from '../src/data/stallTuning.js';
 import { CUSTOMERS, WALK_INS } from '../src/data/customers.js';
 
-const INGREDIENT = { kopi: 'kopi', teh: 'teh', milo: 'milo', horlicks: 'horlicks', water: 'water', condensed: 'condensed', evap: 'evap', sugar: 'sugar' };
+const INGREDIENT = { kopi: 'kopi', teh: 'teh', milo: 'milo', horlicks: 'horlicks', water: 'water', condensed: 'condensed', evap: 'evap', sugar: 'sugar', gula: 'gula' };
 
 // Play the demo steps on a cup the way the ghost hand does: pour in small ticks until the target.
 function play(spec) {
@@ -17,6 +17,7 @@ function play(spec) {
     if (s.do === 'tarik') for (let i = 0; i < TUNING.tarikPullsNeeded; i++) tarikStep(cup);
     if (s.do === 'ice') addIce(cup);
     if (s.do === 'powder') addPowder(cup);
+    if (s.do === 'drop') addExtra(cup, s.extra);
   }
   return cup;
 }

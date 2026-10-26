@@ -2,17 +2,25 @@
 // and how close it is to what the customer ordered. Pure functions, no Phaser.
 import { TUNING, ZONES, LIQUID } from '../data/stallTuning.js';
 import { formatOrder, MALT } from './order.js';
+import { EXTRAS } from '../data/drinks.js';
 
 const BASES = ['kopi', 'teh', 'milo', 'horlicks'];
 const MILKS = ['condensed', 'evap'];
+const SWEETENERS = ['sugar', 'gula', ...MILKS]; // what needs stirring in
 
 export function newCup() {
-  return { base: null, fill: 0, water: 0, sugar: 0, condensed: 0, evap: 0, ice: false, powder: false, stir: 0, froth: 0 };
+  // halia / limau / butter / scoop / tapau: extras dropped on from the counter-top machines (EXTRAS);
+  // poured = the order things first went in (for the Teh C Special's layers)
+  return {
+    base: null, fill: 0, water: 0, sugar: 0, condensed: 0, evap: 0, gula: 0, ice: false, powder: false, stir: 0, froth: 0,
+    halia: false, limau: false, butter: false, scoop: false, tapau: false, poured: [],
+  };
 }
 
 // Pour `ingredient` for dtMs while the tool is held over the cup. Returns the cup (mutated).
 export function pour(cup, ingredient, dtMs) {
   const amt = ((TUNING.pourPerSec[ingredient] ?? 0) * dtMs) / 1000;
+  if (amt > 0 && !cup.poured?.includes(ingredient)) (cup.poured ??= []).push(ingredient);
   if (BASES.includes(ingredient)) {
     // A second, different base turns it into an accidental "cham" (mix).
     if (cup.base && cup.base !== ingredient && cup.fill > 0.05) cup.base = 'cham';
@@ -22,10 +30,10 @@ export function pour(cup, ingredient, dtMs) {
     // Hot water from the Big Brass Kettle: fills the cup, makes kopi / teh weaker (poh)
     cup.water += amt;
     cup.fill += amt;
-  } else if (ingredient === 'sugar') cup.sugar += amt;
+  } else if (ingredient === 'sugar' || ingredient === 'gula') cup[ingredient] += amt;
   else if (MILKS.includes(ingredient)) cup[ingredient] += amt;
   // Adding anything after stirring means it needs stirring again.
-  if (ingredient === 'sugar' || MILKS.includes(ingredient)) cup.stir = Math.min(cup.stir, 0.5);
+  if (SWEETENERS.includes(ingredient)) cup.stir = Math.min(cup.stir, 0.5);
   return cup;
 }
 
@@ -36,6 +44,8 @@ export function addIce(cup) {
   return cup;
 }
 export const addPowder = (cup) => ((cup.powder = true), cup);
+// Ginger, calamansi, butter, ice cream or the takeaway bag (what = a key of EXTRAS).
+export const addExtra = (cup, what) => ((cup[what] = true), cup);
 
 // One pull of the tarik mugs: froths it up, and mixes it as well as stirring does.
 export function tarikStep(cup) {
@@ -51,23 +61,25 @@ export function stirStep(cup) {
   return cup;
 }
 
-export const isEmpty = (cup) => !cup.base && cup.water < 0.02 && cup.sugar < 0.02 && cup.condensed < 0.02 && cup.evap < 0.02;
+export const isEmpty = (cup) => !cup.base && cup.water < 0.02 && cup.sugar < 0.02 && (cup.gula ?? 0) < 0.02 && cup.condensed < 0.02 && cup.evap < 0.02;
 
 // Hot water's share of the drink, ice not counted: 0 = all pot (gao), about half = poh.
 export function waterShare(cup) {
   const liquid = cup.fill - (cup.ice ? TUNING.iceVolume : 0);
   return liquid > 0.01 ? Math.min(1, cup.water / liquid) : 0;
 }
-const hasMix = (cup) => cup.sugar > ZONES.trace || milkAmount(cup) > ZONES.trace;
+const hasMix = (cup) => cup.sugar > ZONES.trace || (cup.gula ?? 0) > ZONES.trace || milkAmount(cup) > ZONES.trace;
+// Gula melaka, evap and teh poured in that order and never stirred: the Teh C Special's three layers.
+export const isLayered = (cup) => (cup.gula ?? 0) > ZONES.trace && cup.stir === 0 && cup.froth === 0;
 export const needsStir = (cup) => hasMix(cup) && cup.stir < 1;
 
 export function milkAmount(cup) {
   return cup.condensed + cup.evap;
 }
 
-// How sweet the cup is: the sugar can plus condensed milk (which is sweet itself).
+// How sweet the cup is: the sugar can, gula melaka and condensed milk (which is sweet itself).
 export function sweetness(cup) {
-  return cup.sugar + cup.condensed;
+  return cup.sugar + (cup.gula ?? 0) + cup.condensed;
 }
 
 // Which milk is in the cup: null, 'condensed', 'evap' or 'mixed'.
@@ -142,9 +154,20 @@ export function gradeCup(cup, spec) {
 
   if (spec.tarik && cup.froth < 1) close.push('not pulled yet: tarik it until frothy');
 
+  // Teh C Special: never stirred, and gula melaka -> evap -> teh from the bottom up
+  if (spec.layered && cup.base) {
+    if ((cup.gula ?? 0) <= ZONES.trace) oops.push('no gula melaka: Teh C Special needs it');
+    else if (cup.stir > 0 || cup.froth > 0) oops.push('stirred: the three layers are gone');
+    else if (['gula', 'evap', 'teh'].join() !== (cup.poured ?? []).filter((p) => ['gula', 'evap', 'teh'].includes(p)).join()) close.push('layers in the wrong order');
+  } else if ((cup.gula ?? 0) > ZONES.trace && !spec.layered && !MALT.includes(spec.base)) close.push('gula melaka in it?');
+
+  for (const [k, e] of Object.entries(EXTRAS)) {
+    if (!!spec[k] !== !!cup[k]) close.push(spec[k] ? e.missing : e.extra);
+  }
+
   if (!!spec.iced !== cup.ice) close.push(spec.iced ? 'forgot the ice (peng)' : 'should be hot, not iced');
   if (!!spec.topping !== cup.powder) close.push(spec.topping ? 'forgot the powder on top' : 'extra powder on top');
-  if (needsStir(cup)) close.push('forgot to stir');
+  if (needsStir(cup) && !spec.layered) close.push('forgot to stir');
 
   const reasons = [...oops, ...close];
   const tier = oops.length || close.length >= 3 ? 'oops' : close.length ? 'close' : 'perfect';
@@ -160,12 +183,16 @@ export function formatCup(cup) {
   const mt = milkType(cup);
   const milk = mt === 'evap' ? 'evap' : mt === 'condensed' ? 'condensed' : 'none';
   const strength = waterShare(cup) >= ZONES.water.poh[0] ? 'poh' : 'normal';
-  let text = MALT.includes(cup.base) ? formatOrder({ base: cup.base, iced: cup.ice, topping: cup.powder }) : formatOrder({ base: cup.base, milk, sugar, strength, iced: cup.ice, tarik: cup.froth >= 1 });
+  const extras = { halia: cup.halia, limau: cup.limau, butter: cup.butter, tapau: cup.tapau };
+  const layered = cup.base === 'teh' && mt === 'evap' && isLayered(cup);
+  let text = MALT.includes(cup.base)
+    ? formatOrder({ base: cup.base, iced: cup.ice, topping: cup.powder, scoop: cup.powder && cup.scoop, tapau: cup.tapau })
+    : formatOrder({ base: cup.base, milk, sugar, strength, iced: cup.ice, tarik: cup.froth >= 1, layered, ...extras });
   const notes = [];
   if (cup.fill < ZONES.fill.good[0]) notes.push('not full');
   if (s === 8) notes.push('too sweet');
   if (mt === 'mixed') notes.push('2 milks');
-  if (needsStir(cup)) notes.push('unstirred');
+  if (needsStir(cup) && !layered) notes.push('unstirred');
   if (notes.length) text += ` (${notes.join(', ')})`;
   return text;
 }

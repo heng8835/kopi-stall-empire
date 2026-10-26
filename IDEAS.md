@@ -9,5 +9,6 @@
 - UPGRADES (user wants this next, 2026-10-23): night shop with machines / tools / comfort / decor that unlock menu items and power-ups. Full catalogue + drink list: docs/specs/next-phase-plan.md (draft, awaiting approval).
 - Regulars (built 2026-10-23, docs/specs/regulars-and-walk-ins.md) follow-ups: a small friendship meter for serving a
   regular perfectly (story callbacks); NSF + tourist walk-ins; walk-ins as small groups (office colleagues).
-- Phase D (kettle gao/poh 2026-10-25, tarik mugs 2026-10-26 BUILT; still to do): new drink mechanics for the coming-soon machines (halia, limau,
-  freezer/Milo Godzilla, gula melaka layers, butter, tapau bags + delivery rider, 4th tray plate, second table).
+- Phase D BUILT 2026-10-26 (kettle, tarik, halia, limau, Milo Godzilla, Teh C Special, gu you, tapau + bulk rider, 4th plate,
+  2nd table). Follow-ups: sitting poses for second-table guests; a bulk rider ordering mixed drinks (now n x the same);
+  di lo (extra strong) on the kettle.

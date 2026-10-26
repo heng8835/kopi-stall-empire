@@ -7,10 +7,12 @@ const SWEET = { none: 'KOSONG', less: 'SIEW DAI', normal: 'NORMAL', more: 'GA DA
 
 export function recipeHint(spec) {
   const pot = spec.iced ? '¾' : 'FULL';
+  const bag = spec.tapau && 'bag it';
   if (spec.base === 'milo' || spec.base === 'horlicks') {
     const name = spec.base === 'milo' ? 'Milo' : 'Horlicks';
-    return [`${name} ${pot}`, spec.iced && 'ice', spec.topping && 'powder on top'].filter(Boolean).join(' · ');
+    return [`${name} ${pot}`, spec.iced && 'ice', spec.topping && 'powder on top', spec.scoop && 'ice cream', bag].filter(Boolean).join(' · ');
   }
+  if (spec.layered) return ['gula melaka NORMAL', 'evap C', 'teh FULL', 'no stirring!', bag].filter(Boolean).join(' · ');
   const name = { kopi: 'Kopi', teh: 'Teh', cham: 'Kopi + teh' }[spec.base];
   const steps = [`${name} ${pot}`];
   if (spec.strength === 'poh') steps.splice(0, 1, `${name} ½`, 'hot water FULL');
@@ -20,9 +22,13 @@ export function recipeHint(spec) {
     steps.push(spec.milk === 'evap' ? 'evap C' : 'no milk');
     steps.push(spec.sugar === 'none' ? 'no sugar' : `sugar ${SWEET[spec.sugar]}`);
   }
+  if (spec.halia) steps.push('halia');
+  if (spec.limau) steps.push('limau');
+  if (spec.butter) steps.push('butter');
   if (spec.tarik) steps.push('tarik');
   else if (spec.milk !== 'none' || spec.sugar !== 'none') steps.push('stir');
   if (spec.iced) steps.push('ice');
+  if (bag) steps.push(bag);
   return steps.join(' · ');
 }
 
@@ -40,6 +46,33 @@ export function nextStep(cup, spec, who) {
   const zone = peng ? '¾ PENG' : 'FULL';
   const fill = cup.ice ? cup.fill - 0.25 : cup.fill; // judge the pour before the ice went in
   const malt = MALTS.includes(spec.base);
+  const extrasNext = () => {
+    // ginger / limau / butter go in before the ice; then ice cream on top; the bag last of all
+    for (const [k, say] of [['halia', 'Halia: drop the ginger in'], ['limau', 'Limau: squeeze the calamansi in'], ['butter', 'Gu you: drop the butter in']]) {
+      if (spec[k] && !cup[k]) return { text: say };
+    }
+    return null;
+  };
+  const finish = () => {
+    if (spec.scoop && !cup.scoop) return { text: 'Godzilla: a scoop of ice cream on top!' };
+    if (spec.tapau && !cup.tapau) return { text: 'Tapau: drop a bag on the cup' };
+    return { text: `Done! Drag it to ${who}` };
+  };
+
+  // Teh C Special: three layers from the bottom up, and no spoon
+  if (spec.layered) {
+    if (cup.stir > 0 || cup.froth > 0) return { text: 'Stirred! The layers are gone. Bin it and try again', bin: true };
+    if (cup.base && cup.base !== 'teh') return { text: 'Wrong drink in this cup! Drag it to the bin', bin: true };
+    if (cup.condensed > ZONES.trace || cup.sugar > ZONES.trace) return { text: 'Special uses gula melaka, not milk or sugar! Bin it', bin: true };
+    const g = cup.gula ?? 0;
+    if (g < ZONES.sugar.normal[0]) return cup.base || cup.evap > ZONES.trace ? { text: 'Gula melaka goes in FIRST. Bin it and start again', bin: true } : { text: 'Layer 1: drop the gula melaka (counter) on the cup till NORMAL' };
+    if (g >= ZONES.sugar.normal[1]) return { text: 'Too much gula melaka! Bin it and try again', bin: true };
+    if (cup.evap < ZONES.milk.normal[0]) return cup.base ? { text: 'Evap goes in before the teh. Bin it and start again', bin: true } : { text: 'Layer 2: evap milk till C · NORMAL' };
+    if (!cup.base || fill < lo) return { text: `Layer 3: teh pot gently till ${zone}. Don't stir!` };
+    if (cup.fill > ZONES.fill.spill) return { text: 'Spilled! Bin it and try again', bin: true };
+    if (peng && !cup.ice) return { text: 'Drop the ice in (it tops up to FULL)' };
+    return finish();
+  }
 
   // the base
   if (spec.base === 'cham') {
@@ -75,10 +108,12 @@ export function nextStep(cup, spec, who) {
     if (spec.milk === 'evap' && cup.evap < ZONES.milk.normal[0]) return { text: 'Evap milk till C · NORMAL' };
     if (spec.milk !== 'condensed' && sweet < want) return { text: `Sugar till ${target}` };
     if (sweet > want) return { text: `Too sweet for ${target.toLowerCase()}! Bin it and try again`, bin: true };
+    const extra = extrasNext();
+    if (extra) return extra;
     if (spec.tarik && cup.froth < 1) return { text: 'Tarik! Drop the mugs on the cup (or pull them up and down over it)' };
     if (needsStir(cup)) return { text: 'Drop the spoon on the cup to stir' };
   }
   if (peng && !cup.ice) return { text: 'Drop the ice in (it tops up to FULL)' };
   if (spec.topping && !cup.powder) return { text: 'Shake the powder on top' };
-  return { text: `Done! Drag it to ${who}` };
+  return finish();
 }

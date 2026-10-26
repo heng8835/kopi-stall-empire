@@ -44,6 +44,7 @@ const KIND = {
   horlicks: { name: 'Horlicks · fill', zones: FILL, value: (c) => c.fill },
   condensed: { name: 'Condensed milk · sweetness', zones: SWEET, value: sweetness },
   sugar: { name: 'Sugar · sweetness', zones: SWEET, value: sweetness },
+  gula: { name: 'Gula melaka · sweetness', zones: SWEET, value: sweetness },
   evap: { name: 'Evaporated milk · C', zones: EVAP, value: (c) => c.evap },
   water: { name: 'Hot water · fill', zones: FILL, value: (c) => c.fill },
 };
@@ -55,6 +56,7 @@ export function targetZone(ingredient, spec) {
   if (['kopi', 'teh'].includes(ingredient) && spec.strength === 'poh' && !spec.iced) return '½ POH';
   if (['kopi', 'teh', 'milo', 'horlicks', 'water'].includes(ingredient)) return spec.iced ? '¾ PENG' : 'FULL';
   if (ingredient === 'evap') return spec.milk === 'evap' ? 'C · NORMAL' : 'NONE (O)';
+  if (ingredient === 'gula') return spec.layered ? 'NORMAL' : 'KOSONG';
   if (ingredient === 'condensed' || ingredient === 'sugar') return spec.sugar ? SWEET_ZONE[spec.sugar] : null;
   return null;
 }

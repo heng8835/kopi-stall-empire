@@ -18,6 +18,11 @@ export const DRINKS = {
     id: 'miloDino', name: 'Milo Dinosaur', zh: '美禄恐龙', base: 'milo', milk: null, price: 280, liquid: '#6b4a32',
     iced: true, topping: 'milo',
   },
+  miloGodzilla: {
+    id: 'miloGodzilla', name: 'Milo Godzilla', zh: '美禄哥斯拉', base: 'milo', milk: null, price: 350, liquid: '#6b4a32',
+    iced: true, topping: 'milo', scoop: true, // a Dinosaur with a scoop of ice cream (Mini Freezer)
+  },
+  tehCSpecial: { id: 'tehCSpecial', name: 'Teh C Special', zh: '三层茶', base: 'teh', milk: 'evap', price: 250, liquid: '#c4874f', layered: true },
 };
 
 // Modifiers available in v0.1 (order-text word -> effect on the drink spec).
@@ -29,6 +34,20 @@ export const MODIFIERS = {
   gao: { strength: 'gao' }, // strong: kopi / teh only, no hot water (Big Brass Kettle)
   poh: { strength: 'poh' }, // weak: pot to half, hot water to FULL
   tarik: { tarik: true }, // pulled between mugs until frothy (Tarik Mugs)
+  halia: { halia: true }, // ginger (Halia Pot)
+  limau: { limau: true }, // calamansi lime, Teh O only (Limau Squeezer)
+  'gu you': { butter: true }, // a cube of butter, Hainanese style (Butter Dish)
+  special: { layered: true }, // "Teh C Special": gula melaka, evap, teh in three layers (Gula Melaka Station)
+  tapau: { tapau: true }, // takeaway: bag it when it's done (Tapau Station)
+};
+
+// Extras dropped on a cup from a counter-top machine: spec field -> what the cup records and how a miss reads.
+export const EXTRAS = {
+  halia: { tool: 'halia', missing: 'forgot the halia (ginger)', extra: 'ginger nobody asked for' },
+  limau: { tool: 'limau', missing: 'forgot the limau', extra: 'limau nobody asked for' },
+  butter: { tool: 'butter', missing: 'forgot the butter (gu you)', extra: 'butter nobody asked for' },
+  scoop: { tool: 'icecream', missing: 'forgot the ice cream', extra: 'ice cream nobody asked for' },
+  tapau: { tool: 'bag', missing: 'not bagged: tapau means takeaway', extra: "bagged, but they're drinking here" },
 };
 
 export const ICED_SURCHARGE = 20; // cents, for peng (Milo Dinosaur already iced)

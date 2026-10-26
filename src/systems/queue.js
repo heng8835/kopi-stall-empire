@@ -13,7 +13,7 @@ export function placeArrival({ freeSpots, totalSpots, lineLength, max, group = f
 export function frontCanTake(line, freeSpots, totalSpots) {
   const front = line[0];
   if (!front) return null;
-  return freeSpots >= (front.n > 1 ? totalSpots : 1) ? front : null;
+  return freeSpots >= ((front.whole ?? front.n > 1) ? totalSpots : 1) ? front : null; // whole = a group (not a bulk rider)
 }
 
 // Arrival times (ms) for a day: n arrivals spread evenly between start and end, each nudged by

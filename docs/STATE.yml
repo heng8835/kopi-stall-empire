@@ -1,12 +1,12 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-26
 phase: development
-next: "Phone playtest of the live build (music volume, Day 1 tutorial, new-order cards, friendship), then Phase D next machine (halia / limau / freezer / gula melaka / butter / tapau / 4th plate / 2nd table). Art waiting: part 3 (sharpen 17 sprites), kettle + tarik mugs, part 4 (tin + Oyen, walking Ah Gong) in docs/art/PROMPTS_2026-10.md."
+next: "Phone playtest of the live build + phase D (buy machines, try Teh C Special / Godzilla / tapau rider / 4 plates / 2nd table), then push. Art waiting: part 3 (sharpen 17), kettle + tarik mugs (26), part 4 (tin + Oyen, Ah Gong walk), part 5 (counter machines, toppings, 4-plate tray, bin + hand, shop icons) in docs/art/PROMPTS_2026-10.md."
 tier_hint: 1
 blockers: []
-touched: [src/scenes/StallScene.js, src/scenes/DramaScene.js, src/systems/tutorial.js, src/systems/demo.js, src/systems/friends.js, src/systems/music.js, src/systems/cards.js, src/data/events.js, src/data/opening.js]
+touched: [src/scenes/StallScene.js, src/scenes/ShopScene.js, src/systems/cup.js, src/systems/order.js, src/systems/hints.js, src/systems/demo.js, src/systems/drinkArt.js, src/data/tools.js, src/data/shop.js, src/data/recipes.js, src/data/customers.js, tests/phaseD.test.js]
 validation: passing
 open_decisions: ["Walk-frame route (IDEAS.md)", "Monetisation: not now; before selling check Suno plan (commercial), Milo/Horlicks names"]
 spec: ""
 board_task: ""
-notes: "All pushed live (GitHub Pages). Music: src/data/music.js (loop points), systems/music.js (bg + story channels), tools/trim_mp3.py. Day 1 = Ep1 (Aunty walks in) -> one demo -> 'ready' -> starter menu card -> day; stall locked until her demo. New-order cards: save key combosSeen; Replay resets tutorialDone/openingSeen/demosOff/demosSeen/combosSeen. Friendship in run.friends. StallScene is reused by Phaser every day: reset per-day state in create. Jump to a day: ?day=N&fame=F&money=CENTS&flags=a,b. Pane testing: g.loop.sleep() + fake Date.now + game.step; renderer.snapshot POSTed to a tiny local receiver; press buttons by bounds (they sit in containers)."
+notes: "Phase D built, committed, NOT pushed. Counter-top machines (tools.js COUNTER row, drawn in code via drawCounterShape until art): drop extras (EXTRAS in drinks.js), gula always dosed. Owning any moves radio/cat bed/cup warmer to the back-wall ledge (stallProps `back`). perks.plates/tables; tableGuests[]; bulk rider = c.whole false. Jump: ?day=N&fame=F&money=CENTS&flags=a,b&owned=x,y. Pane testing: g.loop.sleep() + g.step; renderer.snapshot POSTed to a tiny local receiver (scratch recv.py); await Promise.resolve() between steps lets the demo's awaits run."

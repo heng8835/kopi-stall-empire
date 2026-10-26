@@ -114,6 +114,13 @@ export const LINES = {
     oops: ['Wrong one… no time, I drink on the road.'],
     timeout: ['Aiyo, customer call me. Next time!'],
   },
+  riderBulk: {
+    order: ['Boss, {n} {order}! Office order, all tapau.', '{n} {order} ah boss, bag every cup. Rider life, chiong!', 'Boss! {n} cups, {order}. The app says ten minutes…'],
+    perfect: ['All bagged, steady! Five stars for you.', 'Power, boss! The office will love it.'],
+    close: ['Okay okay, close enough, I chiong!'],
+    oops: ["Aiyo, wrong one… hope they don't notice."],
+    timeout: ['Alamak, order cancelled! Next time, boss.'],
+  },
   nurse: {
     order: ['{order} please… just finish night shift.', 'Boss, {order}. Need to drive home awake.', '{order}, thank you. So sian today.'],
     perfect: ['Wah, I feel human again.', 'Perfect. Thank you boss.'],

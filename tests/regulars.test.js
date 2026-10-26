@@ -58,7 +58,7 @@ describe('regulars and walk-ins', () => {
     for (const w of WALK_INS) {
       expect(SIZES[w.sprite], w.id).toBeTruthy();
       expect(LINES[w.lines]?.order?.length, w.id).toBeGreaterThan(0);
-      expect(ordersFor(w.orders, 30).length, w.id).toBeGreaterThan(0); // comes once their drinks are taught
+      expect(ordersFor(w.orders, 30, w.bulk ? ['tapau', 'tarik'] : []).length, w.id).toBeGreaterThan(0); // comes once their drinks are taught (a bulk rider: the Tapau Station)
       expect(CUSTOMERS.some((c) => c.id === w.id), w.id).toBe(false);
     }
     // a decent crowd from Day 1 (the iced-drink people turn up once peng is taught)

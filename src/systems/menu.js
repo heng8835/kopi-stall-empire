@@ -5,8 +5,10 @@ import { weightedPick } from './random.js';
 
 // The building blocks an order needs, e.g. "Teh C siew dai peng" -> teh, C, siewDai, peng.
 export function featuresOf(spec) {
-  if (spec.base === 'milo') return spec.topping ? ['miloDino'] : spec.iced ? ['milo', 'peng'] : ['milo']; // the Dinosaur is its own recipe
-  if (spec.base === 'horlicks') return spec.topping ? ['horlicksDino'] : spec.iced ? ['horlicks', 'peng'] : ['horlicks'];
+  const away = spec.tapau ? ['tapau'] : [];
+  if (spec.base === 'milo') return [...(spec.scoop ? ['miloGodzilla'] : spec.topping ? ['miloDino'] : spec.iced ? ['milo', 'peng'] : ['milo']), ...away]; // the Dinosaur is its own recipe
+  if (spec.base === 'horlicks') return [...(spec.topping ? ['horlicksDino'] : spec.iced ? ['horlicks', 'peng'] : ['horlicks']), ...away];
+  if (spec.layered) return ['tehCSpecial', ...away];
   const f = [spec.base];
   if (spec.milk === 'none') f.push('O');
   if (spec.milk === 'evap') f.push('C');
@@ -16,7 +18,9 @@ export function featuresOf(spec) {
   if (spec.iced) f.push('peng');
   if (spec.strength === 'gao' || spec.strength === 'poh') f.push(spec.strength);
   if (spec.tarik) f.push('tarik');
-  return f;
+  for (const k of ['halia', 'limau']) if (spec[k]) f.push(k);
+  if (spec.butter) f.push('guYou');
+  return [...f, ...away];
 }
 
 // Everything taught up to and including `day`, plus what owned machines add (shop perks().features).

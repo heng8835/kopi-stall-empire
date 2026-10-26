@@ -38,7 +38,7 @@ Status: BUILT 2026-10-23 (user: "go for c"). Catalogue design: docs/specs/next-p
 | Neon "KOPI" Sign | decor | 45 | 75 | +1 fame a day, +1 customer a day |
 | Fairy Lights | decor | 18 | 50 | +0.4 fame a day |
 
-**Coming next (phase D, shown but not buyable):** Big Brass Kettle, Tarik Mugs, Halia Pot, Limau Squeezer, Mini Freezer, Gula Melaka Station, Butter Dish, Tapau Station, Fourth Tray Plate, Second Table.
+**Phase D (all buyable since 2026-10-26):** Big Brass Kettle, Tarik Mugs, Halia Pot, Limau Squeezer, Mini Freezer, Gula Melaka Station, Butter Dish, Tapau Station, Fourth Tray Plate, Second Table. The small machines stand on the counter top (src/data/tools.js `COUNTER`).
 
 ## Approach
 - Data `src/data/shop.js`: `{ id, aisle, name, zh, price (cents), tier (fame), text, effect, unlocks?, icon, soon? }`.

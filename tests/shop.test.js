@@ -19,7 +19,8 @@ describe('night shop', () => {
     expect(shopState(itemById('fan'), run())).toBe('buy');
     expect(shopState(itemById('fan'), run({ money: 100 }))).toBe('money');
     expect(shopState(itemById('neon'), run())).toBe('fame');
-    expect(shopState(itemById('haliaPot'), run({ fame: 30 }))).toBe('soon');
+    expect(shopState({ ...itemById('haliaPot'), soon: true }, run({ fame: 30 }))).toBe('soon');
+    expect(SHOP.filter((i) => i.soon)).toEqual([]); // phase D: everything is buyable
     expect(shopState(itemById('towel'), run())).toBe('gift');
     expect(shopState(itemById('fan'), run({ owned: ['fan'] }))).toBe('owned');
   });
@@ -37,6 +38,7 @@ describe('night shop', () => {
     const p = perks(['radio', 'catBed', 'plants', 'tipJar', 'fan', 'longSpout', 'sugarScoop', 'brassSpoon', 'horlicksShelf', 'bell']);
     expect(p).toMatchObject({ famePerDay: 1.8, tipMult: 1.2, patienceMult: 1.15, pourMult: 1.25, sugarScoop: true, stirMs: 600, queueBonus: 1 });
     expect(p.features).toEqual(['horlicks', 'horlicksDino']);
-    expect(perks([])).toMatchObject({ famePerDay: 0, pourMult: 1, features: [] });
+    expect(perks([])).toMatchObject({ famePerDay: 0, pourMult: 1, features: [], plates: 3, tables: 1 });
+    expect(perks(['fourthPlate', 'secondTable'])).toMatchObject({ plates: 4, tables: 2 });
   });
 });

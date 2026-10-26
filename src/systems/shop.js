@@ -32,6 +32,7 @@ export const gift = (run, id) => (run.owned?.includes(id) ? run : { ...run, owne
 export function perks(owned = []) {
   const p = {
     pourMult: 1, stirMs: null, sugarScoop: false, milkPump: false, marked: false, autoCup: false, towel: false,
+    plates: 3, tables: 1,
     patienceMult: 1, famePerDay: 0, hotTip: 0, icedTip: 0, tipMult: 1, queueBonus: 0, menuBoard: false, extraCustomers: 0,
     features: [],
   };
@@ -44,6 +45,8 @@ export function perks(owned = []) {
     if (e.tipMult) p.tipMult *= e.tipMult;
     if (e.stirMs) p.stirMs = Math.min(p.stirMs ?? Infinity, e.stirMs);
     for (const k of ['famePerDay', 'hotTip', 'icedTip', 'queueBonus', 'extraCustomers']) p[k] += e[k] ?? 0;
+    if (e.plates) p.plates = Math.max(p.plates, e.plates);
+    if (e.tables) p.tables = Math.max(p.tables, e.tables);
     for (const k of ['sugarScoop', 'milkPump', 'marked', 'autoCup', 'towel', 'menuBoard']) p[k] ||= !!e[k];
     p.features.push(...(item.unlocks ?? []));
   }

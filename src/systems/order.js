@@ -7,6 +7,10 @@ import { GLOSSARY, NAMES, CLAUSE_END_ONLY, PARTICLES } from '../data/glossary.js
 //   sugar: 'normal' | 'less' | 'none' | 'more'   (null for the malt drinks)
 //   strength: 'normal' | 'gao' (strong, no water) | 'poh' (weak, hot water added)   (null for malt drinks)
 //   tarik: true when it's pulled until frothy ("Teh tarik"); absent otherwise
+//   halia / limau / butter: ginger, calamansi lime, a cube of butter dropped in (counter-top machines)
+//   layered: "Teh C Special", gula melaka + evap + teh in three layers, never stirred
+//   scoop: a scoop of ice cream on a Dinosaur ("Milo Godzilla")
+//   tapau: takeaway, bagged when it's done ("... tapau", any drink)
 //   For condensed-milk drinks (Kopi, Teh) the condensed milk is the sweetness; O and C use the sugar can.
 
 const MILK_WORD = { O: 'none', C: 'evap' };
@@ -17,7 +21,8 @@ const SUGAR_TO_WORD = { none: 'kosong', less: 'siew dai', normal: '', more: 'ga 
 const STRENGTH_TO_WORD = { gao: 'gao', poh: 'poh', normal: '' };
 
 export function findDrink(spec) {
-  if (spec.base === 'milo') return spec.topping ? DRINKS.miloDino : DRINKS.milo;
+  if (spec.base === 'milo') return spec.scoop ? DRINKS.miloGodzilla : spec.topping ? DRINKS.miloDino : DRINKS.milo;
+  if (spec.layered) return DRINKS.tehCSpecial;
   if (spec.base === 'horlicks') return spec.topping ? DRINKS.horlicksDino : DRINKS.horlicks;
   return Object.values(DRINKS).find((d) => d.base === spec.base && d.milk === spec.milk) ?? null;
 }
@@ -26,12 +31,15 @@ export function findDrink(spec) {
 export function parseOrder(text) {
   const words = text.trim().split(/\s+/);
   const first = words.shift()?.toLowerCase();
+  const tapau = words.at(-1)?.toLowerCase() === 'tapau' ? (words.pop(), { tapau: true }) : {}; // any drink can be takeaway
 
   if (MALT.includes(first)) {
-    // "Milo", "Milo peng", "Milo Dinosaur" (iced, powder on top); Horlicks the same
+    // "Milo", "Milo peng", "Milo Dinosaur" (iced, powder on top), "Milo Godzilla" (+ ice cream); Horlicks the same
     const rest = words.join(' ').toLowerCase();
-    if (rest === 'dinosaur') return { base: first, milk: null, sugar: null, iced: true, topping: first, strength: null };
-    if (rest === '' || rest === 'peng') return { base: first, milk: null, sugar: null, iced: rest === 'peng', topping: null, strength: null };
+    const malt = { base: first, milk: null, sugar: null, topping: null, strength: null, ...tapau };
+    if (rest === 'dinosaur') return { ...malt, iced: true, topping: first };
+    if (rest === 'godzilla' && first === 'milo') return { ...malt, iced: true, topping: first, scoop: true };
+    if (rest === '' || rest === 'peng') return { ...malt, iced: rest === 'peng' };
     throw new Error(`Unknown ${first} order: "${text}"`);
   }
   if (!['kopi', 'teh', 'cham'].includes(first)) throw new Error(`Unknown drink: "${text}"`);
@@ -45,31 +53,39 @@ export function parseOrder(text) {
     else if (MODIFIERS[w.toLowerCase()]) Object.assign(spec, MODIFIERS[w.toLowerCase()]);
     else throw new Error(`Unknown order word "${w}" in "${text}"`);
   }
-  return spec;
+  if (spec.layered && (spec.base !== 'teh' || spec.milk !== 'evap')) throw new Error(`Only "Teh C Special" is layered: "${text}"`);
+  return Object.assign(spec, tapau);
 }
 
 // Inverse of parseOrder: spec -> real kopitiam lingo.
 export function formatOrder(spec) {
   if (!spec?.base) return '';
-  if (MALT.includes(spec.base)) return `${NAME[spec.base]}${spec.iced && spec.topping ? ' Dinosaur' : spec.iced ? ' peng' : ''}`;
+  const bag = spec.tapau ? ' tapau' : '';
+  if (MALT.includes(spec.base)) return `${NAME[spec.base]}${spec.iced && spec.scoop ? ' Godzilla' : spec.iced && spec.topping ? ' Dinosaur' : spec.iced ? ' peng' : ''}${bag}`;
+  if (spec.layered) return `Teh C Special${bag}`;
   const name = NAME[spec.base];
-  return [name, MILK_TO_WORD[spec.milk], spec.tarik ? 'tarik' : '', STRENGTH_TO_WORD[spec.strength ?? 'normal'], SUGAR_TO_WORD[spec.sugar], spec.iced ? 'peng' : '']
+  return [name, MILK_TO_WORD[spec.milk], spec.butter ? 'gu you' : '', spec.halia ? 'halia' : '', spec.limau ? 'limau' : '', spec.tarik ? 'tarik' : '',
+    STRENGTH_TO_WORD[spec.strength ?? 'normal'], SUGAR_TO_WORD[spec.sugar], spec.iced ? 'peng' : '', spec.tapau ? 'tapau' : '']
     .filter(Boolean)
     .join(' ');
 }
 
 // An order in plain English (for tourists, and anyone learning): "Kopi O kosong" -> "black coffee, no sugar".
 export function plainOrder(spec) {
+  const away = spec.tapau ? ', to take away' : '';
   if (MALT.includes(spec.base)) {
     const name = spec.base === 'milo' ? 'Milo' : 'Horlicks';
-    return spec.topping ? `iced ${name} with a mountain of powder on top` : `${spec.iced ? 'iced ' : 'hot '}${name}`;
+    if (spec.scoop) return `iced ${name} with a mountain of powder and a scoop of ice cream${away}`;
+    return (spec.topping ? `iced ${name} with a mountain of powder on top` : `${spec.iced ? 'iced ' : 'hot '}${name}`) + away;
   }
+  if (spec.layered) return `three-layer tea: palm sugar, evaporated milk and tea, not stirred${away}`;
   const drink = { kopi: 'coffee', teh: 'tea', cham: 'coffee and tea mixed' }[spec.base];
   const black = spec.milk === 'none';
   const first = [spec.iced ? 'iced' : '', spec.strength === 'gao' ? 'strong' : spec.strength === 'poh' ? 'weak' : '', spec.tarik ? 'pulled' : '', black ? 'black' : '', drink].filter(Boolean).join(' ');
   const milk = spec.milk === 'evap' ? 'with evaporated milk' : black ? '' : 'with condensed milk';
   const sugar = { none: 'no sugar', less: 'less sweet', normal: '', more: 'extra sweet' }[spec.sugar];
-  return [first, milk, sugar].filter(Boolean).join(', ');
+  const extra = [spec.halia && 'with ginger', spec.limau && 'with calamansi lime', spec.butter && 'with a cube of butter'].filter(Boolean).join(', ');
+  return [first, milk, extra, sugar].filter(Boolean).join(', ') + away;
 }
 
 const stripPunct = (w) => w.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
