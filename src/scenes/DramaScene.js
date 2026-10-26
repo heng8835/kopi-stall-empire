@@ -60,7 +60,14 @@ export default class DramaScene extends Phaser.Scene {
       this.skip();
     });
 
-    this.titleCard();
+    if (data.ep.noTitle) this.skipTitle(); // the second part of an episode that already had its title card
+    else this.titleCard();
+  }
+
+  skipTitle() {
+    this.queue = visibleBeats(this.d.ep.beats, this.flags);
+    this.stage = 'beats';
+    this.time.delayedCall(FADE_IN_MS, () => this.advance());
   }
 
   // ---------- cards ----------

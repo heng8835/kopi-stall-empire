@@ -78,6 +78,7 @@ const QUEUE_POS = [{ x: 126, feetY: 270 }, { x: 88, feetY: 262 }, { x: 50, feetY
 const MID_STORY_AT = 0.4; // a 'mid' episode plays this far into the day
 const COACH_Y = 410; // the owner's thought bubble, between the tray and the tools
 const LESSON_AT_MS = 5000; // a recipe teacher walks in this far into a lesson day
+const PRELUDE_GAP_MS = 2500; // after an episode's opening (Day 1: the note), the stall sits quiet this long before the guest comes
 // Day periods on the HUD bar, in minutes from opening (7am): morning, lunch rush, teatime, closing.
 // Code-drawn stand-ins for lifted tools whose own art hasn't arrived yet (StallScene methods).
 const DRAWN_LIFT = { toolSpoon: function () { return this.drawnSpoon(); }, toolIceScoop: function () { return this.drawnIceScoop(); } };
@@ -1496,6 +1497,12 @@ export default class StallScene extends Phaser.Scene {
     this.storyDone.add(when);
     const ep = eventsFor(EVENTS, this.day, when)[0];
     if (!ep) return then();
+    if (ep.guest && when !== 'end' && ep.prelude) {
+      // the episode opens on its own (the note, the tin), a quiet moment at the stall, then the guest walks in
+      const opening = { ...ep, beats: ep.prelude, choice: undefined, after: undefined, fame: 0, rush: 0 };
+      this.playEpisode(opening, () => this.time.delayedCall(PRELUDE_GAP_MS, () => this.bringGuest({ ...ep, noTitle: true })));
+      return then();
+    }
     if (ep.guest && when !== 'end') {
       this.bringGuest(ep);
       return then();

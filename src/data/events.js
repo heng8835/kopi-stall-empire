@@ -7,6 +7,8 @@
 //   ep, title {en, zh}   episode number + title card
 //   mood                 optional scene tint: 'dark' (blackout), 'rain', 'fire'
 //   guest {id, order}    optional: this customer is brought in, and the episode plays when they reach the counter
+//   prelude              optional, with a guest: beats played first (with the title card); after a short quiet
+//                        moment at the stall the guest walks in and `beats` play without a second title
 //   rush                 optional: this many extra customers arrive right after the episode
 //   beats                [{ who, text, if?, name?, silhouette?, show? }] — who: a CAST key, 'narrator' or 'note';
 //                        show: a prop on the counter ('tin', or 'tinOyen' = Oyen asleep on the tin)
@@ -50,13 +52,15 @@ export const EVENTS = [
   {
     id: 'ep1-note', day: 1, when: 'start', ep: 1,
     title: { en: 'The Note on the Pot', zh: '壶上的字条' },
-    guest: { id: 'auntyLim', order: 'Teh' }, // she walks in first; on Day 1 she is also the tutorial's first order
-    beats: [
+    guest: { id: 'auntyLim', order: 'Teh' }, // walks in after the note; on Day 1 she is also the tutorial's first order
+    prelude: [
       N('On the counter: Uncle Tan\'s old biscuit tin, with a note taped on it.', { show: 'tin' }),
       { who: 'note', name: 'Uncle Tan', text: '"{owner} — stall is yours for 1 month. Tin for Day 30. Don\'t open. Don\'t let Oyen sit on it. — Tan"', show: 'tin' },
       N('Oyen, the orange stall cat, is already sleeping on it.', { show: 'tinOyen' }),
       { who: 'oyen', text: 'Meow. (does not move)', show: 'tinOyen' },
-      N('Then the first customer of your life walks in.'),
+    ],
+    beats: [
+      N('The first customer of your life.'),
       { who: 'auntyLim', text: 'Eh! So you are the {owner} Uncle Tan pass his stall to ah?' },
       { who: 'auntyLim', text: 'First day ah? Don\'t kan cheong. Here everybody very nice one.' },
       { who: 'auntyLim', text: 'We all look after you. I\'m Aunty Lim. Every morning I come for teh.' },

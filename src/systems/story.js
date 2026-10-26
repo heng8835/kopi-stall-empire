@@ -43,7 +43,7 @@ export const fill = (text, vars) => text.replace(/\{(\w+)\}/g, (m, k) => (vars[k
 // Every beat an episode can show, in order: lines, the chosen option's reply, the lines after,
 // the ending for this fame. Used by the overlay and the data tests.
 export function scriptFor(ep, { flags = [], fame = 0, option = null }) {
-  const out = [...visibleBeats(ep.beats, flags)];
+  const out = [...visibleBeats(ep.prelude, flags), ...visibleBeats(ep.beats, flags)];
   if (option) out.push(...visibleBeats(option.beats, flags));
   out.push(...visibleBeats(ep.after, flags));
   const ending = endingFor(ep.endings, fame);
