@@ -36,6 +36,7 @@ import { Tutorial } from '../systems/tutorial.js';
 import { TUTORIAL_STEPS, TOOL_IDS } from '../data/tutorial.js';
 import { load, save } from '../systems/save.js';
 import { demoSteps, MEASURE } from '../systems/demo.js';
+import { hearts, befriend, friendTip, friendPatience, waitLine, WAIT_LINE_AT, MAX_HEARTS } from '../systems/friends.js';
 import { playMusic, storyMusic, endStoryMusic } from '../systems/music.js';
 import { EPISODE_MUSIC } from '../data/music.js';
 
@@ -72,6 +73,8 @@ const LESSON_AT_MS = 5000; // a recipe teacher walks in this far into a lesson d
 // Day periods on the HUD bar, in minutes from opening (7am): morning, lunch rush, teatime, closing.
 // Code-drawn stand-ins for lifted tools whose own art hasn't arrived yet (StallScene methods).
 const DRAWN_LIFT = { toolSpoon: function () { return this.drawnSpoon(); }, toolIceScoop: function () { return this.drawnIceScoop(); } };
+// The watch-first demo's pace (ms): reading a line, reaching for a tool, carrying it, between steps.
+const DEMO = { read: 1100, reach: 650, carry: 950, between: 550 };
 const PERIOD_ICONS = ['iconMorning', 'iconLunch', 'iconTeatime', 'iconClosing'];
 const PERIODS = [['Morning', 0, 240, 0xffe9a8], ['Lunch', 240, 420, 0xffb870], ['Teatime', 420, 600, 0xbfe0c4], ['Closing', 600, 720, 0x9fb3d9]];
 const DRAG_WAIT_MS = 3000; // ...once the player lets go of a cup/tool (or after this long at most)
@@ -116,6 +119,7 @@ export default class StallScene extends Phaser.Scene {
       jitter: TUNING.spawnJitter,
     });
     this.cameToday = new Set(); // regulars (and guests) who have already been in today
+    this.friends = { ...(this.run.friends ?? {}) }; // friendship with every kind of customer (systems/friends.js)
     this.nextLesson();
     this.paused = false;
     this.ended = false;
@@ -742,10 +746,15 @@ export default class StallScene extends Phaser.Scene {
     for (const [i, s] of steps.entries()) {
       if (demo.cancelled || this.ended) break;
       demo.say = `Watch ${c.def.short ?? c.def.name} teach · ${i + 1}/${steps.length}`;
-      if (s.do !== 'serve') this.showBubble(c, s.teach, 'say');
+      if (s.do !== 'serve') {
+        this.showBubble(c, s.teach, 'say');
+        await wait(DEMO.read); // time to read what they say before the hand moves
+      }
       if (s.do === 'serve') {
         made = true;
         this.showBubble(c, s.teach, 'say');
+        play('cheer');
+        this.happyHop(c);
         demo.say = `Your turn! Drag the cup to ${c.def.short ?? c.def.name}`;
         await glide(hand, { x: slot.x, y: CUP_BOTTOM - 30 }, 400, touch);
         await glide(hand, { x: this.centerX(c), y: FEET_Y - 70 }, 700, touch);
@@ -758,11 +767,11 @@ export default class StallScene extends Phaser.Scene {
       // the hand reaches for the tool, picks it up and carries it over the cup
       const home = { x: tool.home.x, y: tool.home.y + LIFT };
       const over = { x: target.x + (s.do === 'pour' ? 14 : 0), y: CUP_BOTTOM - CUP_H - 4 + LIFT - tool.tool.h / 2 };
-      await glide(hand, home, 420, touch);
+      await glide(hand, home, DEMO.reach, touch);
       if (demo.cancelled) break;
       demo.tool = tool;
       this.onToolDragStart(tool);
-      await glide(home, over, 650, (p) => (touch(p), this.onToolDrag(tool, { worldX: p.x, worldY: p.y })));
+      await glide(home, over, DEMO.carry, (p) => (touch(p), this.onToolDrag(tool, { worldX: p.x, worldY: p.y })));
       if (s.do === 'pour') {
         if (this.dosed(tool.tool)) {
           // scoop / pump: one dose per drop
@@ -786,7 +795,7 @@ export default class StallScene extends Phaser.Scene {
         await wait(s.do === 'stir' ? (this.perks.stirMs ?? TUNING.autoStirMs) + 250 : s.do === 'tarik' ? TUNING.autoTarikMs + 250 : 450);
       }
       demo.tool = null;
-      await wait(250);
+      await wait(DEMO.between);
     }
     if (demo.tool) this.onToolDragEnd(demo.tool, { worldX: demo.tool.home.x, worldY: demo.tool.home.y + LIFT });
     this.tweens.add({ targets: objs, alpha: 0, duration: 200, onComplete: () => objs.forEach((o) => o.destroy()) });
@@ -848,10 +857,12 @@ export default class StallScene extends Phaser.Scene {
       n,
       served: 0,
       state: 'walking',
-      patienceMax: def.patience * 1000 * TUNING.patienceScale * this.perks.patienceMult,
-      patienceMs: def.patience * 1000 * TUNING.patienceScale * this.perks.patienceMult,
+      hearts: hearts(this.friends[def.id]),
+      patienceMax: 0,
+      patienceMs: 0,
       bubble: null,
     };
+    c.patienceMax = c.patienceMs = def.patience * 1000 * TUNING.patienceScale * this.perks.patienceMult * friendPatience(c.hearts);
     c.orderLine = pickLine(def.lines, 'order', this.lineVars({ order: orderText, n }));
 
     if (place === 'table') {
@@ -1010,6 +1021,7 @@ export default class StallScene extends Phaser.Scene {
       : this.add.triangle(0, 0, tx - 7, y + h - 1, tx + 7, y + h - 1, tx, y + h + 8, 0xffffff).setOrigin(0).setDepth(30);
     [...words.objects, ...extras].forEach((o) => o.setDepth(31));
     const objs = [frame, tail, ...words.objects, ...extras];
+    if (c?.def) objs.push(...this.heartRow(c, x + w - 4, table ? y + h + 2 : y - 5)); // friendship: on the bubble's top edge (under it at the table, clear of the HUD)
     let bar = null;
     if (kind === 'order') {
       objs.push(this.add.rectangle(x + pad, y + h - 9, w - pad * 2, 5, 0xe0d6c4).setOrigin(0).setDepth(31));
@@ -1019,6 +1031,36 @@ export default class StallScene extends Phaser.Scene {
     }
     c.bubble = { objs, frame, bar };
     this.updatePatienceBar(c);
+  }
+
+  // A row of small hearts (filled = friendship), right-aligned at (right, top).
+  heartRow(c, right, top) {
+    return Array.from({ length: MAX_HEARTS }, (_, i) =>
+      this.add.image(right - (MAX_HEARTS - i) * 10, top, i < c.hearts ? 'heart' : 'heartEmpty').setOrigin(0).setDisplaySize(11, 10).setDepth(32));
+  }
+
+  // Friendship after a serve or a walk-out; a heart floats up when they like you more.
+  makeFriends(c, tier) {
+    this.friends = befriend(this.friends, c.def.id, tier);
+    const now = hearts(this.friends[c.def.id]);
+    if (now > c.hearts) {
+      const x = this.centerX(c);
+      const y = this.headTop(c) + 40; // over their body, clear of their bubble
+      const heart = this.add.image(x - 26, y, 'heart').setDisplaySize(22, 20).setDepth(44);
+      const t = addText(this, x - 12, y, `Friendship Lv ${now}`, { size: 12, bold: true, color: '#ffd1da', origin: [0, 0.5] }).setDepth(44);
+      t.setStroke('#5a1a2a', 3);
+      this.tweens.add({ targets: [heart, t], y: y - 34, alpha: { from: 1, to: 0 }, duration: 1900, delay: 500, ease: 'Sine.out', onComplete: () => (heart.destroy(), t.destroy()) });
+      this.tweens.add({ targets: heart, scale: heart.scale * 1.25, duration: 160, yoyo: true, repeat: 2 });
+      this.time.delayedCall(300, () => play('perfect'));
+    }
+    c.hearts = now;
+  }
+
+  // Waiting long: a line that shows how they feel about you (then their order again).
+  sayWhileWaiting(c) {
+    c.saidWait = true;
+    this.showBubble(c, waitLine(c.hearts), 'say');
+    this.time.delayedCall(2600, () => c.state === 'waiting' && this.showBubble(c, c.orderLine, 'order'));
   }
 
   clearBubble(c) {
@@ -1076,6 +1118,14 @@ export default class StallScene extends Phaser.Scene {
         this.econ.tipsToday += extra;
       }
     }
+    const fTip = friendTip(c.hearts, tier, res.tip);
+    if (fTip) {
+      res.tip += fTip;
+      this.econ.money += fTip;
+      this.econ.earnedToday += fTip;
+      this.econ.tipsToday += fTip;
+    }
+    this.makeFriends(c, tier);
     c.served += 1;
     c.state = 'reacting';
     logEvent(this.log, 'serve', { who: c.def.id, wanted: c.orderText, made: formatCup(cup), tier, reasons, waitMs: Math.round(c.patienceMax - c.patienceMs) }, this.clockMs);
@@ -1115,6 +1165,7 @@ export default class StallScene extends Phaser.Scene {
 
   timeout(c) {
     c.state = 'reacting';
+    this.makeFriends(c, 'timeout');
     applyTimeout(this.econ);
     logEvent(this.log, 'timeout', { who: c.def.id }, this.clockMs);
     play('walkout');
@@ -1251,6 +1302,7 @@ export default class StallScene extends Phaser.Scene {
       if (c.tutorial) continue; // no time pressure while learning
       c.patienceMs -= delta;
       this.updatePatienceBar(c);
+      if (!c.saidWait && c.patienceMs < c.patienceMax * WAIT_LINE_AT) this.sayWhileWaiting(c);
       if (c.patienceMs <= 0) this.timeout(c);
     }
   }
@@ -1560,7 +1612,7 @@ export default class StallScene extends Phaser.Scene {
     // the shutters are down: the evening music, on into the night shop (Day 30: the finale plays on)
     playMusic(this.day >= MONTH_DAYS ? 'finale' : 'night');
     const e = this.econ;
-    let tomorrow = nextDay(this.run, { money: e.money, fame: e.fame, flags: this.flags, rating: this.rating, ending: this.ending ?? this.run.ending });
+    let tomorrow = nextDay(this.run, { money: e.money, fame: e.fame, flags: this.flags, rating: this.rating, ending: this.ending ?? this.run.ending, friends: this.friends });
     const gifted = GIFTS[this.day];
     if (gifted) tomorrow = gift(tomorrow, gifted);
     saveRun(tomorrow);

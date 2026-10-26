@@ -11,6 +11,7 @@ export default class BootScene extends Phaser.Scene {
   }
 
   create() {
+    for (const key of ['heart', 'heartEmpty']) this.textures.get(key).setFilter(Phaser.Textures.FilterMode.NEAREST);
     this.scene.start('Title');
   }
 }

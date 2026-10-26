@@ -124,6 +124,12 @@ const SOUNDS = {
     tone(t + 0.08, 1319, 0.28, { type: 'square', gain: 0.05 });
   },
   perfect: (t) => notes(t, [523, 659, 784, 1047], 0.08, { gain: 0.09 }),
+  // a little "yay!": a bright run, a few claps and a happy crowd hiss (end of a demo)
+  cheer: (t) => {
+    notes(t, [523, 659, 784, 1047, 1319], 0.07, { type: 'triangle', gain: 0.08 });
+    for (let i = 0; i < 7; i++) noise(t + 0.12 + i * 0.085 + Math.random() * 0.02, 0.045, { freq: 1700 + Math.random() * 900, q: 0.9, gain: 0.07 });
+    noise(t + 0.05, 0.7, { freq: 1200, q: 0.5, gain: 0.03 });
+  },
   oops: (t) => notes(t, [330, 294], 0.14, { type: 'triangle', gain: 0.08 }),
   walkout: (t) => tone(t, 600, 0.35, { slideTo: 300, gain: 0.07 }),
   sugar: (t) => {

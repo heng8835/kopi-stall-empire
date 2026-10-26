@@ -10,6 +10,9 @@ export function preloadSprites(scene) {
   scene.load.image('stallNight', 'bg/stallNight.webp'); // the same stall after closing (night shop)
   scene.load.image('openingSunrise', 'bg/openingSunrise.webp'); // title screen + the opening's last panel
   scene.load.image('iceCluster', 'sprites/iceCluster.png'); // code-drawn pixel ice (art/code/), drawn unsmoothed
+  // friendship hearts: code-drawn pixel art (art/code/make_hearts.py), 3x, shown unsmoothed
+  scene.load.image('heart', 'sprites/heart.png');
+  scene.load.image('heartEmpty', 'sprites/heartEmpty.png');
 }
 
 // Sprite anchored at its feet (bottom centre), scaled to its manifest display height.
