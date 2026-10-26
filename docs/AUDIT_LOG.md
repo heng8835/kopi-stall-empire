@@ -23,6 +23,10 @@ changes since the last entry). You may also add a row by hand when something mat
 
 | Date | Sev | Type | Change | Why | Refs |
 |------|-----|------|--------|-----|------|
+| 2026-10-26 | major | change | Friendship meter for every customer (hearts on bubbles, bigger tips, more patience, waiting lines); new-order combination cards; Oyen + tin in Ep 1 | User playtest feedback | 3aa108a, 1ba4cfa |
+| 2026-10-26 | major | decision | Day 1 tutorial = Aunty Lim teaches one drink in her own bubbles (ghost-hand demo), then a starter menu card; no note cards; stall locked until then | User: notes too heavy, wanted a guided first drink | b3ae38e, 32616a3 |
+| 2026-10-25 | major | change | Full soundtrack (Suno, 6 tracks) with crossfade loops, story music over scene music; prologue cutscene + one-month trial framing | User wanted cozy SG music and a proper opening | 9bf9583, 6ce2faf |
+| 2026-10-25 | minor | decision | Kettle gao/poh uses the "cozy" rule (normal drinks unchanged); tarik mugs teach teh tarik | User picked the cozy option | 9550a35 |
 | 2026-10-23 | minor | change | Spec written for order tickets, peng ¾ fill rule, better day summary + 3-day flow | User playtest feedback; to build in a new session | docs/specs/order-tickets-day-summary.md |
 | 2026-10-22 | major | change | Stall art pass: user's background, tool sheet, glass cup; clean kid/Marcus/Jun/Mei pack | User wanted the game to match the mockup | 2b8d2e4, 2f93ed6 |
 | 2026-10-22 | major | decision | Rebuilt the day as a first-person stall with hands-on drag/pour/stir/serve, 2-minute days | User: buttons not fun, day too long | 70942fb, 94eb34c |
