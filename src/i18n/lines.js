@@ -156,6 +156,27 @@ export const LINES = {
     oops: ['Wrong one ah… never mind, I drink at the red light.'],
     timeout: ['Got booking! Next time boss!'],
   },
+  officePair: {
+    order: ['Boss, {n} {order}! Meeting run late lah.', '{n} {order} please, boss. Same same for both.', 'Boss, {n} {order}. Quick ah, lunch hour almost over.'],
+    perfect: ['Wah, power. Can survive the afternoon now.', 'Shiok! Thanks boss.'],
+    close: ['Can lah, close enough.'],
+    oops: ['Eh, not our order leh… never mind, no time.'],
+    timeout: ['Aiyo, boss call already. Next time!'],
+  },
+  studentPair: {
+    order: ['Boss, {n} {order}! We share the table.', '{n} {order} can? After tuition reward.', 'Boss! {n} {order}, paiseh got exam tomorrow.'],
+    perfect: ['Shiok! Thank you boss!', 'Wah, so nice! Can study now.'],
+    close: ['Can lah, still nice.'],
+    oops: ['Eh… not ours leh. Okay lah, we try.'],
+    timeout: ['Aiyo, bus coming! Bye boss!'],
+  },
+  unclePair: {
+    order: ['Boss, {n} {order}. We sit long long ah.', '{n} {order}, boss. Same as last time.', '老板, {n} {order}. 慢慢来.'],
+    perfect: ['好! Shiok.', 'Wah, this one got standard.'],
+    close: ['可以啦.'],
+    oops: ['Ah? Not this one… never mind lah.'],
+    timeout: ['算了, we go other stall.'],
+  },
   tourist: {
     order: ['Hi! Could I get a coffee, no milk, no sugar, please?'],
     perfect: ['Oh wow, that is strong! Love it, thank you!'],

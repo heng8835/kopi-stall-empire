@@ -28,6 +28,7 @@ export const MODIFIERS = {
   peng: { iced: true },
   gao: { strength: 'gao' }, // strong: kopi / teh only, no hot water (Big Brass Kettle)
   poh: { strength: 'poh' }, // weak: pot to half, hot water to FULL
+  tarik: { tarik: true }, // pulled between mugs until frothy (Tarik Mugs)
 };
 
 export const ICED_SURCHARGE = 20; // cents, for peng (Milo Dinosaur already iced)

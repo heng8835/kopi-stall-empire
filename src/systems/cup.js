@@ -7,7 +7,7 @@ const BASES = ['kopi', 'teh', 'milo', 'horlicks'];
 const MILKS = ['condensed', 'evap'];
 
 export function newCup() {
-  return { base: null, fill: 0, water: 0, sugar: 0, condensed: 0, evap: 0, ice: false, powder: false, stir: 0 };
+  return { base: null, fill: 0, water: 0, sugar: 0, condensed: 0, evap: 0, ice: false, powder: false, stir: 0, froth: 0 };
 }
 
 // Pour `ingredient` for dtMs while the tool is held over the cup. Returns the cup (mutated).
@@ -36,6 +36,14 @@ export function addIce(cup) {
   return cup;
 }
 export const addPowder = (cup) => ((cup.powder = true), cup);
+
+// One pull of the tarik mugs: froths it up, and mixes it as well as stirring does.
+export function tarikStep(cup) {
+  const next = cup.froth + 1 / TUNING.tarikPullsNeeded;
+  cup.froth = next > 0.999 ? 1 : next;
+  cup.stir = Math.max(cup.stir, cup.froth);
+  return cup;
+}
 
 export function stirStep(cup) {
   const next = cup.stir + 1 / TUNING.stirWigglesNeeded;
@@ -132,6 +140,8 @@ export function gradeCup(cup, spec) {
     else if (want === 'normal' && w >= ZONES.water.poh[0]) close.push('too watery');
   }
 
+  if (spec.tarik && cup.froth < 1) close.push('not pulled yet: tarik it until frothy');
+
   if (!!spec.iced !== cup.ice) close.push(spec.iced ? 'forgot the ice (peng)' : 'should be hot, not iced');
   if (!!spec.topping !== cup.powder) close.push(spec.topping ? 'forgot the powder on top' : 'extra powder on top');
   if (needsStir(cup)) close.push('forgot to stir');
@@ -150,7 +160,7 @@ export function formatCup(cup) {
   const mt = milkType(cup);
   const milk = mt === 'evap' ? 'evap' : mt === 'condensed' ? 'condensed' : 'none';
   const strength = waterShare(cup) >= ZONES.water.poh[0] ? 'poh' : 'normal';
-  let text = MALT.includes(cup.base) ? formatOrder({ base: cup.base, iced: cup.ice, topping: cup.powder }) : formatOrder({ base: cup.base, milk, sugar, strength, iced: cup.ice });
+  let text = MALT.includes(cup.base) ? formatOrder({ base: cup.base, iced: cup.ice, topping: cup.powder }) : formatOrder({ base: cup.base, milk, sugar, strength, iced: cup.ice, tarik: cup.froth >= 1 });
   const notes = [];
   if (cup.fill < ZONES.fill.good[0]) notes.push('not full');
   if (s === 8) notes.push('too sweet');

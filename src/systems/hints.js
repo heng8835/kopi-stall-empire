@@ -20,7 +20,8 @@ export function recipeHint(spec) {
     steps.push(spec.milk === 'evap' ? 'evap C' : 'no milk');
     steps.push(spec.sugar === 'none' ? 'no sugar' : `sugar ${SWEET[spec.sugar]}`);
   }
-  if (spec.milk !== 'none' || spec.sugar !== 'none') steps.push('stir');
+  if (spec.tarik) steps.push('tarik');
+  else if (spec.milk !== 'none' || spec.sugar !== 'none') steps.push('stir');
   if (spec.iced) steps.push('ice');
   return steps.join(' · ');
 }
@@ -74,6 +75,7 @@ export function nextStep(cup, spec, who) {
     if (spec.milk === 'evap' && cup.evap < ZONES.milk.normal[0]) return { text: 'Evap milk till C · NORMAL' };
     if (spec.milk !== 'condensed' && sweet < want) return { text: `Sugar till ${target}` };
     if (sweet > want) return { text: `Too sweet for ${target.toLowerCase()}! Bin it and try again`, bin: true };
+    if (spec.tarik && cup.froth < 1) return { text: 'Tarik! Drop the mugs on the cup (or pull them up and down over it)' };
     if (needsStir(cup)) return { text: 'Drop the spoon on the cup to stir' };
   }
   if (peng && !cup.ice) return { text: 'Drop the ice in (it tops up to FULL)' };

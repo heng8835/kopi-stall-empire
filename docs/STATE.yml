@@ -1,12 +1,12 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
-updated: 2026-10-23
+updated: 2026-10-26
 phase: development
-next: "Part 3 art from user (sharpen 17 sprites; then redo pour poses from the sharp tools) + kettle art (sitting 15). Else phase D next machine."
+next: "Phone playtest (music volume, demos, tarik). Friendship meter (needs design answers). Phase D: halia, limau, freezer, gula melaka, butter, tapau, 4th plate, 2nd table. Art: part 3 + kettle/tarik mug art."
 tier_hint: 1
 blockers: []
-touched: [src/data/stallProps.js, src/scenes/StallScene.js, src/scenes/TitleScene.js, src/scenes/ShopScene.js, src/data/customers.js, src/data/tools.js]
+touched: [src/systems/tutorial.js, src/data/tutorial.js, src/systems/demo.js, src/systems/music.js, src/scenes/StallScene.js, src/data/customers.js, src/data/tools.js]
 validation: passing
 open_decisions: ["Walk-frame route (IDEAS.md)"]
 spec: "docs/specs/opening-and-art-plan.md"
 board_task: ""
-notes: "StallScene is reused by Phaser every day: reset per-day state in create (closing, towelUsed…). Jump to a day: ?day=N&fame=F&money=CENTS&flags=a,b. Pane testing: another project's vite may own localhost:5174, use 127.0.0.1; g.loop.sleep() + fake Date.now (tweens read it) + game.step; renderer.snapshot for screenshots (pane rAF often frozen: drive g.step by hand; POST snapshots to a tiny local receiver to view them)."
+notes: "Music: src/data/music.js (loop points), systems/music.js (bg + story channels). Day 1: stall locked until Aunty Lim demo hands over. StallScene is reused by Phaser every day: reset per-day state in create (closing, towelUsed…). Jump to a day: ?day=N&fame=F&money=CENTS&flags=a,b. Pane testing: another project's vite may own localhost:5174, use 127.0.0.1; g.loop.sleep() + fake Date.now (tweens read it) + game.step; renderer.snapshot for screenshots (pane rAF often frozen: drive g.step by hand; POST snapshots to a tiny local receiver to view them)."

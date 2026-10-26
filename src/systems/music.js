@@ -111,6 +111,15 @@ function relevel() {
 // The scene's music (the same key keeps playing across scenes without restarting). A new scene
 // never inherits a story's music: any left over fades out.
 export function playMusic(key) {
+  // the story's song becomes the scene's (Day 30: the finale plays on into the last summary)
+  if (channels.story?.key === key) {
+    halt('bg');
+    channels.bg = channels.story;
+    channels.story = null;
+    ducked = false;
+    wanted.story = null;
+    return relevel();
+  }
   if (channels.story || ducked) endStoryMusic();
   start(key, 'bg');
 }

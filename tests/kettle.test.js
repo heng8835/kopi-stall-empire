@@ -52,3 +52,19 @@ describe('Big Brass Kettle: gao / poh', () => {
     expect(MACHINE_LESSONS.kettle.order).toBe('Kopi O poh');
   });
 });
+
+describe('the bottom rail', () => {
+  it('fits up to 7 tools at their own spots, more share it without overlapping', async () => {
+    const { TOOLS, MACHINE_TOOLS, layoutRail } = await import('../src/data/tools.js');
+    const base = layoutRail(TOOLS);
+    for (const t of TOOLS.filter((x) => x.feet === 626)) expect(base[t.id]).toEqual({ x: t.x, scale: 1 });
+    const all = [...TOOLS, ...Object.values(MACHINE_TOOLS)];
+    const crowded = layoutRail(all);
+    const rail = all.filter((t) => crowded[t.id]).sort((a, b) => crowded[a.id].x - crowded[b.id].x);
+    for (let i = 1; i < rail.length; i++) {
+      const a = rail[i - 1], b = rail[i];
+      expect(crowded[a.id].x + (a.w * crowded[a.id].scale) / 2).toBeLessThanOrEqual(crowded[b.id].x - (b.w * crowded[b.id].scale) / 2 + 0.01);
+    }
+    expect(Math.max(...rail.map((t) => crowded[t.id].x))).toBeLessThan(360);
+  });
+});

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { demoSteps, MEASURE } from '../src/systems/demo.js';
 import { parseOrder } from '../src/systems/order.js';
-import { newCup, pour, addIce, addPowder, stirStep, gradeCup } from '../src/systems/cup.js';
+import { newCup, pour, addIce, addPowder, stirStep, tarikStep, gradeCup } from '../src/systems/cup.js';
 import { TUNING } from '../src/data/stallTuning.js';
 import { CUSTOMERS, WALK_INS } from '../src/data/customers.js';
 
@@ -14,6 +14,7 @@ function play(spec) {
     if (s.do === 'cup') cup = newCup();
     if (s.do === 'pour') for (let i = 0; i < 400 && MEASURE[s.measure](cup) < s.until; i++) pour(cup, INGREDIENT[s.tool], 16);
     if (s.do === 'stir') for (let i = 0; i < TUNING.stirWigglesNeeded; i++) stirStep(cup);
+    if (s.do === 'tarik') for (let i = 0; i < TUNING.tarikPullsNeeded; i++) tarikStep(cup);
     if (s.do === 'ice') addIce(cup);
     if (s.do === 'powder') addPowder(cup);
   }

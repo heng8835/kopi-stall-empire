@@ -15,6 +15,7 @@ export function featuresOf(spec) {
   if (spec.sugar === 'more') f.push('gaDai');
   if (spec.iced) f.push('peng');
   if (spec.strength === 'gao' || spec.strength === 'poh') f.push(spec.strength);
+  if (spec.tarik) f.push('tarik');
   return f;
 }
 

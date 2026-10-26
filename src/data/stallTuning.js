@@ -32,6 +32,8 @@ export const TUNING = {
   pourPerSec: { kopi: 0.9, teh: 0.9, milo: 0.9, horlicks: 0.9, sugar: 1.0, condensed: 1.0, evap: 1.0, water: 0.9 },
 
   stirWigglesNeeded: 6,
+  tarikPullsNeeded: 4, // up-and-down pulls of the tarik mugs until it's frothy
+  autoTarikMs: 1600, // dropping the mugs on a cup pulls it by itself in this long
   autoStirMs: 1000, // dropping the spoon on a cup stirs it in this long
   doseAmount: 0.45, // Sugar Scoop / Milk Pump: one dose = one sweetness zone (1 siew dai, 2 normal, 3 ga dai)
   iceVolume: 0.25, // ice raises the level: peng = pour to the ¾ line, then ice

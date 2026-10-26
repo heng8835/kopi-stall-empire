@@ -19,7 +19,7 @@ describe('night shop', () => {
     expect(shopState(itemById('fan'), run())).toBe('buy');
     expect(shopState(itemById('fan'), run({ money: 100 }))).toBe('money');
     expect(shopState(itemById('neon'), run())).toBe('fame');
-    expect(shopState(itemById('tarikMugs'), run({ fame: 30 }))).toBe('soon');
+    expect(shopState(itemById('haliaPot'), run({ fame: 30 }))).toBe('soon');
     expect(shopState(itemById('towel'), run())).toBe('gift');
     expect(shopState(itemById('fan'), run({ owned: ['fan'] }))).toBe('owned');
   });

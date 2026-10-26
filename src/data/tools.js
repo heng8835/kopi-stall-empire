@@ -6,6 +6,7 @@
 //   pour  - hold over a cup to pour `ingredient` (meter shows how much)
 //   drop  - release over a cup to add once (ice / Milo powder)
 //   stir  - drop it on a cup and it stirs by itself (wiggling over the cup works too)
+//   tarik - drop the mugs on a cup and it's pulled until frothy (up-and-down over the cup works too)
 //   rack  - drag (or tap) to put a new empty cup on the tray
 //   bin   - drop a cup here to throw it away (not draggable)
 
@@ -29,9 +30,26 @@ export const TOOLS = [
 // Tools that come with a night-shop machine (shown only when it's owned), keyed by shop item id.
 export const MACHINE_TOOLS = {
   kettle: { id: 'water', label: 'Hot water', kind: 'pour', ingredient: 'water', sprite: 'toolTehPot', tint: 0xf2c46b, spriteH: 50, x: 70, feet: RAIL, w: 44, h: 58 }, // brass stand-in until its own art
+  tarikMugs: { id: 'tarik', label: 'Tarik', kind: 'tarik', x: 200, feet: RAIL, w: 44, h: 58, color: 0xc9ced4 }, // drawn in code until its art
   horlicksShelf: { id: 'horlicks', label: 'Horlicks', kind: 'pour', ingredient: 'horlicks', sprite: 'toolHorlicks', pourSprite: 'pourHorlicks', x: 22, feet: RAIL, w: 46, h: 58, color: 0xd9c49a },
 };
 for (const t of Object.values(MACHINE_TOOLS)) t.y = t.feet - t.h / 2;
+
+// The bottom rail fits 7 tools at their own spots. With more (machines bought), they share it evenly,
+// in their usual left-to-right order, and shrink a little to fit. Returns { id: { x, scale } }.
+export function layoutRail(tools, left = 4, right = 356) {
+  const rail = tools.filter((t) => t.feet === RAIL).sort((a, b) => a.x - b.x);
+  if (rail.length <= 7) return Object.fromEntries(rail.map((t) => [t.id, { x: t.x, scale: 1 }]));
+  const total = rail.reduce((s, t) => s + t.w, 0);
+  const scale = Math.min(1, (right - left) / total);
+  const out = {};
+  let x = left;
+  for (const t of rail) {
+    out[t.id] = { x: x + (t.w * scale) / 2, scale };
+    x += t.w * scale;
+  }
+  return out;
+}
 
 // Cup spots on the tray plates of the background (x of each cup's centre).
 export const SLOT_X = [70, 182, 290];

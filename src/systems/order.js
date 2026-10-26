@@ -6,6 +6,7 @@ import { GLOSSARY, NAMES, CLAUSE_END_ONLY, PARTICLES } from '../data/glossary.js
 //   milk:  'condensed' | 'evap' | 'none'   (null for the malt drinks, Milo and Horlicks)
 //   sugar: 'normal' | 'less' | 'none' | 'more'   (null for the malt drinks)
 //   strength: 'normal' | 'gao' (strong, no water) | 'poh' (weak, hot water added)   (null for malt drinks)
+//   tarik: true when it's pulled until frothy ("Teh tarik"); absent otherwise
 //   For condensed-milk drinks (Kopi, Teh) the condensed milk is the sweetness; O and C use the sugar can.
 
 const MILK_WORD = { O: 'none', C: 'evap' };
@@ -52,7 +53,7 @@ export function formatOrder(spec) {
   if (!spec?.base) return '';
   if (MALT.includes(spec.base)) return `${NAME[spec.base]}${spec.iced && spec.topping ? ' Dinosaur' : spec.iced ? ' peng' : ''}`;
   const name = NAME[spec.base];
-  return [name, MILK_TO_WORD[spec.milk], STRENGTH_TO_WORD[spec.strength ?? 'normal'], SUGAR_TO_WORD[spec.sugar], spec.iced ? 'peng' : '']
+  return [name, MILK_TO_WORD[spec.milk], spec.tarik ? 'tarik' : '', STRENGTH_TO_WORD[spec.strength ?? 'normal'], SUGAR_TO_WORD[spec.sugar], spec.iced ? 'peng' : '']
     .filter(Boolean)
     .join(' ');
 }

@@ -20,7 +20,7 @@ export const SHOP = [
   { id: 'horlicksShelf', aisle: 'machine', name: 'Horlicks Shelf', zh: '好立克架', price: 3500, tier: 0, icon: '🥛', text: 'A tin of Horlicks on the rail. Horlicks, Horlicks peng, Horlicks Dinosaur.', effect: {}, unlocks: ['horlicks', 'horlicksDino'] },
   { id: 'iceMachine', aisle: 'machine', name: 'Ice Machine', zh: '制冰机', price: 6000, tier: 25, icon: '🧊', text: 'Crystal-clear ice. Iced drinks earn +20¢.', effect: { icedTip: 20 } },
   { id: 'kettle', aisle: 'machine', name: 'Big Brass Kettle', zh: '大铜壶', price: 4500, tier: 0, icon: '🫖', text: 'Hot water on the rail. Kopi / teh poh (weak) and gao (strong): new orders the regulars love.', effect: {}, unlocks: ['gao', 'poh'] },
-  { id: 'tarikMugs', aisle: 'machine', name: 'Tarik Mugs', zh: '拉茶杯', price: 4000, tier: 25, icon: '🍵', text: 'Pull teh from a height until frothy.', soon: true },
+  { id: 'tarikMugs', aisle: 'machine', name: 'Tarik Mugs', zh: '拉茶杯', price: 4000, tier: 25, icon: '🍵', text: 'Pull teh between two mugs from up high until frothy: Teh tarik. The pakciks will love you.', effect: {}, unlocks: ['tarik'] },
   { id: 'haliaPot', aisle: 'machine', name: 'Halia Pot', zh: '姜茶壶', price: 3500, tier: 25, icon: '🫚', text: 'Ginger tea: Teh Halia.', soon: true },
   { id: 'limau', aisle: 'machine', name: 'Limau Squeezer', zh: '酸柑榨汁器', price: 3000, tier: 0, icon: '🍋', text: 'Calamansi lime tea: Teh O Limau.', soon: true },
   { id: 'freezer', aisle: 'machine', name: 'Mini Freezer', zh: '小冰柜', price: 7000, tier: 50, icon: '🍨', text: 'Ice cream for Milo Godzilla.', soon: true },

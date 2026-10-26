@@ -13,20 +13,19 @@ describe('Day-1 tutorial data', () => {
     expect(TOOL_IDS.filter((id) => !TOOLS.some((t) => t.id === id))).toEqual([]);
   });
 
-  it('every step has an enabled counter customer, a valid order, real tools and a bilingual note', () => {
+  it('every step has an enabled counter customer, a valid order, real tools, and a demo or their own line', () => {
     for (const step of TUTORIAL_STEPS.filter((s) => !s.info)) {
       const def = CUSTOMERS.find((c) => c.id === step.customer);
       expect(def?.enabled, step.customer).toBe(true);
-      expect(def.slot ?? 'counter').toBe('counter'); // the note card covers the table spot
+      expect(def.slot ?? 'counter').toBe('counter');
       expect(() => parseOrder(step.order)).not.toThrow();
       expect(step.highlight.filter((id) => !TOOL_IDS.includes(id))).toEqual([]);
-      expect(step.note.en.length).toBeGreaterThan(10);
-      expect(step.note.zh.length).toBeGreaterThan(3);
+      expect(step.demo || step.say?.length > 10, step.order).toBeTruthy();
     }
   });
 
-  it('info cards have bilingual text', () => {
-    for (const step of TUTORIAL_STEPS.filter((s) => s.info)) expect(step.note.en && step.note.zh).toBeTruthy();
+  it('info tips are short enough for the thought bubble', () => {
+    for (const step of TUTORIAL_STEPS.filter((s) => s.info)) expect(step.info.length).toBeLessThanOrEqual(90);
   });
 
   it('every scripted order can be made perfectly using only the highlighted tools (plus earlier ones)', () => {

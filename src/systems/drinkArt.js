@@ -294,6 +294,20 @@ export class DrinkArt {
       g.beginPath(); g.ellipse(o.cx, o.cy + dy, o.rx - 1, o.ry - 1, tilt, Math.PI * 1.05, Math.PI * 1.95); g.stroke();
       g.fillStyle = 'rgba(255,255,255,.35)';
       g.beginPath(); g.ellipse(o.cx - o.rx * 0.45, o.cy + dy + o.ry * 0.25, o.rx * 0.22, o.ry * 0.18, tilt, 0, Math.PI * 2); g.fill();
+      // teh tarik's foam: a creamy cap with little bubbles, thicker the more it's pulled
+      if (cup.froth > 0) {
+        const f = cup.froth;
+        g.fillStyle = 'rgba(244,226,190,0.95)';
+        g.beginPath(); g.ellipse(o.cx, o.cy + dy - 3 * f, o.rx * (0.8 + 0.18 * f), o.ry * (0.75 + 0.2 * f) + 4 * f, tilt, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = 'rgba(160,120,80,0.55)'; g.lineWidth = 2;
+        g.beginPath(); g.ellipse(o.cx, o.cy + dy - 3 * f, o.rx * (0.8 + 0.18 * f), o.ry * (0.75 + 0.2 * f) + 4 * f, tilt, Math.PI * 0.05, Math.PI * 0.95); g.stroke();
+        g.fillStyle = 'rgba(255,255,255,0.8)';
+        for (let i = 0; i < Math.round(14 * f); i++) {
+          const a = i * 2.39996;
+          const r = Math.sqrt((i + 0.5) / 14) * 0.85;
+          g.beginPath(); g.arc(o.cx + Math.cos(a) * o.rx * r * 0.9, o.cy + dy - 3 * f + Math.sin(a) * o.ry * r, 2 + (i % 3), 0, Math.PI * 2); g.fill();
+        }
+      }
       g.restore();
     }
 

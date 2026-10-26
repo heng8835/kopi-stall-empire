@@ -4,6 +4,7 @@
 //   kopi, teh, milo        bases          O, C        no milk / evaporated milk
 //   kosong, siewDai, gaDai sweetness      peng        iced          miloDino   Milo Dinosaur
 //   gao, poh               strength (hot water from the Big Brass Kettle)
+//   tarik                  pulled until frothy (Tarik Mugs)
 //
 // Lesson fields:
 //   day        the day it's taught (and unlocked from then on)
@@ -102,6 +103,18 @@ export const LESSONS = [
 // Machines from the night shop teach their drink the same way: the morning after you buy one,
 // a regular orders it with a card. Keyed by shop item id (src/data/shop.js).
 export const MACHINE_LESSONS = {
+  tarikMugs: {
+    features: ['tarik'],
+    teacher: 'makcik',
+    order: 'Teh tarik',
+    card: {
+      title: 'Teh tarik = pulled tea',
+      zh: '拉茶',
+      line: 'Makcik: "Teh tarik must pull high high! The foam is the soul, you know."',
+      steps: ['Teh pot to FULL, condensed milk as usual', 'Drop the tarik mugs on the cup', '(or pull them up and down over it)', 'No spoon needed: tarik mixes it'],
+      zone: 'FULL',
+    },
+  },
   kettle: {
     features: ['gao', 'poh'],
     teacher: 'ahGong',
@@ -154,6 +167,7 @@ export const BOOK = {
   miloDino: { name: 'Milo Dinosaur', zh: '美禄恐龙', text: 'Iced Milo with a mountain of powder on top. No stirring.' },
   cham: { name: 'Cham', zh: '鸳鸯', text: 'Kopi + teh in one cup: half kopi, teh to FULL, then milk as usual.' },
   horlicks: { name: 'Horlicks', zh: '好立克', text: 'Horlicks tin to FULL. Peng: ¾ + ice.' },
+  tarik: { name: 'Tarik', zh: '拉', text: 'Pulled between two mugs from up high until frothy. It mixes the drink too, no spoon.' },
   gao: { name: 'Gao', zh: '浓', text: 'Strong: the pot only, no hot water at all.' },
   poh: { name: 'Poh', zh: '淡', text: 'Weak: pot to about half, then hot water from the kettle to FULL.' },
   horlicksDino: { name: 'Horlicks Dinosaur', zh: '好立克恐龙', text: 'Iced Horlicks with a mountain of powder on top.' },

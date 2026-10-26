@@ -66,6 +66,8 @@ export default class TitleScene extends Phaser.Scene {
       replay.setInteractive({ useHandCursor: true }).once('pointerdown', () => {
         save('tutorialDone', false);
         save('openingSeen', false);
+        save('demosOff', false); // the watch-first demos come back too
+        save('demosSeen', []);
         replay.setText('Intro + tutorial will play on Day 1 ✓');
       });
     }
