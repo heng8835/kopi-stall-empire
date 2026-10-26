@@ -9,6 +9,8 @@
 //   lines       key into src/i18n/lines.js
 //   sprite      HD sprite key (src/data/spriteSizes.json); groups may list one per member in sprites
 //   slot        'counter' (default, queues at the counter) or 'table' (sits at the side table)
+//   seated      table guests whose sprite is drawn sitting: they walk in on `walkSprite` (when that art exists,
+//               else they just appear in their seat) and sit down
 //   sits        walk-ins: may sit at the second table instead, once it's bought (Second Table)
 //   bulk        one person ordering groupSize cups (a delivery rider): one counter spot, not the whole counter
 //   enabled     false = defined but not in the spawn pool yet (waiting for art)
@@ -90,6 +92,8 @@ export const CUSTOMERS = [
     id: 'ahGong',
     name: 'Ah Gong',
     sprite: 'ahGong',
+    seated: true,
+    walkSprite: 'ahGongWalk', // standing, walking with his paper (docs/art/PROMPTS_2026-10.md image 28)
     slot: 'table',
     enabled: true,
     regular: true,

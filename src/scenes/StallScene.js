@@ -54,7 +54,7 @@ const HUD_H = 40; // clock + day bar + fame + money
 const POUR_BAR_Y = HUD_H + 6; // the pour bar docks here, above the order bubbles
 const COUNTER_Y = 282; // top of the wooden counter in the background
 const FEET_Y = 318; // counter customers stand behind the counter (legs hidden)
-const CUP_BOTTOM = 384; // cups sit on the tray plates
+const CUP_BOTTOM = 376; // cups sit on the tray plates (the saucer inside the plate's rim)
 const CUP_W = 50;
 const CUP_H = 62;
 // Ah Gong's seat at a table in the background (between counter spots, so nobody hides him); he walks
@@ -994,10 +994,31 @@ export default class StallScene extends Phaser.Scene {
       c.table = seat;
       this.tableGuests[seat] = c;
       const t = TABLES[seat];
-      const s = addSprite(this, def.sprite, ENTRY.x, ENTRY.feetY, t.h).setDepth(1.8); // behind counter customers
+      // def.sprite is drawn sitting (Ah Gong): he walks in on def.walkSprite and sits down at the table, or,
+      // until that art exists, simply appears in his seat (a sitting picture can't walk)
+      const walkKey = def.seated ? (this.textures.exists(def.walkSprite ?? '') ? def.walkSprite : null) : def.sprite;
+      if (!walkKey) {
+        const s = addSprite(this, def.sprite, t.x, t.feetY, t.h).setDepth(1.8).setAlpha(0);
+        s.setScale(s.baseScale * this.scaleAt(s.y));
+        c.sprites = [s];
+        this.tweens.add({ targets: s, alpha: 1, duration: 600, ease: 'Sine.out', onComplete: () => this.arrive(c) });
+        return c;
+      }
+      // the standing art keeps its size relative to the sitting one (spriteSizes.json)
+      const walkH = walkKey === def.sprite ? t.h : (t.h * displayHeight(walkKey)) / displayHeight(def.sprite);
+      const s = addSprite(this, walkKey, ENTRY.x, ENTRY.feetY, walkH).setDepth(1.8); // behind counter customers
       s.setScale(s.baseScale * this.scaleAt(s.y));
       c.sprites = [s];
-      this.walk(s, t.x, t.feetY, 0, () => this.arrive(c));
+      this.walk(s, t.x, t.feetY, 0, () => {
+        if (walkKey !== def.sprite) {
+          // sits down: swap to the sitting picture at the table's size
+          s.setTexture(def.sprite);
+          s.homeKey = def.sprite;
+          s.baseScale = t.h / s.height;
+          s.setScale(s.baseScale * this.scaleAt(s.y));
+        }
+        this.arrive(c);
+      });
       return c;
     }
     const keys = c.whole ? (def.sprites ?? Array(n).fill(def.sprite)).slice(0, n) : [def.sprite];
@@ -1030,7 +1051,10 @@ export default class StallScene extends Phaser.Scene {
 
   walkToQueue(c, idx) {
     const p = QUEUE_POS[Math.min(idx, QUEUE_POS.length - 1)];
-    c.sprites.forEach((s, i) => this.walk(s, p.x - i * 14, p.feetY - (i % 2) * 3, i * 120));
+    c.sprites.forEach((s, i) => {
+      s.setDepth(2.5 - idx * 0.05 - i * 0.01); // the front of the line is drawn over the people behind
+      this.walk(s, p.x - i * 14, p.feetY - (i % 2) * 3, i * 120);
+    });
   }
 
   // A spot freed up: the front of the line walks up (a group waits for the whole counter).
