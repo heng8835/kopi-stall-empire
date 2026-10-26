@@ -53,6 +53,50 @@ export function showRecipeCard(scene, lesson, { showLine = true, onClose } = {})
   play('perfect');
 }
 
+// Day 1's starter menu: each drink as its tools, "pot + milk + spoon = drink" (src/data/tutorial.js).
+export function showStarterCard(scene, { title, rows, note, button, onClose }) {
+  const m = modal(scene);
+  const W = 336;
+  const x = (GAME_W - W) / 2;
+  const rowH = 62;
+  const h = 56 + rows.length * rowH + 64 + 56;
+  const top = Math.round((GAME_H - h) / 2) - 10;
+  m.add(scene.add.rectangle(x, top, W, h, COLORS.paper).setOrigin(0).setStrokeStyle(3, COLORS.inkHex), 1);
+  m.add(scene.add.rectangle(GAME_W / 2, top - 2, 70, 16, 0xf2e3a8, 0.9).setAngle(-3), 3);
+  m.add(addText(scene, GAME_W / 2, top + 16, title, { size: 18, bold: true, origin: [0.5, 0] }));
+  const pic = (key, cx, cy, size, tint) => {
+    const img = m.add(scene.add.image(cx, cy, key));
+    img.setScale(Math.min(size / img.height, size / img.width));
+    if (tint) img.setTint(tint);
+    return img;
+  };
+  const sign = (s, cx, cy) => m.add(addText(scene, cx, cy, s, { size: 18, bold: true, color: '#8a5a1e', origin: 0.5 }));
+  rows.forEach((r, i) => {
+    const cy = top + 56 + i * rowH + rowH / 2;
+    if (i) m.add(scene.add.rectangle(x + 14, cy - rowH / 2, W - 28, 1, 0xd9c9a8).setOrigin(0));
+    const xs = [x + 30, x + 82, x + 134];
+    r.tools.forEach((key, j) => {
+      pic(key, xs[j], cy, 44);
+      if (j < r.tools.length - 1) sign('+', (xs[j] + xs[j + 1]) / 2, cy);
+    });
+    sign('=', x + 165, cy);
+    pic('cupGlass', x + 196, cy, 42, r.tint);
+    m.add(addText(scene, x + 222, cy, r.name, { size: 16, bold: true, origin: [0, 0.5] }));
+    // pop in one row after another
+    scene.tweens.add({ targets: m.objs.slice(-9), alpha: { from: 0, to: 1 }, duration: 250, delay: 150 + i * 180 });
+  });
+  m.add(addText(scene, x + 16, top + 56 + rows.length * rowH + 8, note, { size: 12, wrap: W - 32, color: '#3a2e2a' }));
+  const btn = makeButton(scene, GAME_W / 2 - 100, top + h - 52, 200, 40, button, () => {
+    m.close();
+    btn.bg.destroy();
+    btn.txt.destroy();
+    onClose?.();
+  }, { size: 15, bold: true, fill: 0xbfe3c0 });
+  btn.bg.setDepth(DEPTH + 2);
+  btn.txt.setDepth(DEPTH + 3);
+  play('perfect');
+}
+
 // The recipe book: every order word taught so far.
 export function showRecipeBook(scene, day, onClose) {
   const m = modal(scene);

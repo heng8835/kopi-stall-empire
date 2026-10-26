@@ -14,7 +14,7 @@ describe('Day-1 tutorial data', () => {
   });
 
   it('every step has an enabled counter customer, a valid order, real tools, and a demo or their own line', () => {
-    for (const step of TUTORIAL_STEPS.filter((s) => !s.info)) {
+    for (const step of TUTORIAL_STEPS.filter((s) => s.customer)) {
       const def = CUSTOMERS.find((c) => c.id === step.customer);
       expect(def?.enabled, step.customer).toBe(true);
       expect(def.slot ?? 'counter').toBe('counter');
@@ -24,13 +24,20 @@ describe('Day-1 tutorial data', () => {
     }
   });
 
-  it('info tips are short enough for the thought bubble', () => {
-    for (const step of TUTORIAL_STEPS.filter((s) => s.info)) expect(step.info.length).toBeLessThanOrEqual(90);
+  it('the starter menu card shows real tools and drinks you can make on Day 1', async () => {
+    const { STARTER_MENU } = await import('../src/data/tutorial.js');
+    const SIZES = (await import('../src/data/spriteSizes.json')).default;
+    const { ordersFor } = await import('../src/systems/menu.js');
+    expect(TUTORIAL_STEPS.some((s) => s.card === 'starter')).toBe(true);
+    for (const r of STARTER_MENU) {
+      for (const k of r.tools) expect(SIZES[k], k).toBeTruthy();
+      expect(ordersFor([{ text: r.name, weight: 1 }], 1).length, r.name).toBe(1);
+    }
   });
 
   it('every scripted order can be made perfectly using only the highlighted tools (plus earlier ones)', () => {
     const learned = new Set();
-    for (const step of TUTORIAL_STEPS.filter((s) => !s.info)) {
+    for (const step of TUTORIAL_STEPS.filter((s) => s.customer)) {
       step.highlight.forEach((id) => learned.add(id));
       const spec = parseOrder(step.order);
       const cup = newCup();

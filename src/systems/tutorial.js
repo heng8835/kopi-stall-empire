@@ -1,5 +1,6 @@
 import { COLORS } from '../config.js';
-import { TUTORIAL_TEXT } from '../data/tutorial.js';
+import { TUTORIAL_TEXT, STARTER_MENU } from '../data/tutorial.js';
+import { showStarterCard } from './cards.js';
 import { makeButton } from './ui.js';
 import { save } from './save.js';
 
@@ -34,9 +35,10 @@ export class Tutorial {
     this.clearGlows();
     if (this.i >= this.steps.length) return this.finish();
     const step = this.steps[this.i];
-    if (step.info) {
-      this.scene.think(step.info, TUTORIAL_TEXT.infoMs);
-      return this.scene.time.delayedCall(TUTORIAL_TEXT.infoMs, () => this.active && this.next());
+    const T = TUTORIAL_TEXT;
+    if (step.card === 'starter') {
+      return this.scene.pauseFor((resume) =>
+        showStarterCard(this.scene, { title: T.menuTitle, rows: STARTER_MENU, note: T.menuNote, button: T.open, onClose: () => (resume(), this.next()) }));
     }
     this.trySpawn(step);
   }
@@ -49,10 +51,11 @@ export class Tutorial {
     const c = here ?? s.spawnCustomer(step.customer, step.order);
     if (!c) return s.time.delayedCall(500, () => this.trySpawn(step)); // slot still busy
     c.tutorial = true;
-    const yourTurn = () => {
+    // made = the demo made their cup (you just serve it); otherwise the tools to use pulse
+    const yourTurn = (made = false) => {
       if (!this.active) return;
       s.lockStall(false);
-      this.highlight(step.highlight);
+      if (!made) this.highlight(step.highlight);
     };
     const begin = () => {
       if (!this.active) return;
@@ -68,9 +71,13 @@ export class Tutorial {
   // Called by StallScene.serveCup() for every serve.
   onServed(c, tier) {
     if (!this.active || !c.tutorial || c.served < c.n) return;
+    const step = this.steps[this.i];
     if (tier !== 'perfect') this.scene.think(TUTORIAL_TEXT.almost, 2500);
-    this.scene.lockStall(true); // until the next customer hands over
-    this.scene.time.delayedCall(1800, () => this.active && this.next());
+    this.scene.lockStall(true); // until the stall opens
+    // she stays a moment to say you're ready, then the menu card
+    c.linger = 3400;
+    if (step.ready) this.scene.time.delayedCall(1100, () => c.state !== 'gone' && this.scene.showBubble(c, step.ready, 'say'));
+    this.scene.time.delayedCall(3600, () => this.active && this.next());
   }
 
   finish() {

@@ -155,6 +155,7 @@ export default class StallScene extends Phaser.Scene {
     this.pendingTutorial = this.day === 1 && !load('tutorialDone', false);
     this.stallLock = null;
     this.coachNote = null;
+    this.tutorialStarting = false;
     this.queueShown = 0;
     this.queueChip = null;
     if (this.pendingTutorial) this.lockStall(true);
@@ -1155,7 +1156,7 @@ export default class StallScene extends Phaser.Scene {
         this.showBubble(c, c.orderLine, 'order');
       });
     } else {
-      this.time.delayedCall(c.spot === 'table' ? TABLE_LINGER_MS : 1400, () => this.leave(c));
+      this.time.delayedCall(c.linger ?? (c.spot === 'table' ? TABLE_LINGER_MS : 1400), () => this.leave(c));
     }
   }
 
@@ -1347,9 +1348,14 @@ export default class StallScene extends Phaser.Scene {
 
   // Called by the tutorial when it finishes or is skipped.
   startPendingTutorial() {
-    if (!this.pendingTutorial) return;
-    this.pendingTutorial = false;
-    this.time.delayedCall(500, () => this.tutorial.start());
+    if (!this.pendingTutorial || this.tutorialStarting) return;
+    this.tutorialStarting = true;
+    // the clock stays still until the tutorial has really started
+    this.time.delayedCall(500, () => {
+      this.pendingTutorial = false;
+      this.tutorialStarting = false;
+      this.tutorial.start();
+    });
   }
 
   onTutorialDone() {

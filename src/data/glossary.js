@@ -70,6 +70,7 @@ export const GLOSSARY = {
   gao: { term: 'Gao', en: 'Strong (more kopi, no water). From Hokkien 厚.', zh: '浓（福建话"厚"）。' },
   poh: { term: 'Poh', en: 'Weak (watered down with hot water). From Hokkien 薄.', zh: '淡（福建话"薄"）。' },
   kakis: { term: 'Kakis', en: 'Buddies, the friends you always hang out with. "Kopi kakis" = coffee buddies. From Malay.', zh: '好朋友、老伙计（马来语）。' },
+  'jia you': { term: 'Jia you', en: '"Add oil!" Go for it, you can do it! From Mandarin 加油.', zh: '加油！' },
   cham: { term: 'Cham', en: 'Kopi and teh mixed in one cup. Also called Yuan Yang.', zh: '鸳鸯（咖啡加茶）。' },
   'yuan yang': { term: 'Yuan Yang', en: 'Another name for cham: coffee and tea together.', zh: '鸳鸯。' },
   horlicks: { term: 'Horlicks', en: 'A malted milk drink, made like Milo. Very kopitiam.', zh: '好立克（麦芽饮品）。' },
