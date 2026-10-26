@@ -19,6 +19,8 @@ const BOX_Y = 446;
 const BOX_H = 168;
 const PORTRAIT_H = 190;
 const FACE = 62; // the speaker's face beside their name tag
+const PERCH_H = 150; // a cat on the counter: big enough to see, his box hidden behind the ledge
+const OYEN_BODY = 0.74; // Oyen's art: the cat is the top 74%, his fish box the rest
 // The speaker stands behind the stall's wooden counter ledge, like a customer: feet hidden,
 // head and body above it. The ledge is redrawn from the background art in front of them.
 const LEDGE = { top: 282, bottom: 318 }; // logical px, matches StallScene COUNTER_Y
@@ -132,7 +134,7 @@ export default class DramaScene extends Phaser.Scene {
     const cast = CAST[who];
     if (who === 'owner') return { name: this.d.owner.name, sprite: this.d.owner.sprite };
     const has = this.textures.exists(cast.sprite);
-    return { name: beat.name ?? cast.name, sprite: has ? cast.sprite : cast.fallback, silhouette: beat.silhouette || !has };
+    return { name: beat.name ?? cast.name, sprite: has ? cast.sprite : cast.fallback, silhouette: beat.silhouette || !has, perch: cast.perch };
   }
 
   showBeat(beat) {
@@ -143,9 +145,11 @@ export default class DramaScene extends Phaser.Scene {
     const who = this.speaker(beat.who, beat);
     const text = fill(beat.text, this.d.vars);
     const start = this.layer.length;
-    if (who?.sprite && this.textures.exists(who.sprite)) {
-      const s = addSprite(this, who.sprite, GAME_W / 2, FEET_Y);
-      s.setScale(s.scaleX * Math.min(1.5, PORTRAIT_H / s.displayHeight));
+    if (beat.show) this.layer.push(...this.prop(beat.show));
+    const inProp = beat.show === 'tinOyen' && beat.who === 'oyen'; // he's already there, asleep on the tin
+    if (who?.sprite && this.textures.exists(who.sprite) && !inProp) {
+      const s = addSprite(this, who.sprite, GAME_W / 2, who.perch ? LEDGE.bottom : FEET_Y);
+      s.setScale(s.scaleX * (who.perch ? PERCH_H / s.displayHeight : Math.min(1.5, PORTRAIT_H / s.displayHeight)));
       if (s.displayWidth > GAME_W - 20) s.setScale(s.scaleX * ((GAME_W - 20) / s.displayWidth));
       if (who.silhouette) s.setTintFill(0x14110f);
       // a new speaker steps up; the same speaker just stays put
@@ -188,6 +192,45 @@ export default class DramaScene extends Phaser.Scene {
     const card = this.layer.slice(start).filter((o) => o.type !== 'Sprite' && o.type !== 'Image');
     this.easeIn(card, fresh ? { rise: 24, duration: 280 } : { rise: 0, duration: SWAP_MS });
     play('tap');
+  }
+
+  // Something on the counter for this beat (drawn in code until its art arrives): Uncle Tan's
+  // biscuit tin with the note taped on, and maybe Oyen asleep on top.
+  prop(kind) {
+    const cx = GAME_W / 2;
+    const base = LEDGE.top + 12; // the tin stands on the counter top
+    const w = 128;
+    const h = 72;
+    const top = base - h;
+    const g = this.add.graphics();
+    // tin: dark outline, red body, gold bands, a shine on the left, a lid
+    g.fillStyle(0x3a2e2a, 1).fillRoundedRect(cx - w / 2 - 3, top - 3, w + 6, h + 6, 12);
+    g.fillStyle(0xb8402c, 1).fillRoundedRect(cx - w / 2, top, w, h, 10);
+    g.fillStyle(0xe2b65a, 1).fillRect(cx - w / 2, top + 14, w, 6).fillRect(cx - w / 2, base - 14, w, 6);
+    g.fillStyle(0xd9604a, 1).fillRect(cx - w / 2 + 8, top + 22, 8, h - 40);
+    g.fillStyle(0x3a2e2a, 1).fillRoundedRect(cx - w / 2 - 6, top - 10, w + 12, 14, 6);
+    g.fillStyle(0xc9503a, 1).fillRoundedRect(cx - w / 2 - 3, top - 7, w + 6, 8, 4);
+    // the note, taped to the front, with a scribble of handwriting
+    g.fillStyle(0x3a2e2a, 1).fillRect(cx - 32, top + 24, 64, 36);
+    g.fillStyle(0xfff6dc, 1).fillRect(cx - 30, top + 26, 60, 32);
+    g.fillStyle(0xf2e3a8, 0.9).fillRect(cx - 12, top + 21, 24, 8);
+    g.lineStyle(2, 0x6b5a50, 0.8);
+    for (let i = 0; i < 3; i++) g.lineBetween(cx - 24, top + 36 + i * 7, cx + (i === 2 ? 4 : 22), top + 36 + i * 7);
+    const objs = [g];
+    if (kind === 'tinOyen') {
+      // Oyen, asleep on the lid: only the cat part of his art (his fish box is cut away)
+      const o = this.add.image(cx, 0, 'oyen').setOrigin(0.5, 0);
+      o.setScale((w * 1.15) / o.width);
+      o.setCrop(0, 0, o.width, o.height * OYEN_BODY);
+      o.setY(top - 4 - o.displayHeight * OYEN_BODY);
+      this.tweens.add({ targets: o, scaleY: o.scaleY * 1.03, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.inOut' }); // breathing
+      objs.push(o);
+    }
+    objs.forEach((o) => {
+      o.setAlpha(0);
+      this.tweens.add({ targets: o, alpha: 1, duration: 300 });
+    });
+    return objs;
   }
 
   // A square crop of the top of the speaker's sprite (their face), framed, so it's clear who is talking.

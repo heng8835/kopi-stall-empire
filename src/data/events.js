@@ -8,7 +8,8 @@
 //   mood                 optional scene tint: 'dark' (blackout), 'rain', 'fire'
 //   guest {id, order}    optional: this customer is brought in, and the episode plays when they reach the counter
 //   rush                 optional: this many extra customers arrive right after the episode
-//   beats                [{ who, text, if?, name?, silhouette? }] — who: a CAST key, 'narrator' or 'note'
+//   beats                [{ who, text, if?, name?, silhouette?, show? }] — who: a CAST key, 'narrator' or 'note';
+//                        show: a prop on the counter ('tin', or 'tinOyen' = Oyen asleep on the tin)
 //   choice {options}     [{ label, flags?, fame?, money? (cents), beats? }] — shown after `beats`
 //   after                beats after the choice (both options)
 //   endings              finale only: [{ id, min (fame), title, beats }]
@@ -28,7 +29,7 @@ export const CAST = {
   hafiz: { name: 'Hafiz', sprite: 'hafiz' },
   jiaHui: { name: 'Jia Hui', sprite: 'jiaHui' },
   ahGong: { name: 'Ah Gong', sprite: 'ahGong' },
-  oyen: { name: 'Oyen', sprite: 'oyen' },
+  oyen: { name: 'Oyen', sprite: 'oyen', perch: true }, // a cat: lies on the counter (his fish box hidden behind it)
   makcik: { name: 'Makcik', sprite: 'makcikStand' },
   kenneth: { name: 'Kenneth', sprite: 'kenneth' },
   kai: { name: 'Kai', sprite: 'kai' },
@@ -51,10 +52,10 @@ export const EVENTS = [
     title: { en: 'The Note on the Pot', zh: '壶上的字条' },
     guest: { id: 'auntyLim', order: 'Teh' }, // she walks in first; on Day 1 she is also the tutorial's first order
     beats: [
-      N('A note is taped to the old kopi pot.'),
-      { who: 'note', name: 'Uncle Tan', text: '"{owner} — stall is yours for 1 month. Tin for Day 30. Don\'t open. Don\'t let Oyen sit on it. — Tan"' },
-      N('Oyen is already sitting on it.'),
-      { who: 'oyen', text: 'Meow. (does not move)' },
+      N('On the counter: Uncle Tan\'s old biscuit tin, with a note taped on it.', { show: 'tin' }),
+      { who: 'note', name: 'Uncle Tan', text: '"{owner} — stall is yours for 1 month. Tin for Day 30. Don\'t open. Don\'t let Oyen sit on it. — Tan"', show: 'tin' },
+      N('Oyen, the orange stall cat, is already sleeping on it.', { show: 'tinOyen' }),
+      { who: 'oyen', text: 'Meow. (does not move)', show: 'tinOyen' },
       N('Then the first customer of your life walks in.'),
       { who: 'auntyLim', text: 'Eh! So you are the {owner} Uncle Tan pass his stall to ah?' },
       { who: 'auntyLim', text: 'First day ah? Don\'t kan cheong. Here everybody very nice one.' },

@@ -97,6 +97,64 @@ export function showStarterCard(scene, { title, rows, note, button, onClose }) {
   play('perfect');
 }
 
+// The first time an order comes up: its combination, tool + tool + ... = the drink, each tool with
+// the zone to pour to, and a line on what the new words mean. items: [{ key, zone, tint? }].
+export function showComboCard(scene, { name, items, cupTint, notes, onClose }) {
+  const m = modal(scene);
+  const W = 336;
+  const x = (GAME_W - W) / 2;
+  const perRow = 4;
+  const rows = Math.ceil(items.length / perRow);
+  const rowH = 74;
+  const noteObjs = notes.map((n) => addText(scene, 0, 0, n, { size: 12, wrap: W - 32, color: '#3a2e2a' }));
+  const notesH = noteObjs.reduce((h, t) => h + t.height + 4, 0);
+  const h = 70 + rows * rowH + 64 + notesH + 60;
+  const top = Math.round((GAME_H - h) / 2) - 10;
+  m.add(scene.add.rectangle(x, top, W, h, COLORS.paper).setOrigin(0).setStrokeStyle(3, COLORS.inkHex), 1);
+  m.add(scene.add.rectangle(GAME_W / 2, top - 2, 70, 16, 0xf2e3a8, 0.9).setAngle(-3), 3);
+  m.add(addText(scene, GAME_W / 2, top + 12, 'NEW ORDER · 新的点单', { size: 11, bold: true, color: '#c8402c', origin: [0.5, 0] }));
+  m.add(addText(scene, GAME_W / 2, top + 30, name, { size: 20, bold: true, origin: [0.5, 0] }));
+  const pic = (key, cx, cy, size, tint) => {
+    const img = m.add(scene.add.image(cx, cy, key));
+    img.setScale(Math.min(size / img.height, size / img.width));
+    if (tint) img.setTint(tint);
+    return img;
+  };
+  const sign = (s, cx, cy) => m.add(addText(scene, cx, cy, s, { size: 18, bold: true, color: '#8a5a1e', origin: 0.5 }));
+  // the tools, four to a row, each with its zone underneath
+  items.forEach((it, i) => {
+    const row = Math.floor(i / perRow);
+    const col = i % perRow;
+    const inRow = Math.min(perRow, items.length - row * perRow);
+    const span = 78;
+    const cx = GAME_W / 2 + (col - (inRow - 1) / 2) * span;
+    const cy = top + 70 + row * rowH + 24;
+    if (it.key) pic(it.key, cx, cy, 44, it.tint);
+    else m.add(addText(scene, cx, cy, it.label, { size: 13, bold: true, color: '#5a5f66', origin: 0.5 })); // a tool with no art yet
+    m.add(addText(scene, cx, cy + 30, it.zone, { size: 10, bold: true, color: '#2f7a3a', origin: [0.5, 0] }));
+    if (col < inRow - 1) sign('+', cx + span / 2, cy);
+  });
+  // = the drink
+  const ry = top + 70 + rows * rowH + 22;
+  sign('=', GAME_W / 2 - 64, ry);
+  pic('cupGlass', GAME_W / 2 - 30, ry, 46, cupTint);
+  m.add(addText(scene, GAME_W / 2, ry, name, { size: 15, bold: true, origin: [0, 0.5], wrap: 150 }));
+  let ny = top + 70 + rows * rowH + 56;
+  noteObjs.forEach((t) => {
+    m.add(t.setPosition(x + 16, ny));
+    ny += t.height + 4;
+  });
+  const btn = makeButton(scene, GAME_W / 2 - 70, top + h - 50, 140, 40, 'Got it ▸', () => {
+    m.close();
+    btn.bg.destroy();
+    btn.txt.destroy();
+    onClose?.();
+  }, { size: 15, bold: true, fill: 0xbfe3c0 });
+  btn.bg.setDepth(DEPTH + 2);
+  btn.txt.setDepth(DEPTH + 3);
+  play('tap');
+}
+
 // The recipe book: every order word taught so far.
 export function showRecipeBook(scene, day, onClose) {
   const m = modal(scene);

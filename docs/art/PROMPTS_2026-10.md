@@ -210,3 +210,19 @@ Attach: **`art/source/tools-shelf-hd.png`** (from sitting 12, so it matches the 
 counter are lined up with it to the pixel, and ChatGPT tends to move things. If you try it: attach `art/source/stall-bg.webp`
 and ask *"Upscale this exact image to a higher resolution and sharpen it. Do not move, add or remove anything; keep the
 exact layout, colours and camera."* Then I check the alignment before using it.
+
+---
+
+# Part 4: story props and a walking Ah Gong (sitting 16, 2 images)
+
+Right now these are drawn in code or borrowed. Same rules as before; attach `art/source/owner-jun-mei.webp`.
+
+### Image 27 → `art/source/tin-oyen.png`
+> Pixel-art game props in exactly the same style as the attached image. Two items with a wide gap: 1) Uncle Tan's old round biscuit tin, red with gold bands, a little dented, a paper note taped on the front (no readable words), lid on; 2) the SAME tin with a fat orange tabby cat with a red collar and a little bell (the same cat as `public/sprites/oyen.png`, attach it too) curled up asleep on the lid. Plain flat white background, no shadow, no text, no logos.
+
+### Image 28 → `art/source/ahgong-walk.png` (also attach `public/sprites/ahGong.png`)
+> Chibi pixel-art game character in exactly the same style as the first attached image: the SAME old man as in the second image (same face, glasses, hair, clothes), standing and walking slowly, holding his folded newspaper under one arm. Full body, 3/4 view facing right. Plain flat white background, no shadow, no text.
+*(So he walks in standing, then sits down with his paper.)*
+
+### Also: Tarik Mugs → add to Image 26 (sitting 15, with the kettle)
+> 3) two steel tarik mugs side by side, one slightly taller, simple handles; 4) the same two mugs mid-pull: one held high, a long stream of tea pouring down into the other.

@@ -178,7 +178,7 @@ export const LINES = {
     timeout: ['算了, we go other stall.'],
   },
   tourist: {
-    order: ['Hi! Could I get a coffee, no milk, no sugar, please?'],
+    order: ['Hi! One {order} please. That is {plain}, right?', 'Could I get a {order}? I mean… {plain}. Did I say it right?'],
     perfect: ['Oh wow, that is strong! Love it, thank you!'],
     close: ['Interesting! Thank you!'],
     oops: ['Hmm, not quite what I expected, but fun!'],

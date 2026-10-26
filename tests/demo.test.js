@@ -38,3 +38,17 @@ describe('demo: the ghost hand makes every order perfectly', () => {
     expect(steps[2].say).toMatch(/Condensed milk to NORMAL/);
   });
 });
+
+describe('new-order card combinations', () => {
+  it('lists the tools in order with their zones', async () => {
+    const { comboFor } = await import('../src/systems/demo.js');
+    expect(comboFor(parseOrder('Teh C siew dai peng'))).toEqual([
+      { tool: 'teh', zone: '¾ PENG' }, { tool: 'evap', zone: 'C' }, { tool: 'sugar', zone: 'SIEW DAI' }, { tool: 'stir', zone: 'stir' }, { tool: 'ice', zone: 'ice' },
+    ]);
+    expect(comboFor(parseOrder('Kopi O kosong'))).toEqual([{ tool: 'kopi', zone: 'FULL' }]);
+  });
+  it('the instant cup is perfect', async () => {
+    const { demoCup } = await import('../src/systems/demo.js');
+    expect(gradeCup(demoCup(parseOrder('Teh tarik')), parseOrder('Teh tarik')).tier).toBe('perfect');
+  });
+});

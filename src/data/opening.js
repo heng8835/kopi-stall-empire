@@ -39,6 +39,8 @@ export const OPENING = [
       { chat: 'them', text: 'Come try one month lah. 30 days. After that you decide.' },
       { chat: 'me', text: 'Uncle… OK! I try!' },
       { chat: 'them', text: 'Good. Tomorrow 6am. Oyen hungry.' },
+      { chat: 'me', text: 'Uncle… who is Oyen?' },
+      { chat: 'them', text: 'The stall cat lah! Orange one. He come with the stall. Give him ikan bilis.' },
     ],
   },
   {

@@ -10,13 +10,13 @@ import { fitCamera } from '../systems/view.js';
 import { addSprite, displayHeight } from '../systems/sprites.js';
 import { makeButton, layoutLine, showGlossary, addMuteToggle } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
-import { parseOrder } from '../systems/order.js';
+import { parseOrder, plainOrder } from '../systems/order.js';
 import { newCup, pour, addIce, addPowder, stirStep, tarikStep, gradeCup, formatCup } from '../systems/cup.js';
 import { DRINKS } from '../data/drinks.js';
 import { DrinkArt, ART_ORIGIN } from '../systems/drinkArt.js';
 import { PourBar } from '../systems/pourBar.js';
-import { showRecipeCard, showRecipeBook } from '../systems/cards.js';
-import { ordersFor, lessonFor, unlockedFeatures, regularOrder } from '../systems/menu.js';
+import { showRecipeCard, showRecipeBook, showComboCard } from '../systems/cards.js';
+import { ordersFor, lessonFor, unlockedFeatures, regularOrder, featuresOf } from '../systems/menu.js';
 import { perks, gift } from '../systems/shop.js';
 import { SHOP_FROM_DAY, GIFTS } from '../data/shop.js';
 import { STALL_PROPS, PROP_DEPTH } from '../data/stallProps.js';
@@ -35,7 +35,8 @@ import { startDay, logEvent, finishDay, summarize } from '../systems/playlog.js'
 import { Tutorial } from '../systems/tutorial.js';
 import { TUTORIAL_STEPS, TOOL_IDS } from '../data/tutorial.js';
 import { load, save } from '../systems/save.js';
-import { demoSteps, MEASURE } from '../systems/demo.js';
+import { demoSteps, MEASURE, comboFor, demoCup } from '../systems/demo.js';
+import { liquidColor } from '../systems/cup.js';
 import { hearts, befriend, friendTip, friendPatience, waitLine, WAIT_LINE_AT, MAX_HEARTS } from '../systems/friends.js';
 import { playMusic, storyMusic, endStoryMusic } from '../systems/music.js';
 import { EPISODE_MUSIC } from '../data/music.js';
@@ -56,7 +57,9 @@ const FEET_Y = 318; // counter customers stand behind the counter (legs hidden)
 const CUP_BOTTOM = 384; // cups sit on the tray plates
 const CUP_W = 50;
 const CUP_H = 62;
-const TABLE = { x: 46, feetY: 116, h: 80, bubble: { x: 96, y: 46, w: 176 } }; // Ah Gong by the window, above the order bubbles
+// Ah Gong's seat at a table in the background (between counter spots, so nobody hides him); he walks
+// in from the street and sits. h = his height up close (he's small, far back). Bubble above him.
+const TABLE = { x: 238, feetY: 176, h: 112, bubble: { y: 50, w: 176 } };
 const GROUP_X = [40, 130, 220, 310];
 const GROUP_XS = { 2: [112, 250], 3: [64, 180, 296], 4: GROUP_X }; // where a group of n stands
 const BUBBLE_BOTTOM = 172;
@@ -155,6 +158,7 @@ export default class StallScene extends Phaser.Scene {
     this.pendingTutorial = this.day === 1 && !load('tutorialDone', false);
     this.stallLock = null;
     this.coachNote = null;
+    this.comboQueue = [];
     this.tutorialStarting = false;
     this.queueShown = 0;
     this.queueChip = null;
@@ -807,6 +811,33 @@ export default class StallScene extends Phaser.Scene {
     onDone(made && !demo.cancelled);
   }
 
+  // ---------- the first time an order comes up: its combination card ----------
+
+  newOrderCheck(c) {
+    const seen = load('combosSeen', []);
+    if (seen.includes(c.orderText) || this.comboQueue.some((q) => q.orderText === c.orderText)) return;
+    this.comboQueue.push(c);
+  }
+
+  // Called every frame: show a waiting combination card when nothing else is on screen.
+  showNextCombo() {
+    if (!this.comboQueue.length || this.paused || this.demo || this.ended || this.scene.isActive('Drama')) return;
+    const c = this.comboQueue.shift();
+    const seen = load('combosSeen', []);
+    if (seen.includes(c.orderText)) return;
+    save('combosSeen', [...seen, c.orderText]);
+    const ART = { kopi: 'toolKopiPot', teh: 'toolTehPot', milo: 'toolMilo', horlicks: 'toolHorlicks', condensed: 'toolCondensed', evap: 'toolEvap', sugar: 'toolSugar', stir: 'toolStir', ice: 'toolIce' };
+    const items = comboFor(c.spec).map(({ tool, zone }) => {
+      if (tool === 'water') return { key: 'toolTehPot', tint: 0xf2c46b, zone: `hot water ${zone}` };
+      if (tool === 'powder') return { key: c.spec.base === 'horlicks' ? 'toolHorlicks' : 'toolMilo', zone };
+      if (tool === 'tarik') return { label: 'Tarik\nmugs', zone };
+      return { key: ART[tool], zone };
+    });
+    // what the new words mean (the recipe book's lines), skipping the plain bases
+    const notes = featuresOf(c.spec).filter((f) => !['kopi', 'teh', 'milo', 'horlicks'].includes(f) && BOOK[f]).map((f) => `${BOOK[f].name}: ${BOOK[f].text}`);
+    this.pauseFor((resume) => showComboCard(this, { name: c.orderText, items, cupTint: liquidColor(demoCup(c.spec)), notes, onClose: resume }));
+  }
+
   // ---------- customers ----------
 
   waitingCustomers() {
@@ -864,13 +895,15 @@ export default class StallScene extends Phaser.Scene {
       bubble: null,
     };
     c.patienceMax = c.patienceMs = def.patience * 1000 * TUNING.patienceScale * this.perks.patienceMult * friendPatience(c.hearts);
-    c.orderLine = pickLine(def.lines, 'order', this.lineVars({ order: orderText, n }));
+    c.orderLine = pickLine(def.lines, 'order', this.lineVars({ order: orderText, n, plain: plainOrder(c.spec) }));
 
     if (place === 'table') {
       c.spot = 'table';
       this.tableGuest = c;
-      c.sprites = [addSprite(this, def.sprite, TABLE.x, TABLE.feetY, TABLE.h).setDepth(2).setAlpha(0)];
-      this.tweens.add({ targets: c.sprites, alpha: 1, duration: 500, onComplete: () => this.arrive(c) });
+      const s = addSprite(this, def.sprite, ENTRY.x, ENTRY.feetY, TABLE.h).setDepth(1.8); // behind counter customers
+      s.setScale(s.baseScale * this.scaleAt(s.y));
+      c.sprites = [s];
+      this.walk(s, TABLE.x, TABLE.feetY, 0, () => this.arrive(c));
       return c;
     }
     const keys = n > 1 ? (def.sprites ?? Array(n).fill(def.sprite)).slice(0, n) : [def.sprite];
@@ -965,6 +998,7 @@ export default class StallScene extends Phaser.Scene {
     for (const sl of this.slots) if (sl.cup && !sl.ticket) this.assignCup(sl);
     if (c.lesson) this.time.delayedCall(500, () => !this.ended && this.showLesson(c.lessonLine));
     if (c.onArrive) this.time.delayedCall(700, () => c.onArrive()); // e.g. the tutorial's next step
+    if (!c.tutorial && !c.lesson && !c.onArrive && !c.episode && !this.pendingTutorial) this.newOrderCheck(c);
     if (c.episode) {
       this.time.delayedCall(900, () => {
         if (this.ended) return; // closing time plays it instead
@@ -999,7 +1033,8 @@ export default class StallScene extends Phaser.Scene {
     const pad = 6;
     const table = c.spot === 'table';
     const w = table ? TABLE.bubble.w : c.spot === 'all' || kind === 'say' ? 200 : 114; // what someone says (teaching) gets a wide, short bubble
-    const x = table ? TABLE.bubble.x : Phaser.Math.Clamp(this.centerX(c) - w / 2, 4, GAME_W - w - 4);
+    // (Ah Gong's bubble leans left, clear of the sound button)
+    const x = Phaser.Math.Clamp(this.centerX(c) - w * (table ? 0.8 : 0.5), 4, GAME_W - w - 4);
     const words = layoutLine(this, text, x + pad, 0, w - pad * 2, (key) => this.openGlossary(key), { size: 11 });
     const extras = [];
     let h = words.height + pad * 2;
@@ -1016,13 +1051,11 @@ export default class StallScene extends Phaser.Scene {
       ey += o.height + 1;
     }
     const frame = this.add.rectangle(x, y, w, h, 0xffffff).setOrigin(0).setStrokeStyle(2, COLORS.inkHex, 0.8).setDepth(30);
-    const tx = table ? x + 6 : Phaser.Math.Clamp(this.centerX(c), x + 12, x + w - 12);
-    const tail = table
-      ? this.add.triangle(0, 0, x + 1, y + 16, x + 1, y + 28, x - 9, y + 24, 0xffffff).setOrigin(0).setDepth(30)
-      : this.add.triangle(0, 0, tx - 7, y + h - 1, tx + 7, y + h - 1, tx, y + h + 8, 0xffffff).setOrigin(0).setDepth(30);
+    const tx = Phaser.Math.Clamp(this.centerX(c), x + 12, x + w - 12);
+    const tail = this.add.triangle(0, 0, tx - 7, y + h - 1, tx + 7, y + h - 1, tx, y + h + 8, 0xffffff).setOrigin(0).setDepth(30);
     [...words.objects, ...extras].forEach((o) => o.setDepth(31));
     const objs = [frame, tail, ...words.objects, ...extras];
-    if (c?.def) objs.push(...this.heartRow(c, x + w - 4, table ? y + h + 2 : y - 5)); // friendship: on the bubble's top edge (under it at the table, clear of the HUD)
+    if (c?.def) objs.push(...this.heartRow(c, x + w - 4, y - 5)); // friendship, on the bubble's top edge
     let bar = null;
     if (kind === 'order') {
       objs.push(this.add.rectangle(x + pad, y + h - 9, w - pad * 2, 5, 0xe0d6c4).setOrigin(0).setDepth(31));
@@ -1293,6 +1326,7 @@ export default class StallScene extends Phaser.Scene {
     }
 
     this.updateQueueChip();
+    this.showNextCombo();
     if (!teaching) {
       this.runArrivals();
       this.maybeMidStory(delta);

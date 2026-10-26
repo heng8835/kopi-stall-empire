@@ -81,3 +81,13 @@ describe('tokenize: names and plain English', () => {
     expect(keys('Can I get a Kopi, did I say it right?')).toEqual(['kopi']);
   });
 });
+
+describe('plain English orders', () => {
+  it('says what the lingo means', async () => {
+    const { plainOrder } = await import('../src/systems/order.js');
+    expect(plainOrder(parseOrder('Kopi O kosong'))).toBe('black coffee, no sugar');
+    expect(plainOrder(parseOrder('Teh C siew dai peng'))).toBe('iced tea, with evaporated milk, less sweet');
+    expect(plainOrder(parseOrder('Kopi'))).toBe('coffee, with condensed milk');
+    expect(plainOrder(parseOrder('Milo Dinosaur'))).toBe('iced Milo with a mountain of powder on top');
+  });
+});

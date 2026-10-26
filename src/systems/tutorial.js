@@ -2,7 +2,7 @@ import { COLORS } from '../config.js';
 import { TUTORIAL_TEXT, STARTER_MENU } from '../data/tutorial.js';
 import { showStarterCard } from './cards.js';
 import { makeButton } from './ui.js';
-import { save } from './save.js';
+import { load, save } from './save.js';
 
 const DEPTH = 47; // above the recipe-book / sound buttons
 
@@ -37,6 +37,7 @@ export class Tutorial {
     const step = this.steps[this.i];
     const T = TUTORIAL_TEXT;
     if (step.card === 'starter') {
+      save('combosSeen', [...new Set([...load('combosSeen', []), ...STARTER_MENU.map((r) => r.name)])]); // shown here, no separate cards
       return this.scene.pauseFor((resume) =>
         showStarterCard(this.scene, { title: T.menuTitle, rows: STARTER_MENU, note: T.menuNote, button: T.open, onClose: () => (resume(), this.next()) }));
     }

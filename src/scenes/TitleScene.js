@@ -68,6 +68,7 @@ export default class TitleScene extends Phaser.Scene {
         save('openingSeen', false);
         save('demosOff', false); // the watch-first demos come back too
         save('demosSeen', []);
+        save('combosSeen', []); // and the new-order cards
         replay.setText('Intro + tutorial will play on Day 1 ✓');
       });
     }

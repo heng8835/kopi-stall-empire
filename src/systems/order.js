@@ -58,6 +58,20 @@ export function formatOrder(spec) {
     .join(' ');
 }
 
+// An order in plain English (for tourists, and anyone learning): "Kopi O kosong" -> "black coffee, no sugar".
+export function plainOrder(spec) {
+  if (MALT.includes(spec.base)) {
+    const name = spec.base === 'milo' ? 'Milo' : 'Horlicks';
+    return spec.topping ? `iced ${name} with a mountain of powder on top` : `${spec.iced ? 'iced ' : 'hot '}${name}`;
+  }
+  const drink = { kopi: 'coffee', teh: 'tea', cham: 'coffee and tea mixed' }[spec.base];
+  const black = spec.milk === 'none';
+  const first = [spec.iced ? 'iced' : '', spec.strength === 'gao' ? 'strong' : spec.strength === 'poh' ? 'weak' : '', spec.tarik ? 'pulled' : '', black ? 'black' : '', drink].filter(Boolean).join(' ');
+  const milk = spec.milk === 'evap' ? 'with evaporated milk' : black ? '' : 'with condensed milk';
+  const sugar = { none: 'no sugar', less: 'less sweet', normal: '', more: 'extra sweet' }[spec.sugar];
+  return [first, milk, sugar].filter(Boolean).join(', ');
+}
+
 const stripPunct = (w) => w.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
 
 const bare = (w) => stripPunct(w).replace(/['’]s$/, ''); // "Tan's" -> "tan"
