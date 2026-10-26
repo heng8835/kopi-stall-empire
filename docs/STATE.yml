@@ -1,5 +1,5 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
-updated: 2026-10-26
+updated: 2026-10-27
 phase: development
 next: "Phone playtest of the live build + phase D (buy machines, try Teh C Special / Godzilla / tapau rider / 4 plates / 2nd table), then push. Art waiting: part 3 (sharpen 17), kettle + tarik mugs (26), part 4 (tin + Oyen, Ah Gong walk), part 5 (counter machines, toppings, 4-plate tray, bin + hand, shop icons) in docs/art/PROMPTS_2026-10.md."
 tier_hint: 1
@@ -9,4 +9,4 @@ validation: passing
 open_decisions: ["Walk-frame route (IDEAS.md)", "Monetisation: not now; before selling check Suno plan (commercial), Milo/Horlicks names"]
 spec: ""
 board_task: ""
-notes: "Phase D built, committed, NOT pushed. Counter-top machines (tools.js COUNTER row, drawn in code via drawCounterShape until art): drop extras (EXTRAS in drinks.js), gula always dosed. Owning any moves radio/cat bed/cup warmer to the back-wall ledge (stallProps `back`). perks.plates/tables; tableGuests[]; bulk rider = c.whole false. Jump: ?day=N&fame=F&money=CENTS&flags=a,b&owned=x,y. Pane testing: g.loop.sleep() + g.step; renderer.snapshot POSTed to a tiny local receiver (scratch recv.py); await Promise.resolve() between steps lets the demo's awaits run."
+notes: "All pushed live. Dial: systems/dial.js + PourBar.show(..., { value }) + StallScene.openDial; recipe book = 📖 tab (cards.showRecipeBook, BOOK.example); toolIcon() renders code-drawn tools to textures for cards. Customers depth = 2 + feetY/1000 (sortByFeet). Counter-top machines (tools.js COUNTER row, drawn in code via drawCounterShape until art): drop extras (EXTRAS in drinks.js), gula always dosed. Owning any moves radio/cat bed/cup warmer to the back-wall ledge (stallProps `back`). perks.plates/tables; tableGuests[]; bulk rider = c.whole false. Jump: ?day=N&fame=F&money=CENTS&flags=a,b&owned=x,y. Pane testing: g.loop.sleep() + g.step; renderer.snapshot POSTed to a tiny local receiver (scratch recv.py); await Promise.resolve() between steps lets the demo's awaits run."

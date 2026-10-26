@@ -30,8 +30,8 @@ export const SHOP = [
   { id: 'fourthPlate', aisle: 'machine', name: 'Fourth Tray Plate', zh: '第四个杯位', price: 6500, tier: 50, icon: '🍽️', text: 'Make 4 cups at once.', effect: { plates: 4 } },
   // tools
   { id: 'longSpout', aisle: 'tool', name: 'Long-Spout Pot', zh: '长嘴壶', price: 2500, tier: 0, icon: '🫗', text: 'Kopi, teh and malt drinks pour 25% faster.', effect: { pourMult: 1.25 } },
-  { id: 'sugarScoop', aisle: 'tool', name: 'Sugar Scoop', zh: '糖匙', price: 1500, tier: 0, icon: '🥄', text: 'Drop sugar on a cup: each scoop is one zone. 1 = siew dai, 2 = normal, 3 = ga dai.', effect: { sugarScoop: true } },
-  { id: 'milkPump', aisle: 'tool', name: 'Milk Pump', zh: '炼奶泵', price: 2000, tier: 25, icon: '🥫', text: 'Drop condensed or evap milk on a cup: each pump is one zone.', effect: { milkPump: true } },
+  { id: 'sugarScoop', aisle: 'tool', name: 'Sugar Scoop', zh: '糖匙', price: 1500, tier: 0, icon: '🥄', text: 'Drop the scoop on a cup, then tap to stop the dial: siew dai, normal or ga dai in one go.', effect: { sugarScoop: true } },
+  { id: 'milkPump', aisle: 'tool', name: 'Milk Pump', zh: '炼奶泵', price: 2000, tier: 25, icon: '🥫', text: 'Drop condensed or evap milk on a cup, then tap to stop the dial on the zone you want.', effect: { milkPump: true } },
   { id: 'brassSpoon', aisle: 'tool', name: 'Brass Spoon', zh: '铜汤匙', price: 1200, tier: 0, icon: '🥄', text: 'Stirs in 0.6 seconds instead of 1.', effect: { stirMs: 600 } },
   { id: 'markedGlass', aisle: 'tool', name: 'Marked Glasses', zh: '刻度杯', price: 1000, tier: 0, icon: '🥃', text: 'Every glass shows its ¾ and FULL lines.', effect: { marked: true } },
   { id: 'cupRack', aisle: 'tool', name: 'Cup Rack Pro', zh: '自动杯架', price: 1800, tier: 25, icon: '🗄️', text: 'After you serve, a fresh cup drops onto that plate.', effect: { autoCup: true } },

@@ -5,6 +5,7 @@ import { GAME_W, COLORS } from '../config.js';
 import { ZONES } from '../data/stallTuning.js';
 import { addText } from './text.js';
 import { sweetness } from './cup.js';
+import { dialZones } from './dial.js';
 
 const Z = ZONES;
 // [label, from, to, kind] straight from ZONES (the same boundaries gradeCup uses);
@@ -61,6 +62,10 @@ export function targetZone(ingredient, spec) {
   return null;
 }
 
+// The timing dial's zones for a dosed ingredient (and what it measures: sweetness, or evap for the pump).
+export const dialZonesFor = (ingredient) => dialZones(KIND[ingredient].zones);
+export const measureOf = (ingredient, cup) => KIND[ingredient].value(cup);
+
 const X = 8;
 const W = GAME_W - 16;
 const BAR_H = 22;
@@ -83,17 +88,18 @@ export class PourBar {
 
   // Called every frame while pouring: ingredient key, the cup, the slot number (1-3) and, for a
   // ticketed cup, the ticket ({ spec, who }) so the order's target zone is outlined.
-  show(ingredient, cup, slotNo, ticket = null) {
+  // dial = { value }: the timing dial (Sugar Scoop / Milk Pump / gula): the needle at value, red zone cut short.
+  show(ingredient, cup, slotNo, ticket = null, dial = null) {
     const k = KIND[ingredient];
     if (!k || !cup) return;
-    const zones = k.pohZones && ticket?.spec?.strength === 'poh' && !ticket.spec.iced ? k.pohZones : k.zones;
-    const key = `${ingredient}:${zones === k.zones ? '' : 'poh'}`;
+    const zones = dial ? dialZonesFor(ingredient) : k.pohZones && ticket?.spec?.strength === 'poh' && !ticket.spec.iced ? k.pohZones : k.zones;
+    const key = `${ingredient}:${dial ? 'dial' : zones === k.zones ? '' : 'poh'}`;
     if (this.kind !== key) this.layout(key, zones);
-    const v = k.value(cup);
+    const v = dial ? dial.value : k.value(cup);
     const max = zones.at(-1)[2];
     const mx = X + (Math.min(v, max) / max) * W;
     const zone = zones.find((z) => v >= z[1] && v < z[2]) ?? zones.at(-1);
-    this.label.setText(ticket ? `Cup ${slotNo} · ${ticket.who} · ${k.name}` : `Cup ${slotNo} · ${k.name}`);
+    this.label.setText(dial ? `Cup ${slotNo} · ${k.name.split(' ·')[0]} · TAP to stop!` : ticket ? `Cup ${slotNo} · ${ticket.who} · ${k.name}` : `Cup ${slotNo} · ${k.name}`);
     this.now.setText(zone[0]);
     this.marker.clear();
     const target = zones.find((z) => z[0] === targetZone(ingredient, ticket?.spec));
@@ -106,7 +112,7 @@ export class PourBar {
     this.marker.fillStyle(0x111111, 1).fillRect(mx - 2.5, 12, 5, BAR_H + 8).lineStyle(1, 0xffffff, 1).strokeRect(mx - 2.5, 12, 5, BAR_H + 8);
     // tremble in the careful zone, shake in the red one (never wild)
     const t = this.scene.time.now;
-    const amp = zone[3] === 'bad' ? 2.6 : zone[3] === 'hi' ? 0.9 : 0;
+    const amp = dial ? 0 : zone[3] === 'bad' ? 2.6 : zone[3] === 'hi' ? 0.9 : 0;
     this.c.setPosition(amp ? Math.sin(t / (zone[3] === 'bad' ? 22 : 38)) * amp : 0, this.y + (amp ? Math.cos(t / 31) * amp * 0.35 : 0));
     this.c.setAlpha(1);
     this.hideAt = t + 700;

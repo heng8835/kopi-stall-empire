@@ -35,7 +35,7 @@ export const TUNING = {
   tarikPullsNeeded: 4, // up-and-down pulls of the tarik mugs until it's frothy
   autoTarikMs: 1600, // dropping the mugs on a cup pulls it by itself in this long
   autoStirMs: 1000, // dropping the spoon on a cup stirs it in this long
-  doseAmount: 0.45, // Sugar Scoop / Milk Pump: one dose = one sweetness zone (1 siew dai, 2 normal, 3 ga dai)
+  dialSweepMs: 1400, // Sugar Scoop / Milk Pump / gula: the timing dial's needle crosses the bar in this long
   iceVolume: 0.25, // ice raises the level: peng = pour to the ¾ line, then ice
 };
 

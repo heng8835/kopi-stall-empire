@@ -150,3 +150,12 @@ describe('the counter top', () => {
     }
   });
 });
+
+describe('the recipe book', () => {
+  it('every recipe word has an example order that uses it', () => {
+    for (const [f, b] of Object.entries(BOOK)) {
+      expect(b.example, f).toBeTruthy();
+      expect(featuresOf(parseOrder(b.example)), f).toContain(f);
+    }
+  });
+});

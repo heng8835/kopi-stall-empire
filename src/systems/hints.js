@@ -65,7 +65,7 @@ export function nextStep(cup, spec, who) {
     if (cup.base && cup.base !== 'teh') return { text: 'Wrong drink in this cup! Drag it to the bin', bin: true };
     if (cup.condensed > ZONES.trace || cup.sugar > ZONES.trace) return { text: 'Special uses gula melaka, not milk or sugar! Bin it', bin: true };
     const g = cup.gula ?? 0;
-    if (g < ZONES.sugar.normal[0]) return cup.base || cup.evap > ZONES.trace ? { text: 'Gula melaka goes in FIRST. Bin it and start again', bin: true } : { text: 'Layer 1: drop the gula melaka (counter) on the cup till NORMAL' };
+    if (g < ZONES.sugar.normal[0]) return cup.base || cup.evap > ZONES.trace ? { text: 'Gula melaka goes in FIRST. Bin it and start again', bin: true } : { text: 'Layer 1: drop the gula melaka (counter) on the cup, tap the dial at NORMAL' };
     if (g >= ZONES.sugar.normal[1]) return { text: 'Too much gula melaka! Bin it and try again', bin: true };
     if (cup.evap < ZONES.milk.normal[0]) return cup.base ? { text: 'Evap goes in before the teh. Bin it and start again', bin: true } : { text: 'Layer 2: evap milk till C · NORMAL' };
     if (!cup.base || fill < lo) return { text: `Layer 3: teh pot gently till ${zone}. Don't stir!` };
