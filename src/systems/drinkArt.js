@@ -445,12 +445,13 @@ export class DrinkArt {
       if (fill >= tf + 0.08) continue;
       const o = oval(levelY(tf));
       g.save();
-      g.setLineDash([7, 5]);
-      // a dark edge under the gold line, so it reads on a pale glass (and for older eyes)
-      g.lineWidth = 6;
+      g.setLineDash([12, 6]);
+      // a dark edge under the gold line, so it reads on a pale glass (and for older eyes: thick, since the
+      // art is drawn at 3x and shown at a third)
+      g.lineWidth = 10;
       g.strokeStyle = 'rgba(58,46,42,0.75)';
       g.beginPath(); g.ellipse(o.cx, o.cy, o.rx + 1, o.ry + 1, 0, 0, Math.PI); g.stroke();
-      g.lineWidth = 3.5;
+      g.lineWidth = 6;
       g.strokeStyle = 'rgba(255,210,63,1)';
       g.beginPath(); g.ellipse(o.cx, o.cy, o.rx + 1, o.ry + 1, 0, 0, Math.PI); g.stroke();
       g.restore();

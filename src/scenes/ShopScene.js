@@ -13,7 +13,11 @@ import { saveRun } from '../systems/run.js';
 import { playMusic } from '../systems/music.js';
 
 // Catalogue pictures borrowed from stall art until their own (docs/art/PROMPTS_2026-10.md part 5); the rest show their emoji.
-const SHOP_ART = { menuBoard: 'propMenuBoard', cupRack: 'toolRack', markedGlass: 'cupGlass' };
+const SHOP_ART = {
+  menuBoard: 'propMenuBoard', cupRack: 'toolRack', markedGlass: 'cupGlass', longSpout: 'pourKopiPot', sugarScoop: 'toolSugar',
+  milkPump: 'toolCondensed', brassSpoon: 'toolStir', iceMachine: 'iceCluster', twinSock: 'toolKopiPot',
+};
+const SHOP_TINT = { brassSpoon: 0xf0c060 }; // the same brass as the spoon at the stall
 
 // The night shop: Uncle Tan's Supplier Catalogue, between a day's summary and the next morning.
 // Started with { run } = tomorrow's run; purchases are saved straight into it.
@@ -151,7 +155,8 @@ export default class ShopScene extends Phaser.Scene {
     const art = STALL_PROPS[item.id]?.[0]?.key ?? MACHINE_TOOLS[item.id]?.sprite ?? SHOP_ART[item.id] ?? null;
     const icon = art ? this.add.image(x + 26, y + h / 2, art) : addText(this, x + 26, y + h / 2, item.icon, { size: 26, origin: 0.5 });
     if (art) icon.setScale(Math.min(40 / icon.width, 40 / icon.height));
-    if (art && MACHINE_TOOLS[item.id]?.tint) icon.setTint(MACHINE_TOOLS[item.id].tint);
+    const tint = MACHINE_TOOLS[item.id]?.tint ?? SHOP_TINT[item.id];
+    if (art && tint) icon.setTint(tint);
     const name = addText(this, x + 52, y + 8, item.name, { size: 14, bold: true, color: dim ? '#8a7a70' : '#3a2e2a' });
     const zh = addText(this, x + 52 + name.width + 6, y + 10, item.zh, { size: 11, color: '#8a7a70' });
     const tier = addText(this, x + 52, y + h - 16, item.tier ? `Fame ${item.tier}+` : 'Any fame', { size: 9, bold: true, color: '#8a5a1e' });

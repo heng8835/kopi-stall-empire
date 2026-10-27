@@ -74,8 +74,9 @@ The one-month trial is why the tin is for Day 30, and it frames the finale's dec
 ## Ep 1 · Day 1 · The Note on the Tin 《罐上的字条》
 **Cast:** narrator, Oyen, Aunty Lim · **When:** start (after your first cup), then end
 
-*before* (gameplay, no scene): the stall opens and Aunty Lim walks straight up: "First day ah? One teh: teh pot to FULL,
-condensed to NORMAL, stir. You try!" You make it yourself, the tools pulsing, and serve it. Then the episode plays:
+*before* (gameplay, no scene): the stall opens and Aunty Lim walks straight up: "First day ah? Come, I show you how to
+make my teh. Watch!" The ghost hand makes it with the real tools while she says each step; you drag it to her. She
+stays at the counter, and the episode plays:
 
 *start*
 - **Narrator:** The first teh of your life. Aunty Lim sips it slowly.

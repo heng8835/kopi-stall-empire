@@ -36,7 +36,14 @@ export class Tutorial {
     if (this.i >= this.steps.length) return this.finish();
     const step = this.steps[this.i];
     const T = TUTORIAL_TEXT;
-    if (step.story) return this.scene.playStory(step.story, () => this.active && this.next());
+    if (step.story) {
+      return this.scene.playStory(step.story, () => {
+        const c = this.stayer;
+        this.stayer = null;
+        if (c && c.state !== 'gone') this.scene.time.delayedCall(600, () => c.state !== 'gone' && this.scene.leave(c));
+        if (this.active) this.next();
+      });
+    }
     if (step.card === 'starter') {
       save('combosSeen', [...new Set([...load('combosSeen', []), ...STARTER_MENU.map((r) => r.name)])]); // shown here, no separate cards
       return this.scene.pauseFor((resume) =>
@@ -57,12 +64,15 @@ export class Tutorial {
     const yourTurn = (made = false) => {
       if (!this.active) return;
       s.lockStall(false);
-      if (!made) this.highlight(step.highlight);
+      if (made) return;
+      this.highlight(step.highlight);
+      if (step.demo) s.showBubble(c, c.orderLine, 'order'); // demos off: just her order, the tools pulse
     };
     const begin = () => {
       if (!this.active) return;
-      if (step.demo) return s.runDemo(c, yourTurn);
       s.showBubble(c, step.say, 'say');
+      // a moment to read her greeting, then the ghost hand makes it (you serve)
+      if (step.demo) return s.time.delayedCall(2200, () => this.active && s.runDemo(c, yourTurn));
       s.time.delayedCall(2800, () => c.state === 'waiting' && !c.served && s.showBubble(c, c.orderLine, 'order'));
       yourTurn();
     };
@@ -74,10 +84,14 @@ export class Tutorial {
   onServed(c, tier) {
     if (!this.active || !c.tutorial || c.served < c.n) return;
     const step = this.steps[this.i];
+    this.clearGlows(); // the pulsing boxes go as soon as the cup is served
     if (tier !== 'perfect') this.scene.think(TUTORIAL_TEXT.almost, 2500);
     this.scene.lockStall(true); // until the stall opens
-    // she stays a moment (to say you're ready, if the step has a line), then the next step
-    c.linger = step.ready ? 3400 : 1800;
+    // she stays a moment (to say you're ready, if the step has a line), then the next step. If that's her
+    // episode, she stays at the counter all through it and leaves after.
+    const storyNext = this.steps[this.i + 1]?.story;
+    c.linger = storyNext ? 10 * 60_000 : step.ready ? 3400 : 1800;
+    if (storyNext) this.stayer = c;
     if (step.ready) this.scene.time.delayedCall(1100, () => c.state !== 'gone' && this.scene.showBubble(c, step.ready, 'say'));
     this.scene.time.delayedCall(step.ready ? 3600 : 1400, () => this.active && this.next());
   }

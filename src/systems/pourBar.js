@@ -1,5 +1,5 @@
-// The pour bar: a horizontal gauge docked under the HUD while something is poured, so the
-// player's finger (down at the cup) never covers it. Zones touch (no gaps); the bar trembles in
+// The pour bar: a horizontal gauge docked above the pot while something is poured (under the
+// customers' bubbles), so the player's hand, down at the cup, never covers it. Zones touch (no gaps); the bar trembles in
 // GA DAI-style "careful" zones and shakes harder in the red ones.
 import { GAME_W, COLORS } from '../config.js';
 import { ZONES } from '../data/stallTuning.js';
@@ -68,16 +68,18 @@ export const measureOf = (ingredient, cup) => KIND[ingredient].value(cup);
 
 const X = 8;
 const W = GAME_W - 16;
-const BAR_H = 22;
+const BAR_H = 28;
+const TOP = 19; // the bar's top, under the header line
+const HEAD = 13; // header text size
 
 export class PourBar {
   constructor(scene, y, depth = 55) {
     this.scene = scene;
     this.y = y;
     this.c = scene.add.container(0, y).setDepth(depth).setAlpha(0);
-    this.panel = scene.add.rectangle(X - 4, -4, W + 8, BAR_H + 26, COLORS.paper, 0.96).setOrigin(0).setStrokeStyle(2, COLORS.inkHex, 0.9);
-    this.label = addText(scene, X, -1, '', { size: 11, bold: true });
-    this.now = addText(scene, X + W, -1, '', { size: 11, bold: true, color: '#c8562e', origin: [1, 0] });
+    this.panel = scene.add.rectangle(X - 4, -4, W + 8, TOP + BAR_H + 10, COLORS.paper, 0.97).setOrigin(0).setStrokeStyle(2, COLORS.inkHex, 0.9);
+    this.label = addText(scene, X, -1, '', { size: HEAD, bold: true });
+    this.now = addText(scene, X + W, -1, '', { size: HEAD, bold: true, color: '#c8562e', origin: [1, 0] });
     this.g = scene.add.graphics();
     this.marker = scene.add.graphics();
     this.c.add([this.panel, this.g, this.marker, this.label, this.now]);
@@ -99,17 +101,22 @@ export class PourBar {
     const max = zones.at(-1)[2];
     const mx = X + (Math.min(v, max) / max) * W;
     const zone = zones.find((z) => v >= z[1] && v < z[2]) ?? zones.at(-1);
-    this.label.setText(dial ? `Cup ${slotNo} · ${k.name.split(' ·')[0]} · TAP to stop!` : ticket ? `Cup ${slotNo} · ${ticket.who} · ${k.name}` : `Cup ${slotNo} · ${k.name}`);
+    const what = k.name.split(' ·')[0];
+    this.label.setText(dial ? `Cup ${slotNo} · ${what} · TAP to stop!` : ticket ? `Cup ${slotNo} · ${ticket.who} · ${what}` : `Cup ${slotNo} · ${k.name}`);
     this.now.setText(zone[0]);
     this.marker.clear();
     const target = zones.find((z) => z[0] === targetZone(ingredient, ticket?.spec));
     if (target) {
       const x0 = X + (target[1] / max) * W;
       const x1 = X + (target[2] / max) * W;
-      this.marker.lineStyle(3, 0xffd23f, 1).strokeRect(x0 + 1.5, 17.5, x1 - x0 - 3, BAR_H - 3);
-      this.now.setText(zone === target ? `★ ${zone[0]}` : `${zone[0]}  → ★ ${target[0]}`);
+      this.marker.lineStyle(3, 0xffd23f, 1).strokeRect(x0 + 1.5, TOP + 1.5, x1 - x0 - 3, BAR_H - 3);
+      this.now.setText(zone === target ? `★ ${zone[0]}` : `${zone[0]} → ★ ${target[0]}`);
     }
-    this.marker.fillStyle(0x111111, 1).fillRect(mx - 2.5, 12, 5, BAR_H + 8).lineStyle(1, 0xffffff, 1).strokeRect(mx - 2.5, 12, 5, BAR_H + 8);
+    // the status on the right keeps its size; the label on the left shrinks so the two never touch
+    this.label.setScale(1);
+    const room = W - this.now.width - 10;
+    if (this.label.width > room) this.label.setScale(Math.max(0.6, room / this.label.width));
+    this.marker.fillStyle(0x111111, 1).fillRect(mx - 3, TOP - 4, 6, BAR_H + 8).lineStyle(1, 0xffffff, 1).strokeRect(mx - 3, TOP - 4, 6, BAR_H + 8);
     // tremble in the careful zone, shake in the red one (never wild)
     const t = this.scene.time.now;
     const amp = dial ? 0 : zone[3] === 'bad' ? 2.6 : zone[3] === 'hi' ? 0.9 : 0;
@@ -127,13 +134,14 @@ export class PourBar {
     for (const [label, a, b, kind] of zones) {
       const x0 = X + (a / max) * W;
       const x1 = X + (b / max) * W;
-      this.g.fillStyle(FILL_COLORS[kind], 1).fillRect(x0, 16, x1 - x0, BAR_H);
-      this.g.lineStyle(1, 0x000000, 0.18).lineBetween(x1, 16, x1, 16 + BAR_H);
-      const t = addText(this.scene, (x0 + x1) / 2, 16 + BAR_H / 2, label, { size: 9, bold: true, color: '#1f1f1f', origin: 0.5 });
+      this.g.fillStyle(FILL_COLORS[kind], 1).fillRect(x0, TOP, x1 - x0, BAR_H);
+      this.g.lineStyle(1, 0x000000, 0.18).lineBetween(x1, TOP, x1, TOP + BAR_H);
+      const t = addText(this.scene, (x0 + x1) / 2, TOP + BAR_H / 2, label, { size: 11, bold: true, color: '#1f1f1f', origin: 0.5 });
+      if (t.width > x1 - x0 - 2) t.setScale(Math.max(0.7, (x1 - x0 - 2) / t.width)); // narrow zones
       this.zoneTexts.push(t);
       this.c.add(t);
     }
-    this.g.lineStyle(2, COLORS.inkHex, 1).strokeRoundedRect(X, 16, W, BAR_H, 4);
+    this.g.lineStyle(2, COLORS.inkHex, 1).strokeRoundedRect(X, TOP, W, BAR_H, 4);
     this.c.bringToTop(this.marker);
   }
 

@@ -1,14 +1,17 @@
 // Dialogue per character. Each has their own natural language mix (see GAME_DESIGN.md cast).
 // {order} = the order in kopitiam lingo, {n} = cups in a group order,
-// {owner} = how they address the player ("Ah Boy" for Jun, "Ah Girl" for Mei).
+// {owner} = how they address the player ("Ah Boy" for Jun, "Ah Girl" for Mei),
+// {greet} = Morning / Afternoon / Evening by the stall's clock (greetAt).
 // Keep glossary words space-separated so they stay tappable (see systems/order.js tokenize).
+
+import { TUNING } from '../data/stallTuning.js';
 
 export const LINES = {
   auntyLim: {
     order: [
       'Boss, {order} ah. 谢谢哦.',
       '{owner}, {order} one. Make nice nice hor.',
-      'Morning boss! Same same, {order} lah.',
+      '{greet} boss! Same same, {order} lah.',
     ],
     perfect: ['Wah, shiok! 刚刚好.', 'This one correct lah, {owner}.', '好喝! Tomorrow I come again.'],
     close: ['Hmm... can lah, can drink.', '差一点点 only. Never mind.'],
@@ -45,7 +48,7 @@ export const LINES = {
   },
   // Random walk-ins (src/data/customers.js WALK_INS): short, generic, still local.
   officeWorker: {
-    order: ['Boss, {order} please. Takeaway… no wait, here.', 'Morning! {order}, thanks boss.', '{order} one, boss. Need to wake up.'],
+    order: ['Boss, {order} please. Takeaway… no wait, here.', '{greet}! {order}, thanks boss.', '{order} one, boss. Need to wake up.'],
     perfect: ['Wah, power. Can survive the meeting now.', 'Nice, thanks boss!'],
     close: ['Okay lah, can drink.'],
     oops: ['Eh, not my order leh… never mind, I drink.'],
@@ -95,7 +98,7 @@ export const LINES = {
   },
   mum: {
     order: ['{order} please, boss. Shh, baby sleeping.', 'Boss, {order}. Quick quick before he wake up.', '{order}, thank you ah.'],
-    perfect: ['Wah, so nice. First break today.', 'Thank you boss, saved my morning.'],
+    perfect: ['Wah, so nice. First break today.', 'Thank you boss, saved my day.'],
     close: ['Okay, can lah.'],
     oops: ['Not mine leh… never mind, I too tired to care.'],
     timeout: ['Aiyo, baby wake up already. Next time!'],
@@ -208,6 +211,12 @@ export const UI = {
   restartKeep: 'Keep my save',
   restartYes: 'Start over',
 };
+
+// "Morning" until noon, "Afternoon" until 5pm, then "Evening" (ms into the day; the day runs 7am -> 7pm).
+export function greetAt(ms, dayMs = TUNING.dayMs) {
+  const hour = 7 + (ms / dayMs) * 12;
+  return hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
+}
 
 export function pickLine(charId, kind, vars = {}, rng = Math.random) {
   const list = LINES[charId]?.[kind] ?? ['...'];

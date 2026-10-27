@@ -61,7 +61,10 @@ export default class DramaScene extends Phaser.Scene {
     this.lastWho = null;
     this.bornAt = this.time.now;
 
-    const skip = addText(this, GAME_W - 10, BOX_Y - 8, 'Skip ▸▸', { size: 14, bold: true, color: '#fff6dc', origin: [1, 1] }).setDepth(20);
+    // top-right corner: clear of the choice buttons and the name tag (playtest: it sat on the 2nd choice)
+    const skip = addText(this, GAME_W - 16, 50, 'Skip ▸▸', { size: 14, bold: true, color: '#fff6dc', origin: [1, 0] }).setDepth(21);
+    const pill = this.add.rectangle(GAME_W - 8, 45, skip.width + 16, skip.height + 10, 0x2b2420, 0.9).setOrigin(1, 0).setStrokeStyle(2, 0xfff6dc, 0.6).setDepth(20);
+    this.skipText = { setVisible: (v) => (skip.setVisible(v), pill.setVisible(v)) };
     skip.setStroke('#2b2420', 3);
     skip.setInteractive({ useHandCursor: true }).on('pointerdown', (p, x, y, e) => {
       e?.stopPropagation?.();
@@ -267,11 +270,12 @@ export default class DramaScene extends Phaser.Scene {
   showChoice() {
     this.clear();
     this.waitingChoice = true;
+    this.skipText.setVisible(false); // a choice has to be made
     this.choiceAt = this.time.now;
     this.layer.push(addText(this, GAME_W / 2, 250, 'What do you do?', { size: 18, bold: true, color: '#fff6dc', origin: 0.5 }));
     this.layer.push(addText(this, GAME_W / 2, 276, '你会怎么做?', { size: 14, color: '#d8cbb5', origin: 0.5 }));
     this.d.ep.choice.options.forEach((opt, i) => {
-      const btn = makeButton(this, 24, 310 + i * 70, GAME_W - 48, 58, opt.label, () => this.choose(opt), { size: 15, bold: true });
+      const btn = makeButton(this, 24, 310 + i * 70, GAME_W - 48, 58, fill(opt.label, this.d.vars ?? {}), () => this.choose(opt), { size: 15, bold: true });
       this.layer.push(btn.bg, btn.txt);
     });
     this.lastWho = null;
@@ -281,6 +285,7 @@ export default class DramaScene extends Phaser.Scene {
   choose(opt) {
     if (!this.waitingChoice || this.time.now - this.choiceAt < CHOICE_GRACE_MS) return;
     this.waitingChoice = false;
+    this.skipText.setVisible(true);
     this.d.onChoice?.(opt);
     for (const f of opt.flags ?? []) this.flags.add(f);
     this.stage = 'reply';

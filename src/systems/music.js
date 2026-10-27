@@ -6,18 +6,33 @@
 import { MUSIC, DUCK, DUCK_UNDER_STORY } from '../data/music.js';
 import { audioOut, onAudioReady } from './sfx.js';
 
+const bytes = {}; // key -> Promise<ArrayBuffer> (downloaded at boot, before audio is allowed)
 const buffers = {}; // key -> Promise<AudioBuffer>
 const channels = { bg: null, story: null }; // channel -> { key, gain, sources, timer, stopped }
 const wanted = { bg: null, story: null }; // what to play once audio is unlocked
 let ducked = false; // a story is on
 
+const download = (key) =>
+  (bytes[key] ??= fetch(`audio/${MUSIC[key].file}`).then((r) => {
+    if (!r.ok) throw new Error(r.status);
+    return r.arrayBuffer();
+  }));
+
+// decodeAudioData takes the buffer over, so it gets a copy (the downloaded bytes stay reusable)
 function decode(key) {
   const out = audioOut();
   if (!out) return null;
-  buffers[key] ??= fetch(`audio/${MUSIC[key].file}`)
-    .then((r) => r.arrayBuffer())
-    .then((b) => out.ctx.decodeAudioData(b));
+  buffers[key] ??= download(key).then((b) => out.ctx.decodeAudioData(b.slice(0)));
+  buffers[key].catch(() => delete buffers[key]); // a failed download or decode can try again next time
   return buffers[key];
+}
+
+// Download the tracks one after another as soon as the game loads (playtest: the music came in seconds
+// late, every scene, because each mp3 was only fetched when its scene started). Once audio is
+// unlocked, the first `decodeNow` tracks are decoded straight away too.
+export function preloadMusic(keys, decodeNow = 2) {
+  keys.reduce((prev, key) => prev.then(() => download(key)).catch(() => {}), Promise.resolve());
+  onAudioReady(() => keys.slice(0, decodeNow).forEach((k) => decode(k)?.catch(() => {})));
 }
 
 // Equal-power fade curves (fading one pass out while the next fades in keeps the loudness steady).
@@ -47,7 +62,7 @@ function start(key, channel) {
     ?.then((buf) => {
       if (track.stopped) return;
       const { loopStart, loopEnd, crossfade: xf = 2, loop = true } = MUSIC[key];
-      track.gain.gain.setTargetAtTime(level(channel), ctx.currentTime, 0.6);
+      track.gain.gain.setTargetAtTime(level(channel), ctx.currentTime, 0.15); // up in under half a second
       if (!loop) {
         const src = ctx.createBufferSource();
         src.buffer = buf;

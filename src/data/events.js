@@ -19,7 +19,8 @@
 //   epilogue             finale only: beats after the ending
 //   caption              finale only: the closing line. Other episodes end on a 下集 card with just the
 //                        next episode's number + title (systems/story.js nextEpisode), no spoilers
-// Line text: {owner} = Ah Boy / Ah Girl, {rating} = Aunty Lim's score today, {ratingNote} = what she says about it.
+// Line text: {owner} = Ah Boy / Ah Girl, {rating} = Aunty Lim's score today, {ratingNote} = what she says about it,
+// {boast} = the cocky answer to it ("Tomorrow sure 10/10!", or "...also 10/10!" after a 10). Choice labels are filled too.
 // Keep glossary words space-separated so they stay tappable (systems/order.js tokenize).
 
 // Speakers. sprite = HD sprite key; fallback = drawn as a dark silhouette while the art is missing.
@@ -72,7 +73,7 @@ export const EVENTS = [
     choice: {
       options: [
         { label: '"Aunty, teach me!"', flags: ['humble'], fame: 2, beats: [{ who: 'auntyLim', text: 'Hm. At least got manners. Everybody 有进步空间. Tomorrow I watch.' }] },
-        { label: '"Tomorrow sure 10/10!"', flags: ['cocky'], fame: 1, beats: [{ who: 'auntyLim', text: 'Wah, big talk. 我记住了.' }] },
+        { label: '"{boast}"', flags: ['cocky'], fame: 1, beats: [{ who: 'auntyLim', text: 'Wah, big talk. 我记住了.' }] },
       ],
     },
     after: [N('She writes the number in a little red notebook. Why does a retired canteen aunty need a notebook?')],
@@ -99,6 +100,7 @@ export const EVENTS = [
   {
     id: 'ep3-fast-fast', day: 3, when: 'mid', ep: 3,
     title: { en: 'Fast Fast', zh: '快快' },
+    guest: { id: 'officeGuy', order: 'Kopi C kosong' }, // Marcus is at the counter when it plays
     beats: [
       { who: 'marcus', text: 'Boss, kopi C kosong, fast fast — yes Mr Lee, the Q3 deck is almost —' },
       N('His phone slips into the tray. The screen lights up. No call. Just the lock screen.'),
@@ -107,7 +109,7 @@ export const EVENTS = [
     choice: {
       options: [
         { label: 'Pretend you didn\'t see', flags: ['marcusQuiet'], beats: [{ who: 'marcus', text: '(quietly) …Thanks, boss.' }] },
-        { label: '"Bro, you okay?"', flags: ['marcusAsked'], beats: [{ who: 'marcus', text: 'Okay one. Okay one.' }, N('He tips 50 cents. His hand is shaking.')] },
+        { label: '"Bro, you okay?"', flags: ['marcusAsked'], money: 50, beats: [{ who: 'marcus', text: 'Okay one. Okay one.' }, N('He tips 50 cents. His hand is shaking.')] },
       ],
     },
   },

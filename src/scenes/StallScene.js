@@ -4,7 +4,7 @@ import { CUSTOMERS, WALK_INS } from '../data/customers.js';
 import { OWNERS } from '../data/owners.js';
 import { TOOLS, SLOT_X, SLOT_X4, SPOT_X, MACHINE_TOOLS, COUNTER, layoutRail, layoutCounter } from '../data/tools.js';
 import { TUNING } from '../data/stallTuning.js';
-import { pickLine, UI } from '../i18n/lines.js';
+import { pickLine, greetAt, UI } from '../i18n/lines.js';
 import { addText } from '../systems/text.js';
 import { fitCamera } from '../systems/view.js';
 import { addSprite, displayHeight } from '../systems/sprites.js';
@@ -53,7 +53,7 @@ const CLOSE_MIN = 19 * 60; // 7:00pm
 
 // Layout (logical px, 360x640), matched to the stall background art (901x1600 = 2.5x).
 const HUD_H = 40; // clock + day bar + fame + money
-const POUR_BAR_Y = 408; // the pour bar docks over the thought bubble, below the cups: clear of the bubbles and the Recipes tab
+const POUR_BAR_Y = 176; // the pour bar docks just under the customers' bubbles, above the pot: never under the pouring hand
 const COUNTER_Y = 282; // top of the wooden counter in the background
 const SERVE_AREA_Y = COUNTER_Y + 10; // a cup let go above this is "up at the customers"
 const FEET_Y = 318; // counter customers stand behind the counter (legs hidden)
@@ -62,7 +62,7 @@ const CUP_W = 50;
 const CUP_H = 62;
 // Ah Gong's seat at a table in the background (between counter spots, so nobody hides him); he walks
 // in from the street and sits. h = his height up close (he's small, far back). Bubble above him.
-const TABLE = { x: 238, feetY: 176, h: 112, bubble: { y: 50, w: 176 } };
+const TABLE = { x: 238, feetY: 176, h: 112, bubble: { y: 50, w: 176, lean: 0.86 } }; // ends left of the Recipes tab
 // With the Second Table: a walk-in who likes to sit takes the left table, and the two bubbles share the top
 // (lean = how far left of the guest the bubble starts, as a share of its width).
 const TABLES = [TABLE, { x: 104, feetY: 176, h: 112, bubble: { y: 50, w: 120, lean: 0.8 } }];
@@ -300,7 +300,7 @@ export default class StallScene extends Phaser.Scene {
     const four = this.perks.plates >= 4;
     if (four) this.drawFourPlates();
     this.slots = (four ? SLOT_X4 : SLOT_X).map((x, i) => {
-      const label = addText(this, x, CUP_BOTTOM + 6, '', { size: 10, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: four ? 86 : 112 }).setDepth(16);
+      const label = addText(this, x, CUP_BOTTOM + 5, '', { size: 11, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: four ? 86 : 112, lineSpacing: -2 }).setDepth(16);
       label.setStroke('#3a2414', 3);
       const container = this.add.container(x, CUP_BOTTOM).setDepth(14);
       // the cup, its drink, stream, steam and ice: drawn on a canvas at the glass art's resolution
@@ -314,8 +314,8 @@ export default class StallScene extends Phaser.Scene {
       container.setInteractive(new Phaser.Geom.Rectangle(0, hitH / 2 - CUP_H - 8, CUP_W + 24, hitH), Phaser.Geom.Rectangle.Contains);
       this.input.setDraggable(container);
       // who the cup is for, just above it (moves with the cup when dragged)
-      const forText = addText(this, 0, -CUP_H - 6, '', { size: 9, bold: true, color: '#fff6dc', origin: [0.5, 1] });
-      forText.setStroke('#3a2414', 3);
+      const forText = addText(this, 0, -CUP_H - 6, '', { size: 11, bold: true, color: '#fff6dc', origin: [0.5, 1] });
+      forText.setStroke('#3a2414', 4); // readable over the cat bed and the ledge props
       container.add(forText);
       const slot = { i, x, cup: null, container, art, label, forText, ticket: null }; // ticket = who it's for (assignCup)
       container.on('dragstart', () => this.onCupDragStart(slot));
@@ -351,6 +351,7 @@ export default class StallScene extends Phaser.Scene {
     for (const def of [...TOOLS, ...extra]) {
       const spot = rail[def.id];
       const t = spot ? { ...def, x: spot.x, w: def.w * spot.scale } : def;
+      const upgraded = this.upgradedTool(def.id);
       // counter-top machines stand behind the cups, so a tall Godzilla or a tapau knot stays in view
       const c = this.add.container(t.x, t.y).setDepth(t.feet === COUNTER ? 12 : 20);
       c.homeDepth = c.depth;
@@ -360,6 +361,7 @@ export default class StallScene extends Phaser.Scene {
       if (t.sprite) {
         const s = addSprite(this, t.sprite, 0, t.h / 2 - 12, t.spriteH);
         if (t.tint) s.setTint(t.tint); // a stand-in recoloured until its own art arrives
+        if (t.id === 'stir' && this.perks.stirMs) s.setTint(0xf0c060); // the Brass Spoon
         c.sprite = s;
         parts.push(s);
       }
@@ -369,8 +371,8 @@ export default class StallScene extends Phaser.Scene {
         parts.push(g);
       }
       // name tag so similar-looking cans are easy to tell apart
-      const label = addText(this, 0, t.h / 2 - 13, t.label, { size: 10, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc' });
-      const tag = this.add.rectangle(0, t.h / 2 - 13, label.width + 8, 14, 0x2b2420, 0.85).setOrigin(0.5, 0);
+      const label = addText(this, 0, t.h / 2 - 13, t.label, { size: 10, bold: true, align: 'center', origin: [0.5, 0], color: upgraded ? '#2b2420' : '#fff6dc' });
+      const tag = this.add.rectangle(0, t.h / 2 - 13, label.width + 8, 14, upgraded ? 0xf2c14e : 0x2b2420, 0.9).setOrigin(0.5, 0);
       parts.push(tag, label);
       c.add(parts);
       c.setSize(t.w, t.h);
@@ -387,6 +389,13 @@ export default class StallScene extends Phaser.Scene {
       if (t.kind === 'rack') c.on('pointerup', (p) => p.getDistance() < 6 && this.placeCupInFreeSlot());
     }
     if (import.meta.env.DEV) TOOL_IDS.filter((id) => !this.tools[id]).forEach((id) => console.warn('[tutorial] no tool for id', id));
+  }
+
+  // A tool a night-shop upgrade improves (its name tag turns gold, so the purchase shows at the stall).
+  upgradedTool(id) {
+    const p = this.perks;
+    return (p.pourMult > 1 && ['kopi', 'teh', 'milo', 'horlicks'].includes(id)) || (p.sugarScoop && id === 'sugar')
+      || (p.milkPump && ['condensed', 'evap'].includes(id)) || (p.stirMs && id === 'stir') || ((p.marked || p.autoCup) && id === 'rack');
   }
 
   // Shape for tools without art yet: the counter machines (t.shape), the tarik mugs, a tin for pouring
@@ -481,8 +490,9 @@ export default class StallScene extends Phaser.Scene {
 
   // The drink itself is drawn every frame by slot.art (systems/drinkArt.js); this updates the label.
   redrawSlot(slot) {
-    slot.label.setText(slot.cup ? formatCup(slot.cup) : '');
-    slot.forText.setText(slot.cup && slot.ticket ? `for ${slot.ticket.who}` : '');
+    slot.label.setText(slot.cup ? formatCup(slot.cup) : '').setScale(1);
+    if (slot.label.height > 20) slot.label.setScale(20 / slot.label.height < 0.8 ? 0.8 : 20 / slot.label.height); // two lines stay clear of the coach
+    slot.forText.setText(slot.cup && slot.ticket ? `for ${slot.ticket.who}` : slot.cup && !slot.cup.base && this.perks.autoCup ? 'next customer' : '');
   }
 
   // ---------- cups on the tray ----------
@@ -604,9 +614,11 @@ export default class StallScene extends Phaser.Scene {
 
   // Match a cup to the waiting customer it fits best (oldest first on a tie).
   assignCup(slot) {
+    // oldest first, but the customer standing right over this plate wins a tie (cups line up with people)
+    const over = (c) => (c.spot === slot.i && this.slots.length === 3 ? 0 : 1);
     const cands = this.waitingCustomers()
       .filter((c) => this.cupsOwed(c, slot) > 0)
-      .sort((a, b) => (a.arrivedAt ?? 0) - (b.arrivedAt ?? 0))
+      .sort((a, b) => over(a) - over(b) || (a.arrivedAt ?? 0) - (b.arrivedAt ?? 0))
       .map((c) => ({ c, spec: c.spec }));
     const pick = slot.cup ? pickFor(slot.cup, cands) : null;
     slot.ticket = pick ? { c: pick.c, spec: pick.spec, who: pick.c.def.short ?? pick.c.def.name } : null;
@@ -653,7 +665,10 @@ export default class StallScene extends Phaser.Scene {
       this.tweens.add({ targets: slot.container, x: slot.x, y: CUP_BOTTOM, duration: 160, ease: 'Quad.out' });
     };
     if (!slot.cup) return back();
-    if (Phaser.Geom.Rectangle.Contains(Phaser.Geom.Rectangle.Inflate(this.tools.bin.area(), 8, 8), p.worldX, p.worldY)) {
+    const bin = Phaser.Geom.Rectangle.Inflate(this.tools.bin.area(), 18, 18);
+    bin.y -= 30; // the cup floats above the finger: the top of the bin counts too
+    bin.height += 30;
+    if (bin.contains(p.worldX, p.worldY) || bin.contains(p.worldX, p.worldY - CUP_H / 2)) {
       play('bin');
       logEvent(this.log, 'bin', { made: formatCup(slot.cup) }, this.clockMs);
       this.removeCup(slot);
@@ -834,6 +849,7 @@ export default class StallScene extends Phaser.Scene {
     if (t.kind === 'drop' && slot?.cup) this.dropOnCup(slot, t.apply);
     if (t.kind === 'pour' && this.dosed(t) && slot?.cup) this.openDial(slot, t.ingredient);
     if (t.kind === 'stir' && slot?.cup?.base) this.autoStir(slot); // drop the spoon on a cup: it stirs itself
+    else if (t.kind === 'stir' && slot?.cup) this.think('Pour the kopi or teh first, then stir', 2500);
     if (t.kind === 'tarik' && slot?.cup?.base) this.autoTarik(slot); // drop the mugs on a cup: it's pulled
     if (t.kind === 'rack' && slot && !slot.cup) this.placeCup(slot);
     this.pouring = null;
@@ -882,7 +898,7 @@ export default class StallScene extends Phaser.Scene {
     // a tap anywhere stops it (an invisible sheet over the stall, under the HUD and the bar)
     const catcher = this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000, 0.001).setOrigin(0).setDepth(54).setInteractive();
     catcher.on('pointerdown', () => !autoStop && this.stopDial());
-    const tap = addText(this, slot.x, CUP_BOTTOM - CUP_H - 18, 'TAP!', { size: 18, bold: true, color: '#fff6dc', origin: 0.5 }).setDepth(56);
+    const tap = addText(this, slot.x, CUP_BOTTOM - CUP_H - 40, 'TAP!', { size: 18, bold: true, color: '#fff6dc', origin: 0.5 }).setDepth(56);
     tap.setStroke('#c8562e', 5);
     this.tweens.add({ targets: tap, scale: 1.15, duration: 280, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
     this.dial = { slot, ingredient, zones, ms: 0, value: 0, max: zones.at(-1)[2], autoStop, parts: [catcher, tap] };
@@ -927,7 +943,13 @@ export default class StallScene extends Phaser.Scene {
     for (let i = 1; i <= TUNING.stirWigglesNeeded; i++) {
       this.time.delayedCall((ms / TUNING.stirWigglesNeeded) * i, () => slot.cup && slot.cup.stir < 1 && this.stirCup(slot));
     }
-    this.time.delayedCall(ms, () => (slot.stirring = false));
+    this.time.delayedCall(ms, () => {
+      slot.stirring = false;
+      if (slot.cup?.base) {
+        slot.cup.stir = 1; // the spoon always finishes the job
+        this.redrawSlot(slot);
+      }
+    });
   }
 
   // Teh tarik: a steel mug above the cup pours a long stream down and pulls back up, a few times.
@@ -1322,7 +1344,7 @@ export default class StallScene extends Phaser.Scene {
   }
 
   lineVars(extra = {}) {
-    return { owner: this.owner.address, ...extra };
+    return { owner: this.owner.address, greet: '{greet}', ...extra }; // filled when the bubble shows (showBubble)
   }
 
   arrive(c) {
@@ -1364,13 +1386,18 @@ export default class StallScene extends Phaser.Scene {
 
   showBubble(c, text, kind) {
     this.clearBubble(c);
+    text = text.replace('{greet}', greetAt(this.clockMs ?? 0)); // an order picked at 11am but shown at 1pm says Afternoon
     const pad = 6;
     const table = c.spot === 'table';
     // (Ah Gong's bubble leans left, clear of the sound button; with two tables both bubbles narrow so they never meet)
     const tb = table && (c.table ? TABLES[c.table].bubble : this.tableGuests.length > 1 ? TABLE_PAIR_BUBBLE : TABLE.bubble);
     const w = table ? tb.w : c.spot === 'all' || kind === 'say' ? 200 : 114; // what someone says (teaching) gets a wide, short bubble
     const x = Phaser.Math.Clamp(this.centerX(c) - w * (table ? tb.lean ?? 0.8 : 0.5), 4, GAME_W - w - 4);
-    const words = layoutLine(this, text, x + pad, 0, w - pad * 2, (key) => this.openGlossary(key), { size: 11 });
+    let words = layoutLine(this, text, x + pad, 0, w - pad * 2, (key) => this.openGlossary(key), { size: 12 });
+    if (words.height > 50) { // a long line: one size smaller, so a rush doesn't stack bubbles up into each other
+      words.objects.forEach((o) => o.destroy());
+      words = layoutLine(this, text, x + pad, 0, w - pad * 2, (key) => this.openGlossary(key), { size: 11 });
+    }
     if (words.terms) this.tapHintOnce();
     const extras = [];
     let h = words.height + pad * 2;
@@ -1391,7 +1418,9 @@ export default class StallScene extends Phaser.Scene {
     const tail = this.add.triangle(0, 0, tx - 7, y + h - 1, tx + 7, y + h - 1, tx, y + h + 8, 0xffffff).setOrigin(0).setDepth(30);
     [...words.objects, ...extras].forEach((o) => o.setDepth(31));
     const objs = [frame, tail, ...words.objects, ...extras];
-    if (c?.def) objs.push(...this.heartRow(c, x + w - 4, y - 5)); // friendship, on the bubble's top edge
+    // friendship, on the bubble's top edge (on the left end if the right end would be under the Recipes tab)
+    const underTab = y < HUD_H + 34 && x + w > GAME_W - 100;
+    if (c?.def) objs.push(...this.heartRow(c, underTab ? x + 4 + MAX_HEARTS * 13 : x + w - 4, y - 6));
     let bar = null;
     if (kind === 'order') {
       objs.push(this.add.rectangle(x + pad, y + h - 9, w - pad * 2, 5, 0xe0d6c4).setOrigin(0).setDepth(31));
@@ -1413,7 +1442,7 @@ export default class StallScene extends Phaser.Scene {
   // A row of small hearts (filled = friendship), right-aligned at (right, top).
   heartRow(c, right, top) {
     return Array.from({ length: MAX_HEARTS }, (_, i) =>
-      this.add.image(right - (MAX_HEARTS - i) * 10, top, i < c.hearts ? 'heart' : 'heartEmpty').setOrigin(0).setDisplaySize(11, 10).setDepth(32));
+      this.add.image(right - (MAX_HEARTS - i) * 13, top, i < c.hearts ? 'heart' : 'heartEmpty').setOrigin(0).setDisplaySize(14, 13).setDepth(32));
   }
 
   // Friendship after a serve or a walk-out; a heart floats up when they like you more.
@@ -1475,6 +1504,7 @@ export default class StallScene extends Phaser.Scene {
 
   serveCup(slot, c) {
     const cup = slot.cup;
+    if (slot.stirring) cup.stir = 1; // served while the spoon was still going: it was stirred
     let { tier, reasons } = gradeCup(cup, c.spec);
     // Uncle Tan's towel forgives the first spill of the day
     if (this.perks.towel && !this.towelUsed && reasons.includes('spilled over')) {
@@ -1526,7 +1556,7 @@ export default class StallScene extends Phaser.Scene {
     if (tier === 'perfect') this.log.events.at(-1).line = reply;
     this.showBubble(c, reply, 'reaction');
     if (res.paid + res.tip) {
-      this.floatText(`+${formatMoney(res.paid + res.tip)}`, this.centerX(c), this.headTop(c) + 10);
+      this.floatText(`+${formatMoney(res.paid + res.tip)}`, this.centerX(c), this.headTop(c) + 64);
       this.coinBurst(c);
     }
     if (tier === 'perfect') this.happyHop(c);
@@ -1580,7 +1610,8 @@ export default class StallScene extends Phaser.Scene {
   // ---------- juice / feedback ----------
 
   floatText(str, x, y) {
-    const t = addText(this, x, y, str, { size: 16, bold: true, color: '#2f7a3a', origin: 0.5 }).setDepth(60);
+    const t = addText(this, x, y, str, { size: 20, bold: true, color: '#7ee07a', origin: 0.5 }).setDepth(60);
+    t.setStroke('#1d3b1a', 5);
     this.tweens.add({ targets: t, y: y - 32, alpha: 0, duration: 1100, onComplete: () => t.destroy() });
   }
 
@@ -1822,7 +1853,7 @@ export default class StallScene extends Phaser.Scene {
       ep,
       flags: this.flags,
       fame: this.econ.fame,
-      vars: this.lineVars({ rating: this.rating ?? this.todayRating(), ratingNote: ratingNote(this.rating ?? this.todayRating()) }),
+      vars: this.lineVars({ rating: this.rating ?? this.todayRating(), ratingNote: ratingNote(this.rating ?? this.todayRating()), boast: (this.rating ?? this.todayRating()) >= 10 ? 'Tomorrow also 10/10!' : 'Tomorrow sure 10/10!' }),
       owner: { name: this.owner.name, sprite: this.owner.sprite },
       onChoice: (opt) => this.applyStoryChoice(opt),
       onEnding: (e) => (this.ending = e.id),
@@ -2141,7 +2172,8 @@ export default class StallScene extends Phaser.Scene {
     line(`${c.served} cups · ${c.perfect} perfect · ${c.close} close · ${c.oops} oops${c.walkedOut ? ` · ${c.walkedOut} left` : ''}`, {}, 4);
     line(`Sales ${formatMoney(sum.money.sales)}  ·  Tips ${formatMoney(sum.money.tips)}  ·  Total ${formatMoney(sum.money.total)}`, { bold: true }, 4);
     const today = beforeStars - sum.fame.from;
-    line(`名气 ${sum.fame.from} → ${sum.fame.to} (${today >= 0 ? '+' : ''}${today} today${starFame ? ` · ★ +${starFame}` : ''})  ·  Aunty Lim's teh ${this.rating}/10`, { size: 12, color: '#8a5a1e' }, 4);
+    line(`名气 ${sum.fame.from} → ${sum.fame.to} (${today >= 0 ? '+' : ''}${today} today${starFame ? ` · ★ +${starFame}` : ''})`, { size: 13, color: '#7a4a12', bold: true }, 2);
+    line(`Aunty Lim's teh: ${this.rating}/10`, { size: 12, color: '#7a4a12' }, 4);
     if ((e.bestStreak ?? 0) >= 3) line(`Best combo ×${e.bestStreak}`, { size: 12, color: '#c27a12', bold: true }, 8);
     if (e.perkEarned) line(`Your upgrades earned +${formatMoney(e.perkEarned)} today`, { size: 12, color: '#2f7a3a', bold: true }, 6);
     const ROWS = 4;
@@ -2152,19 +2184,19 @@ export default class StallScene extends Phaser.Scene {
       const total = rest.reduce((a, r) => ({ perfect: a.perfect + r.perfect, close: a.close + r.close, oops: a.oops + r.oops, walkedOut: a.walkedOut + r.walkedOut }), { perfect: 0, close: 0, oops: 0, walkedOut: 0 });
       line(`+${rest.length} more: ${bits(total)}`, { size: 12, align: 'left', color: '#6b5a50' }, 2, left);
     }
-    if (sum.topSlips.length) line(`Most slips: ${sum.topSlips.map((t) => `${t.reason} ×${t.n}`).join(', ')}`, { size: 11, color: '#8a7a70', align: 'left' }, 2, left);
+    if (sum.topSlips.length) line(`Most slips: ${sum.topSlips.map((t) => `${t.reason} ×${t.n}`).join(', ')}`, { size: 12, color: '#5e4e44', align: 'left' }, 2, left);
     line(`Uncle Tan says: ${sum.tip.en}`, { size: 12, color: '#2f7a3a', bold: true, align: 'left' }, 2, left);
-    line(sum.tip.zh, { size: 11, color: '#6b5a50', align: 'left' }, 6, left);
-    if (sum.quote) line(`${sum.quote.who}: "${sum.quote.line}"`, { size: 11, color: '#8a5a1e', align: 'left' }, 6, left);
+    line(sum.tip.zh, { size: 12, color: '#5e4e44', align: 'left' }, 6, left);
+    if (sum.quote) line(`${sum.quote.who}: "${sum.quote.line}"`, { size: 12, color: '#7a4a12', align: 'left' }, 6, left);
     if (gifted) line("Uncle Tan left you his old towel. (It forgives one spill a day.)", { size: 11, color: '#8a5a1e', bold: true }, 6);
     if (!done) {
       const more = nextCustomerAt(e.fame);
-      line(`Tomorrow: up to ${customersForFame(e.fame) + this.perks.extraCustomers} customers${more ? ` · 名气 ${more}: one more` : ''}`, { size: 11, color: '#8a7a70' }, 4);
+      line(`Tomorrow: up to ${customersForFame(e.fame) + this.perks.extraCustomers} customers${more ? ` · 名气 ${more}: one more` : ''}`, { size: 12, color: '#5e4e44' }, 4);
       const goal = goalText(nextGoal(tomorrow));
       if (goal) line(goal, { size: 12, color: '#2f5f8a', bold: true }, 4);
       // the month so far, and what it's all for
       const filled = Math.round((this.day / MONTH_DAYS) * 10);
-      line(`${'▰'.repeat(filled)}${'▱'.repeat(10 - filled)}  Day ${this.day}/${MONTH_DAYS} · Uncle Tan's tin: Day 30`, { size: 11, color: '#8a5a1e' }, 8);
+      line(`${'▰'.repeat(filled)}${'▱'.repeat(10 - filled)}  Day ${this.day}/${MONTH_DAYS} · Uncle Tan's tin: Day 30`, { size: 12, color: '#7a4a12' }, 8);
     }
     const textH = items.reduce((h, [t, gap]) => h + t.height + gap, 0);
     const dev = import.meta.env.DEV;
