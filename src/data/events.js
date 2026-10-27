@@ -13,12 +13,13 @@
 //   beats                [{ who, text, if?, name?, silhouette?, show? }] — who: a CAST key, 'narrator' or 'note';
 //                        show: a prop on the counter ('tin', or 'tinOyen' = Oyen asleep on the tin)
 //   choice {options}     [{ label, flags?, fame?, money? (cents), beats? }] — shown after `beats`
+//                        guestPays? (cents: all the episode's guest pays today), guestCups? (they buy fewer)
 //   after                beats after the choice (both options)
 //   endings              finale only: [{ id, min (fame), title, beats }]
 //   epilogue             finale only: beats after the ending
 //   caption              finale only: the closing line. Other episodes end on a 下集 card with just the
 //                        next episode's number + title (systems/story.js nextEpisode), no spoilers
-// Line text: {owner} = Ah Boy / Ah Girl, {rating} = Aunty Lim's score today.
+// Line text: {owner} = Ah Boy / Ah Girl, {rating} = Aunty Lim's score today, {ratingNote} = what she says about it.
 // Keep glossary words space-separated so they stay tappable (systems/order.js tokenize).
 
 // Speakers. sprite = HD sprite key; fallback = drawn as a dark silhouette while the art is missing.
@@ -61,19 +62,18 @@ export const EVENTS = [
     ],
     beats: [
       N('The first customer of your life.'),
-      { who: 'auntyLim', text: 'Eh! So you are the {owner} Uncle Tan pass his stall to ah?' },
-      { who: 'auntyLim', text: 'First day ah? Don\'t kan cheong. Here everybody very nice one.' },
-      { who: 'auntyLim', text: 'We all look after you. I\'m Aunty Lim. Every morning I come for teh.' },
-      { who: 'auntyLim', text: 'Uncle Tan\'s teh: 9 out of 10. Yours ah… 我们看看. One teh, please.' },
+      { who: 'auntyLim', text: 'Eh! You are the {owner} Uncle Tan pass his stall to? First day ah? Don\'t kan cheong.' },
+      { who: 'auntyLim', text: 'I\'m Aunty Lim. Every morning I come for teh. Uncle Tan\'s teh: 9 out of 10.' },
+      { who: 'auntyLim', text: 'Yours ah… 我们看看. One teh, please.' },
     ],
   },
   {
     id: 'ep1-rating', day: 1, when: 'end', ep: 1,
     title: { en: 'The Note on the Pot', zh: '壶上的字条' },
-    beats: [{ who: 'auntyLim', text: 'Today: {rating} out of 10. 有进步空间 lah.' }],
+    beats: [{ who: 'auntyLim', text: 'Today: {rating} out of 10. {ratingNote}' }],
     choice: {
       options: [
-        { label: '"Aunty, teach me!"', flags: ['humble'], fame: 2, beats: [{ who: 'auntyLim', text: 'Hm. At least got manners. Tomorrow I watch.' }] },
+        { label: '"Aunty, teach me!"', flags: ['humble'], fame: 2, beats: [{ who: 'auntyLim', text: 'Hm. At least got manners. Everybody 有进步空间. Tomorrow I watch.' }] },
         { label: '"Tomorrow sure 10/10!"', flags: ['cocky'], fame: 1, beats: [{ who: 'auntyLim', text: 'Wah, big talk. 我记住了.' }] },
       ],
     },
@@ -91,9 +91,9 @@ export const EVENTS = [
     ],
     choice: {
       options: [
-        { label: '"Can, owe me lah."', flags: ['kidsOwe'], beats: [{ who: 'darren', text: 'BOSS POWER!' }] },
-        { label: '"Sorry ah, rules are rules."', flags: ['kidsNo'], beats: [N('The kids buy 3 and share the 4th with four straws.'), { who: 'hafiz', text: 'Integrity… is thirsty.' }] },
-        { label: '"Today on the house!"', flags: ['kidsFree'], fame: 3, money: -980, beats: [{ who: 'weiLing', text: '(writes it down) We will repay. With interest.' }] },
+        { label: '"Can, owe me lah."', flags: ['kidsOwe'], guestPays: 980, beats: [{ who: 'darren', text: 'BOSS POWER!' }] },
+        { label: '"Sorry ah, rules are rules."', flags: ['kidsNo'], guestCups: 3, beats: [N('The kids buy 3 and share the 4th with four straws.'), { who: 'hafiz', text: 'Integrity… is thirsty.' }] },
+        { label: '"Today on the house!"', flags: ['kidsFree'], fame: 3, guestPays: 0, beats: [{ who: 'weiLing', text: '(writes it down) We will repay. With interest.' }] },
       ],
     },
     after: [N('Jia Hui closes her sketchbook. She drew something. She won\'t say what.')],

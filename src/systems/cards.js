@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../config.js';
 import { addText } from './text.js';
-import { makeButton } from './ui.js';
+import { makeButton, addMuteToggle } from './ui.js';
 import { play } from './sfx.js';
 
 const DEPTH = 90;
@@ -192,7 +192,8 @@ export function showRecipeBook(scene, { entries, onClose }) {
   const pad = 12;
   m.add(scene.add.rectangle(x, top, W, GAME_H - top - 10, 0xfff8e6).setOrigin(0).setStrokeStyle(3, 0x8a5a2b), 1);
   m.add(addText(scene, x + pad, top + 8, "📖 Uncle Tan's recipe book", { size: 16, bold: true }));
-  m.add(addText(scene, x + pad, top + 30, '配方本 · the stall is paused · drag to scroll', { size: 10, color: '#8a7a70' }));
+  m.add(addText(scene, x + pad, top + 30, '配方本 · the stall is paused · drag to scroll', { size: 11, color: '#6b5a50' }));
+  m.add(addMuteToggle(scene, x + W - pad, top + 10, { size: 14, origin: [1, 0] }), 4); // sound on / off lives here
   const viewTop = top + 50;
   // everything that scrolls lives in one container, masked to the page
   const list = scene.add.container(0, 0);
@@ -204,9 +205,9 @@ export function showRecipeBook(scene, { entries, onClose }) {
   entries.forEach((e, i) => {
     if (i) list.add(scene.add.rectangle(x + pad, y - 6, W - pad * 2, 1, 0xd9c9a8).setOrigin(0));
     const name = sub.add(addText(scene, x + pad, y, `${e.name}  ${e.zh}`, { size: 13, bold: true, color: '#c8562e' }));
-    const eg = sub.add(addText(scene, x + W - pad, y + 2, `e.g. ${e.example}`, { size: 10, color: '#8a7a70', origin: [1, 0] }));
+    const eg = sub.add(addText(scene, x + W - pad, y + 2, `e.g. ${e.example}`, { size: 11, color: '#6b5a50', origin: [1, 0] }));
     y += Math.max(name.height, eg.height) + 2;
-    const text = sub.add(addText(scene, x + pad, y, e.text, { size: 11, wrap: W - pad * 2, color: '#3a2e2a' }));
+    const text = sub.add(addText(scene, x + pad, y, e.text, { size: 12, wrap: W - pad * 2, color: '#3a2e2a' }));
     y += text.height + 6;
     comboStrip(scene, sub, e.items, { cx: GAME_W / 2, cy: y + 15, size: 28, cupTint: e.cupTint });
     y += 52;
@@ -215,8 +216,8 @@ export function showRecipeBook(scene, { entries, onClose }) {
   const minY = Math.min(0, bottom - viewTop - contentH);
   let dragFrom = null;
   const scrollTo = (v) => list.setY(Phaser.Math.Clamp(v, minY, 0));
-  m.objs[0].on('pointerdown', (p) => (dragFrom = { y: p.y, at: list.y }));
-  m.objs[0].on('pointermove', (p) => dragFrom && p.isDown && scrollTo(dragFrom.at + (p.y - dragFrom.y)));
+  m.objs[0].on('pointerdown', (p) => (dragFrom = { y: p.worldY, at: list.y }));
+  m.objs[0].on('pointermove', (p) => dragFrom && p.isDown && scrollTo(dragFrom.at + (p.worldY - dragFrom.y)));
   m.objs[0].on('pointerup', () => (dragFrom = null));
   const wheel = (p, over, dx, dy) => scrollTo(list.y - dy * 0.5);
   scene.input.on('wheel', wheel);

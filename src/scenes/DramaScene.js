@@ -33,6 +33,10 @@ const SWAP_MS = 140; // old card out / new card in
 const TAP_GRACE_MS = 350; // a finger still on the screen from the stall can't advance the first line
 const CHOICE_GRACE_MS = 500; // ...or pick a choice the player hasn't seen yet
 
+// When the next episode comes, so a teaser never reads as "tomorrow" when it's days away.
+const whenNext = (ep, next) =>
+  next.day === ep.day ? (next.when === 'end' ? 'tonight' : 'later today') : next.day === ep.day + 1 ? 'tomorrow' : `Day ${next.day}`;
+
 export default class DramaScene extends Phaser.Scene {
   constructor() {
     super('Drama');
@@ -57,7 +61,8 @@ export default class DramaScene extends Phaser.Scene {
     this.lastWho = null;
     this.bornAt = this.time.now;
 
-    const skip = addText(this, GAME_W - 10, 36, 'Skip ▸▸', { size: 13, bold: true, color: '#fff6dc', origin: [1, 0] }).setDepth(20);
+    const skip = addText(this, GAME_W - 10, BOX_Y - 8, 'Skip ▸▸', { size: 14, bold: true, color: '#fff6dc', origin: [1, 1] }).setDepth(20);
+    skip.setStroke('#2b2420', 3);
     skip.setInteractive({ useHandCursor: true }).on('pointerdown', (p, x, y, e) => {
       e?.stopPropagation?.();
       this.skip();
@@ -96,7 +101,9 @@ export default class DramaScene extends Phaser.Scene {
     play('dayEnd');
     const t = (y, s, o) => this.layer.push(addText(this, GAME_W / 2, y, s, { align: 'center', origin: 0.5, color: '#fff6dc', ...o }));
     const total = Math.max(...EVENTS.map((e) => e.ep));
-    t(250, `EP ${ep.ep} / ${total}`, { size: 14, bold: true, color: '#f2c14e' });
+    const parts = EVENTS.filter((e) => e.ep === ep.ep);
+    const part = parts.findIndex((e) => e.id === ep.id);
+    t(250, `EP ${ep.ep} / ${total}${part > 0 ? `  ·  Part ${part + 1}` : ''}`, { size: 14, bold: true, color: '#f2c14e' });
     t(284, ep.title.zh, { size: 30, bold: true });
     t(322, ep.title.en, { size: 17 });
     this.layer.forEach((o, i) => this.easeIn([o], { rise: 12, delay: FADE_IN_MS * 0.6 + i * 110, duration: 380 }));
@@ -302,7 +309,7 @@ export default class DramaScene extends Phaser.Scene {
     const t = (y, s, o) => this.layer.push(addText(this, GAME_W / 2, y, s, { align: 'center', origin: 0.5, wrap: 320, ...o }));
     this.layer.push(this.add.rectangle(0, 250, GAME_W, 130, 0x000000, 0.75).setOrigin(0));
     if (next) {
-      t(276, next.endings ? '下集 · 大结局' : '下集', { size: 13, bold: true, color: '#f2c14e' });
+      t(276, `${next.endings ? '下集 · 大结局' : '下集'}  ·  ${whenNext(this.d.ep, next)}`, { size: 13, bold: true, color: '#f2c14e' });
       t(310, `EP ${next.ep} 《${next.title.zh}》`, { size: 22, bold: true, color: '#fff6dc' });
       t(344, next.title.en, { size: 14, color: '#fff6dc' });
     } else t(315, cap, { size: 17, bold: true, color: '#f2c14e' });

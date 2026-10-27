@@ -1,10 +1,10 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-27
 phase: development
-next: "Alpha P0 fixes pushed (serving zones, calm pop-up queue, pour dwell, mid-day save + restart confirm). Next: P1 from docs/playtest/2026-10-27-alpha-report.md (faster first pour, progression/goals, story teasers, choices with effects, 不要太甜 grading). Re-run the alpha with tools/playtest/harness.js after."
+next: "Alpha P0+P1+P2 fixes pushed. Re-run the alpha (tools/playtest/harness.js, brief in the 2026-10-27 report) to measure. Leftovers in IDEAS.md (art: walk-ins holding drinks, Oyen at the stall, shop icons; bubble overlap in rushes)."
 tier_hint: 1
 blockers: []
-touched: [src/scenes/StallScene.js, src/scenes/TitleScene.js, src/scenes/DramaScene.js, src/systems/serve.js, src/systems/run.js, src/i18n/lines.js, tests/serve.test.js, tests/run.test.js]
+touched: [src/scenes/StallScene.js, src/scenes/ShopScene.js, src/scenes/DramaScene.js, src/scenes/TitleScene.js, src/systems/economy.js, src/systems/queue.js, src/systems/daySummary.js, src/data/shop.js, src/data/events.js, src/data/tutorial.js, src/data/stallTuning.js]
 validation: passing
 open_decisions: ["Walk-frame route (IDEAS.md)", "Monetisation: not now; before selling check Suno plan (commercial), Milo/Horlicks names"]
 spec: ""

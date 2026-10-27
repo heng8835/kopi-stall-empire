@@ -24,7 +24,7 @@ export const TOOLS = [
   { id: 'ice', label: 'Ice', kind: 'drop', apply: 'ice', sprite: 'toolIce', liftSprite: 'toolIceScoop', liftH: 40, liftAngle: -8, x: 122, feet: RAIL, w: 64, h: 66 },
   { id: 'stir', label: 'Spoon', kind: 'stir', sprite: 'toolStir', liftSprite: 'toolSpoon', liftH: 62, x: 172, feet: RAIL, w: 50, h: 72 },
   { id: 'rack', label: 'Cups', kind: 'rack', sprite: 'toolRack', x: 238, feet: RAIL, w: 76, h: 76 },
-  { id: 'powder', label: 'Powder', kind: 'drop', apply: 'powder', sprite: 'toolMilo', spriteH: 48, x: 296, feet: RAIL, w: 46, h: 58 },
+  { id: 'powder', label: 'Powder', kind: 'drop', apply: 'powder', shape: 'heap', x: 296, feet: RAIL, w: 46, h: 58 }, // a heaped bowl, drawn in code: never mistaken for the Milo tin
   { id: 'bin', label: 'Bin', kind: 'bin', x: 336, feet: RAIL, w: 42, h: 56, color: 0x6c757d },
 ].map((t) => ({ ...t, y: t.feet - t.h / 2 })); // y = centre (drag/hit maths use the centre)
 

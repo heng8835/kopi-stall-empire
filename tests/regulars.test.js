@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { daySchedule } from '../src/systems/queue.js';
+import { daySchedule, bunch } from '../src/systems/queue.js';
 import { regularOrder, ordersFor } from '../src/systems/menu.js';
 import { CUSTOMERS, WALK_INS } from '../src/data/customers.js';
 import { LINES } from '../src/i18n/lines.js';
@@ -29,6 +29,12 @@ describe('regulars and walk-ins', () => {
       expect(s[0].at).toBe(day.start);
       expect(s.find((a) => a.id === 'ahGong').at).toBeGreaterThanOrEqual(10_000);
     }
+  });
+
+  it('walk-ins come in little rushes', () => {
+    // sizes: 2 (rand 0.5), then 3 (rand 0.9), then 1 (rand 0.1)
+    expect(bunch([0, 100, 200, 300, 400, 500], 10, 1000, seq(0.5, 0.9, 0.1))).toEqual([0, 10, 200, 210, 220, 500]);
+    expect(bunch([0, 100], 0, 1000)).toEqual([0, 100]);
   });
 
   it('a low-fame day still brings every regular', () => {

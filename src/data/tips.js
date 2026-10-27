@@ -8,7 +8,7 @@ export const TIPS = [
   { match: 'forgot the ice', en: '"Peng" means iced. Drop the ice in last.', zh: 'peng = 加冰，最后放冰。' },
   { match: 'not quite full', en: 'Hold the pot a little longer, till the bar says FULL.', zh: '壶多按一会儿，到 FULL。' },
   { match: 'half empty', en: 'Hold the pot a little longer, till the bar says FULL.', zh: '壶多按一会儿，到 FULL。' },
-  { match: 'should be no milk', en: '"O" means no milk at all: sugar can only.', zh: 'O = 不加奶，只加糖。' },
+  { match: 'should be no milk', en: '"O" means no milk at all: sugar jar only.', zh: 'O = 不加奶，只加糖。' },
   { match: 'instead of condensed', en: 'Plain Kopi / Teh uses condensed milk (the red can). "C" is the blue evap can.', zh: '普通的用炼奶（红罐），C 才用淡奶（蓝罐）。' },
   { match: 'instead of evaporated', en: '"C" means evaporated milk: the blue can.', zh: 'C = 淡奶（蓝罐）。' },
   { match: 'forgot the milk', en: 'Kopi and Teh need milk: condensed for plain, evap for C.', zh: '记得加奶。' },
@@ -17,3 +17,5 @@ export const TIPS = [
 ];
 
 export const DEFAULT_TIP = { en: 'Shiok! Steady hands today. Tomorrow more customers will come.', zh: '不错！明天会有更多客人。' };
+
+export const WALKOUT_TIP = { en: 'Some customers got tired of waiting. Start on the oldest bubble first: its green bar is the shortest.', zh: '有客人等太久走了。先做等最久的那位。' };

@@ -36,7 +36,7 @@ describe('night shop', () => {
 
   it('adds up power-ups', () => {
     const p = perks(['radio', 'catBed', 'plants', 'tipJar', 'fan', 'longSpout', 'sugarScoop', 'brassSpoon', 'horlicksShelf', 'bell']);
-    expect(p).toMatchObject({ famePerDay: 1.8, tipMult: 1.2, patienceMult: 1.15, pourMult: 1.25, sugarScoop: true, stirMs: 600, queueBonus: 1 });
+    expect(p).toMatchObject({ famePerDay: 1.8, tipMult: 1.5, patienceMult: 1.15, pourMult: 1.25, sugarScoop: true, stirMs: 600, queueBonus: 1 });
     expect(p.features).toEqual(['horlicks', 'horlicksDino']);
     expect(perks([])).toMatchObject({ famePerDay: 0, pourMult: 1, features: [], plates: 3, tables: 1 });
     expect(perks(['fourthPlate', 'secondTable'])).toMatchObject({ plates: 4, tables: 2 });

@@ -19,7 +19,7 @@ import { playMusic } from '../systems/music.js';
 const BOX_Y = 470;
 const BOX_H = 150;
 const FADE_MS = 700;
-const TITLE_HOLD_MS = 2600; // the title card moves on by itself (a tap skips it)
+const TITLE_HOLD_MS = 1800; // the title card moves on by itself (a tap skips it)
 const PHONE = { x: GAME_W / 2 - 112, y: 64, w: 224, h: 360 }; // the chat area runs to the bottom less 18
 const CHAT_TOP = PHONE.y + 70;
 const CHAT_W = 156;

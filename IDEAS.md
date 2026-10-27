@@ -12,3 +12,7 @@
 - Phase D BUILT 2026-10-26 (kettle, tarik, halia, limau, Milo Godzilla, Teh C Special, gu you, tapau + bulk rider, 4th plate,
   2nd table). Follow-ups: sitting poses for second-table guests; a bulk rider ordering mixed drinks (now n x the same);
   di lo (extra strong) on the kettle.
+- Alpha (2026-10-27) leftovers, not fixed yet: walk-in art already holds a drink while ordering (needs new stills);
+  Oyen is talked about but never at the stall (needs a counter sprite); shop emoji icons next to pixel art (part 5 shop
+  icons); order bubbles still overlap in big rushes; "gao" grades like normal (no water either way, by design);
+  a lesson taught after a story (Milo Dinosaur, Day 2) gets no ghost-hand demo.

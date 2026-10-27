@@ -1,8 +1,10 @@
-// Day-1 tutorial: Aunty Lim (who walked in during Episode 1) teaches her teh once, in her own chat
-// bubbles, while a ghost hand makes it (systems/demo.js; Skip-able). You serve it, she says you're
+// Day-1 tutorial: Aunty Lim (who walked in during Episode 1) tells you her teh in one line and you make
+// it yourself straight away: the tools to use pulse and your thought bubble says each next step
+// (playtest: the watch-first demo kept new players from their first pour for too long). You serve it, she says you're
 // ready, then the starter menu card shows the four drinks as tools: pot + milk/sugar + spoon = drink.
 // OK opens the stall and Day 1 begins.
 //   customer, order   who comes and what they order       demo   the ghost hand makes it first
+//   say               what they say first (no demo)
 //   highlight         tool ids (TOOL_IDS) that pulse if you make it yourself (demo skipped)
 //   ready             what they say after you serve them
 //   card: 'starter'   the starter menu card (STARTER_MENU below)
@@ -11,7 +13,7 @@
 export const TOOL_IDS = ['kopi', 'teh', 'sugar', 'condensed', 'evap', 'milo', 'ice', 'powder', 'stir', 'rack', 'bin'];
 
 export const TUTORIAL_STEPS = [
-  { customer: 'auntyLim', order: 'Teh', demo: true, highlight: ['rack', 'teh', 'condensed', 'stir'], ready: 'Not bad leh! You ready for the next customer liao.' },
+  { customer: 'auntyLim', order: 'Teh', say: 'Teh: teh pot to FULL, condensed milk to NORMAL, stir. You try!', highlight: ['rack', 'teh', 'condensed', 'stir'], ready: 'Not bad leh! You ready for the next customer liao.' },
   { card: 'starter' },
 ];
 
@@ -28,7 +30,7 @@ export const TUTORIAL_TEXT = {
   skip: 'Skip tutorial',
   almost: 'Almost! Check the gauge zones next time.',
   menuTitle: "Today's menu 今天的菜单",
-  menuNote: 'Condensed milk IS the sweetness. O = no milk, so the sugar can sweetens it. The book (top right) keeps these recipes.',
-  open: 'Open the stall! 开档 ▸',
+  menuNote: 'Condensed milk IS the sweetness. O = no milk: sweeten it with the sugar jar instead. The book (top right) keeps these recipes.',
+  open: 'Got it, open! 开档 ▸',
   done: '名气 Fame: perfect cups bring more customers tomorrow. Jia you!',
 };

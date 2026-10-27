@@ -7,7 +7,7 @@ export const LINES = {
   auntyLim: {
     order: [
       'Boss, {order} ah. 谢谢哦.',
-      '{owner}, {order} one. 不要太甜 hor.',
+      '{owner}, {order} one. Make nice nice hor.',
       'Morning boss! Same same, {order} lah.',
     ],
     perfect: ['Wah, shiok! 刚刚好.', 'This one correct lah, {owner}.', '好喝! Tomorrow I come again.'],
@@ -37,8 +37,8 @@ export const LINES = {
     timeout: ['Bell ring already! Run run run!'],
   },
   ahGong: {
-    order: ['老板, {order} 一杯, 不要太甜 ah.', 'Same as usual. {order}.', '{order}. Last time Uncle Tan make got soul one.'],
-    perfect: ['嗯. 好.'],
+    order: ['老板, {order} 一杯. 慢慢来.', 'Same as usual. {order}.', '{order}. Last time Uncle Tan make got soul one.'],
+    perfect: ['嗯. 好. (Mm. Good.)'],
     close: ['还可以.'],
     oops: ['Ah? 这个不是我的...算了.'],
     timeout: ['我去看报纸先.'],
@@ -66,7 +66,7 @@ export const LINES = {
     timeout: ['Aiyo, tuition start already! Bye boss!'],
   },
   auntie: {
-    order: ['{owner}, {order} one ah. 谢谢.', 'Boss, {order}. 不要太甜 hor.', '{order} lah, {owner}. Hot day ah.'],
+    order: ['{owner}, {order} one ah. 谢谢.', 'Boss, {order}. 谢谢 hor.', '{order} lah, {owner}. Hot day ah.'],
     perfect: ['刚刚好! Good {owner}.', 'Wah, shiok. I tell my friends.'],
     close: ['Can lah, can drink.'],
     oops: ['Aiyo, wrong one leh. Never mind, I drink.'],
@@ -80,14 +80,14 @@ export const LINES = {
     timeout: ['Aiyo, must catch the bus back to camp!'],
   },
   pakcik: {
-    order: ['Boss, {order} satu. Terima kasih.', 'Assalamualaikum boss. {order} ah.', '{order}, boss. Not too sweet hor.'],
+    order: ['Boss, {order} satu. Terima kasih.', 'Assalamualaikum boss. {order} ah.', '{order}, boss. Terima kasih ah.'],
     perfect: ['Sedap! Terima kasih.', 'Wah, shiok. Good boss.'],
     close: ['Okay lah, can.'],
     oops: ['Eh, this one not mine… never mind lah.'],
     timeout: ['Takpe, I come back later.'],
   },
   ahMa: {
-    order: ['{owner} ah, {order} 一杯. 慢慢来.', 'Ah Ma want {order}. Hot hot one ah.', '{order} ah, {owner}. 你很乖.'],
+    order: ['{owner} ah, {order} 一杯. 慢慢来.', 'Ah Ma want {order}. No rush ah.', '{order} ah, {owner}. 你很乖.'],
     perfect: ['好喝! 乖孙.', 'Wah, like last time. 好!'],
     close: ['可以啦, can drink.'],
     oops: ['Ah? 不是这个… never mind, Ah Ma drink.'],
@@ -194,7 +194,7 @@ export const LINES = {
 };
 
 export const UI = {
-  tapHint: 'Tap orange words to learn the lingo',
+  tapHint: 'Psst: tap the orange words in a bubble to learn the lingo 👆',
   closing: 'Closing time! 收档啦~',
   dayDone: 'Day {day} done!',
   dayDoneZh: '今天辛苦了!',

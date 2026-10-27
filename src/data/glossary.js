@@ -60,6 +60,7 @@ export const GLOSSARY = {
   assalamualaikum: { term: 'Assalamualaikum', en: 'A Muslim greeting: "peace be upon you".', zh: '穆斯林问候语"愿你平安"。' },
   sian: { term: 'Sian', en: 'Tired, bored, fed up. From Hokkien.', zh: '好累、好闷（福建话）。' },
   chiong: { term: 'Chiong', en: 'Rush, charge ahead. From Hokkien.', zh: '冲（福建话）。' },
+  nsf: { term: 'NSF', en: 'Full-time National Serviceman: a young man doing his two years of national service.', zh: '全职国民服役人员。' },
   'book out': { term: 'Book out', en: 'When NSFs leave camp for the weekend.', zh: '国民服役人员周末离营。' },
   cookhouse: { term: 'Cookhouse', en: 'The army camp canteen.', zh: '军营食堂。' },
   steady: { term: 'Steady', en: 'Great job, well done! Very Singlish praise.', zh: '厉害！稳！' },

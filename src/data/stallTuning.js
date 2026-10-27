@@ -10,15 +10,21 @@ export const TUNING = {
   lastSpawnBeforeEndMs: 18_000,
   spawnJitter: 0.35, // each arrival lands within +-35% of its even share of the day
   queueRetryMs: 3000, // queue full: try that arrival again this much later
+  rushGapMs: 2500, // walk-ins come in little rushes of 1-3, this far apart (queue.js bunch)
+  emptyClockSpeed: 4, // nobody at the stall: the clock runs this much faster (no dead air)
   regularVariety: 0.25, // chance a regular orders something other than their usual
 
   // Fame (名气, 0-100) decides how many arrivals a day brings (a group counts as one).
   fameStart: 10,
-  fameDelta: { perfect: 0.25, close: 0.1, oops: 0, timeout: -1 },
+  fameDelta: { perfect: 0.4, close: 0.1, oops: -0.2, timeout: -1 },
+  fameForStars: [0, 0, 1, 2], // the day-end bonus for 1 / 2 / 3 stars
+  closePay: 0.6, // a close cup pays this share of the price (a wrong drink pays nothing)
+  streakTipStep: 10, // cents: each perfect cup in a row adds this to the tip...
+  streakTipMax: 50, // ...up to this
   // Few customers at first; upgrades make you faster before the crowd grows.
   customersMin: 8,
   customersMax: 15,
-  famePerExtraCustomer: 15, // 8 + floor(fame/15): fame 10 -> 8, 30 -> 10, 60 -> 12, 100 -> 14
+  famePerExtraCustomer: 5, // 8 + floor((fame - 10)/5): fame 10 -> 8, 20 -> 10, 30 -> 12, 45+ -> 15
 
   // Walking in from the street opening on the left, and the queue by the rope posts.
   queueMax: 3,

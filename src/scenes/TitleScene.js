@@ -51,6 +51,12 @@ export default class TitleScene extends Phaser.Scene {
     });
     this.choose(this.owner);
 
+    // a brand-new player: fetch the prologue's pictures now, so it doesn't open on a black screen
+    if (!openingSeen()) {
+      for (const key of ['openingDawn', 'openingFlashback', 'openingOffice']) if (!this.textures.exists(key)) this.load.image(key, `bg/${key}.webp`);
+      this.load.start();
+    }
+
     // Continue the month, or start a new one (a finished month can only start again).
     const run = loadRun();
     if (run && !monthOver(run)) {

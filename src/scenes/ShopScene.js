@@ -18,7 +18,8 @@ const SHOP_ART = { menuBoard: 'propMenuBoard', cupRack: 'toolRack', markedGlass:
 // The night shop: Uncle Tan's Supplier Catalogue, between a day's summary and the next morning.
 // Started with { run } = tomorrow's run; purchases are saved straight into it.
 
-const LIST = { top: 116, bottom: 560 };
+const LIST = { top: 116, bottom: 546 };
+const CONFIRM_MS = 4000; // a first tap on Buy asks; a second tap within this long buys
 const CARD_H = 84;
 const DEPTH = 10;
 
@@ -33,6 +34,7 @@ export default class ShopScene extends Phaser.Scene {
     this.aisle = data.aisle ?? 'machine';
     this.scroll = 0;
     this.leaving = false; // Phaser reuses this scene object every night
+    this.pending = null; // { id, at }: Buy tapped once, waiting for the confirming tap
     playMusic('night');
 
     // the stall at night, chairs up, one warm bulb; dimmed a little so the catalogue reads
@@ -40,7 +42,7 @@ export default class ShopScene extends Phaser.Scene {
     this.add.rectangle(0, 0, GAME_W, GAME_H, 0x0b1430, 0.35).setOrigin(0);
     this.cameras.main.fadeIn(700, 11, 20, 48);
 
-    // Days 1-2: just the quiet stall at night; Uncle Tan's catalogue arrives after Day 3
+    // before SHOP_FROM_DAY: just the quiet stall at night
     if (this.run.day - 1 < SHOP_FROM_DAY) return this.quietNight();
 
     addText(this, GAME_W / 2, 14, "Uncle Tan's Supplier Catalogue", { size: 17, bold: true, color: '#fff6dc', origin: [0.5, 0] });
@@ -61,15 +63,15 @@ export default class ShopScene extends Phaser.Scene {
     this.list = this.add.container(0, LIST.top);
     const maskShape = this.make.graphics({ add: false }).fillRect(0, LIST.top, GAME_W, LIST.bottom - LIST.top);
     this.list.setMask(maskShape.createGeometryMask());
-    this.input.on('pointerdown', (p) => (this.dragFrom = p.y >= LIST.top && p.y <= LIST.bottom ? { y: p.y, scroll: this.scroll } : null));
+    this.input.on('pointerdown', (p) => (this.dragFrom = p.worldY >= LIST.top && p.worldY <= LIST.bottom ? { y: p.worldY, scroll: this.scroll } : null));
     this.input.on('pointermove', (p) => {
       if (!this.dragFrom || !p.isDown) return;
-      this.setScroll(this.dragFrom.scroll + (this.dragFrom.y - p.y));
+      this.setScroll(this.dragFrom.scroll + (this.dragFrom.y - p.worldY));
     });
     this.input.on('pointerup', () => (this.dragFrom = null));
     this.input.on('wheel', (p, over, dx, dy) => this.setScroll(this.scroll + dy * 0.5));
 
-    this.note = addText(this, GAME_W / 2, LIST.bottom + 4, '', { size: 11, color: '#ffd28a', origin: [0.5, 0], align: 'center', wrap: 330 });
+    this.note = addText(this, GAME_W / 2, LIST.bottom + 4, '', { size: 12, bold: true, color: '#ffd28a', origin: [0.5, 0], align: 'center', wrap: 340 });
     const open = makeButton(this, GAME_W / 2 - 120, GAME_H - 54, 240, 46, `Open stall ▸  Day ${this.run.day}`, () => this.openStall(), { size: 17, bold: true, fill: 0xbfe3c0 });
     open.bg.setDepth(DEPTH);
     open.txt.setDepth(DEPTH + 1);
@@ -150,8 +152,9 @@ export default class ShopScene extends Phaser.Scene {
     const tier = addText(this, x + 52, y + h - 16, item.tier ? `Fame ${item.tier}+` : 'Any fame', { size: 9, bold: true, color: '#8a5a1e' });
     this.list.add([bg, icon, name, zh, text, tier]); // bg first so it sits behind
 
+    const asking = this.pending?.id === item.id;
     const label = {
-      buy: `Buy ${formatMoney(item.price)}`,
+      buy: asking ? 'Tap to confirm' : `Buy ${formatMoney(item.price)}`,
       money: `${formatMoney(item.price)}`,
       owned: 'Owned ✓',
       fame: `🔒 Fame ${item.tier}`,
@@ -160,7 +163,7 @@ export default class ShopScene extends Phaser.Scene {
     }[state];
     const bw = 88;
     const btn = makeButton(this, x + w - bw - 8, y + h / 2 - 18, bw, 36, label, () => this.tryBuy(item), {
-      size: 11, bold: true, fill: state === 'buy' ? 0xbfe3c0 : state === 'owned' ? 0xd7ecd3 : 0xe8e0d0,
+      size: 11, bold: true, fill: asking ? 0xf2c14e : state === 'buy' ? 0xbfe3c0 : state === 'owned' ? 0xd7ecd3 : 0xe8e0d0,
     });
     btn.setEnabled(state === 'buy');
     this.list.add([btn.bg, btn.txt]);
@@ -168,15 +171,23 @@ export default class ShopScene extends Phaser.Scene {
     return h;
   }
 
+  // First tap asks ("Tap to confirm"), the second buys: a scroll that starts on a button never buys.
   tryBuy(item) {
-    if (this.dragFrom && Math.abs(this.input.activePointer.y - this.dragFrom.y) > 8) return; // it was a scroll
+    const keep = this.scroll;
+    if (this.pending?.id !== item.id || this.time.now - this.pending.at > CONFIRM_MS) {
+      this.pending = { id: item.id, at: this.time.now };
+      this.note.setText(`${item.name}: ${formatMoney(item.price)}. Tap again to buy.`);
+      this.renderList();
+      this.setScroll(keep);
+      return;
+    }
+    this.pending = null;
     const next = buy(this.run, item);
     if (!next) return;
     this.run = next;
     saveRun(this.run);
     play('coin');
-    this.note.setText(item.unlocks ? `${item.name} bought! Tomorrow a regular will order the new drink.` : `${item.name} bought! It works from tomorrow.`);
-    const keep = this.scroll;
+    this.note.setText(item.unlocks ? `${item.name} bought! A regular will order the new drink tomorrow.` : `${item.name} bought! It works from tomorrow.`);
     this.renderList();
     this.setScroll(keep);
   }

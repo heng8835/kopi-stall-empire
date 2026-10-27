@@ -10,6 +10,7 @@ import { milkAmount, needsStir, isLayered } from './cup.js';
 
 const M = 26; // side margin (spill, steam drift)
 const TOP = 170; // room above the glass for the stream, steam and the Milo mountain
+const MOUNTAIN_H = 78; // the Milo / Horlicks Dinosaur powder heap at its full height (playtest: 64 read small)
 const BOT = 10;
 export const ART_W = 150 + M * 2;
 export const ART_H = TOP + 186 + BOT;
@@ -262,7 +263,7 @@ export class DrinkArt {
     const g = this.g;
     const o = oval(cup.powder ? IN.top : ly);
     const R = 36;
-    const y = o.cy - (cup.powder ? 64 * this.powder : 4) - 10; // sitting in the top of the mountain
+    const y = o.cy - (cup.powder ? MOUNTAIN_H * this.powder : 4) - 10; // sitting in the top of the mountain
     const dome = () => {
       g.beginPath();
       g.arc(o.cx, y, R, Math.PI, Math.PI * 2);
@@ -445,8 +446,12 @@ export class DrinkArt {
       const o = oval(levelY(tf));
       g.save();
       g.setLineDash([7, 5]);
-      g.lineWidth = 3;
-      g.strokeStyle = 'rgba(255,210,63,0.95)';
+      // a dark edge under the gold line, so it reads on a pale glass (and for older eyes)
+      g.lineWidth = 6;
+      g.strokeStyle = 'rgba(58,46,42,0.75)';
+      g.beginPath(); g.ellipse(o.cx, o.cy, o.rx + 1, o.ry + 1, 0, 0, Math.PI); g.stroke();
+      g.lineWidth = 3.5;
+      g.strokeStyle = 'rgba(255,210,63,1)';
       g.beginPath(); g.ellipse(o.cx, o.cy, o.rx + 1, o.ry + 1, 0, 0, Math.PI); g.stroke();
       g.restore();
     }
@@ -483,9 +488,9 @@ export class DrinkArt {
     if (this.powder > 0) {
       const o = oval(IN.top);
       const k = this.powder;
-      const w = o.rx * 1.22 * (0.6 + 0.4 * k);
+      const w = o.rx * 1.32 * (0.6 + 0.4 * k);
       const base = o.cy + 4;
-      const h = 64 * k;
+      const h = MOUNTAIN_H * k;
       const malt = cup.base === 'horlicks';
       const C = malt
         ? { ink: '#5e4a2c', mid: '#e3cd9f', light: '#f7ebcc', dark: '#c4a66f', speck: '#a8884f' }

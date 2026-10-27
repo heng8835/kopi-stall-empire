@@ -28,17 +28,30 @@ export function arrivalSchedule(n, start, end, jitter, rand = Math.random) {
   return times.sort((a, b) => a - b);
 }
 
+// Pull evenly spread times together into rushes of 1-3: each rush starts at its first time.
+export function bunch(times, gap, end, rand = Math.random) {
+  if (!gap) return times;
+  const out = [];
+  for (let i = 0; i < times.length; ) {
+    const r = rand();
+    const size = r < 0.35 ? 1 : r < 0.75 ? 2 : 3;
+    for (let j = 0; j < size && i < times.length; j++, i++) out.push(Math.min(end, times[i - j] + j * gap));
+  }
+  return out.sort((a, b) => a - b);
+}
+
 // A whole day's arrivals, sorted by time: each regular once, at a random moment inside their usual
 // window (minutes after opening; the day is 720 minutes, 7am -> 7pm), plus walk-ins spread over the
 // day so the total comes to `total`. Regulars -> { at, id }, walk-ins -> { at, id: null }.
-// The first walk-in always comes right at `start`.
-export function daySchedule({ total, regulars, dayMs, start, end, jitter, rand = Math.random }) {
+// The first walk-in always comes right at `start`. Walk-ins come in little rushes (rushGap ms
+// apart, 1-3 at a time) with calm in between, which plays better than an even trickle.
+export function daySchedule({ total, regulars, dayMs, start, end, jitter, rushGap = 0, rand = Math.random }) {
   const msPerMin = dayMs / 720;
   const regs = regulars.map(({ id, window: [from, to] }) => {
     const at = (from + rand() * (to - from)) * msPerMin;
     return { at: Math.round(Math.max(start, Math.min(end, at))), id };
   });
-  const walkIns = arrivalSchedule(Math.max(0, total - regs.length), start, end, jitter, rand).map((at) => ({ at, id: null }));
+  const walkIns = bunch(arrivalSchedule(Math.max(0, total - regs.length), start, end, jitter, rand), rushGap, end, rand).map((at) => ({ at, id: null }));
   if (walkIns[0]) walkIns[0].at = start; // nobody waits long for the first customer (regulars keep their own time)
   return [...regs, ...walkIns].sort((a, b) => a.at - b.at);
 }

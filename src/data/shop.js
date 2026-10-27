@@ -18,7 +18,7 @@ export const SHOP = [
   // machines
   { id: 'twinSock', aisle: 'machine', name: 'Twin Sock Stand', zh: '双咖啡袋架', price: 5500, tier: 25, icon: '☕', text: 'Brew kopi and teh side by side. Pour both into one cup: Cham!', effect: {}, unlocks: ['cham'] },
   { id: 'horlicksShelf', aisle: 'machine', name: 'Horlicks Shelf', zh: '好立克架', price: 3500, tier: 0, icon: '🥛', text: 'A tin of Horlicks on the rail. Horlicks, Horlicks peng, Horlicks Dinosaur.', effect: {}, unlocks: ['horlicks', 'horlicksDino'] },
-  { id: 'iceMachine', aisle: 'machine', name: 'Ice Machine', zh: '制冰机', price: 6000, tier: 25, icon: '🧊', text: 'Crystal-clear ice. Iced drinks earn +20¢.', effect: { icedTip: 20 } },
+  { id: 'iceMachine', aisle: 'machine', name: 'Ice Machine', zh: '制冰机', price: 3500, tier: 25, icon: '🧊', text: 'Crystal-clear ice. Iced drinks earn +40¢.', effect: { icedTip: 40 } },
   { id: 'kettle', aisle: 'machine', name: 'Big Brass Kettle', zh: '大铜壶', price: 4500, tier: 0, icon: '🫖', text: 'Hot water on the rail. Kopi / teh poh (weak) and gao (strong): new orders the regulars love.', effect: {}, unlocks: ['gao', 'poh'] },
   { id: 'tarikMugs', aisle: 'machine', name: 'Tarik Mugs', zh: '拉茶杯', price: 4000, tier: 25, icon: '🍵', text: 'Pull teh between two mugs from up high until frothy: Teh tarik. The pakciks will love you.', effect: {}, unlocks: ['tarik'] },
   { id: 'haliaPot', aisle: 'machine', name: 'Halia Pot', zh: '姜茶壶', price: 3500, tier: 25, icon: '🫚', text: 'A pot of ginger brew on the counter. Teh halia, and Teh halia tarik for the pakciks.', effect: {}, unlocks: ['halia'] },
@@ -39,8 +39,8 @@ export const SHOP = [
   // comfort
   { id: 'fan', aisle: 'comfort', name: 'Standing Fan', zh: '风扇', price: 3000, tier: 0, icon: '🌀', text: 'Customers wait 15% longer.', effect: { patienceMult: 1.15 } },
   { id: 'radio', aisle: 'comfort', name: 'Radio', zh: '收音机', price: 2500, tier: 0, icon: '📻', text: 'Old songs all day. +0.5 fame a day.', effect: { famePerDay: 0.5 } },
-  { id: 'cupWarmer', aisle: 'comfort', name: 'Cup Warmer', zh: '暖杯器', price: 3500, tier: 25, icon: '♨️', text: 'Hot drinks earn +10¢.', effect: { hotTip: 10 } },
-  { id: 'tipJar', aisle: 'comfort', name: 'Bigger Tip Jar', zh: '小费罐', price: 1200, tier: 0, icon: '🫙', text: 'Tips +20%.', effect: { tipMult: 1.2 } },
+  { id: 'cupWarmer', aisle: 'comfort', name: 'Cup Warmer', zh: '暖杯器', price: 2500, tier: 25, icon: '♨️', text: 'Hot drinks earn +20¢.', effect: { hotTip: 20 } },
+  { id: 'tipJar', aisle: 'comfort', name: 'Bigger Tip Jar', zh: '小费罐', price: 1200, tier: 0, icon: '🫙', text: 'Tips +50%.', effect: { tipMult: 1.5 } },
   { id: 'bell', aisle: 'comfort', name: 'Queue Bell', zh: '铃铛', price: 1000, tier: 0, icon: '🔔', text: 'One more spot in the queue.', effect: { queueBonus: 1 } },
   { id: 'catBed', aisle: 'comfort', name: "Oyen's Cat Bed", zh: '猫床', price: 1500, tier: 0, icon: '🐈', text: 'A happy Oyen is good for business. +1 fame a day.', effect: { famePerDay: 1 } },
   { id: 'tissues', aisle: 'comfort', name: 'Tissue Packets', zh: '纸巾包', price: 800, tier: 0, icon: '🧻', text: 'Free chope packets for regulars. +0.3 fame a day.', effect: { famePerDay: 0.3 } },
@@ -55,6 +55,6 @@ export const SHOP = [
 ];
 
 // The night shop opens after this day's summary.
-export const SHOP_FROM_DAY = 3;
+export const SHOP_FROM_DAY = 1;
 // Story gifts: given at the end of this day (no purchase).
 export const GIFTS = { 21: 'towel' };

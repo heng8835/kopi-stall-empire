@@ -16,7 +16,7 @@ export function createDayState(carry = {}) {
   };
 }
 
-// Price of what the customer ordered (they pay for their order, even if you got it wrong).
+// Price of what the customer ordered (the full price for a perfect cup; see applyServe).
 export function priceOf(spec) {
   const drink = findDrink(spec);
   const base = drink?.price ?? 120;
@@ -27,14 +27,26 @@ export const clampFame = (f) => Math.max(0, Math.min(100, Math.round(f * 100) / 
 
 // How many arrivals a day brings at this fame (a group counts as one).
 export function customersForFame(fame) {
-  const n = TUNING.customersMin + Math.floor(fame / TUNING.famePerExtraCustomer);
+  const n = TUNING.customersMin + Math.floor(Math.max(0, fame - TUNING.fameStart) / TUNING.famePerExtraCustomer);
   return Math.max(TUNING.customersMin, Math.min(TUNING.customersMax, n));
 }
 
+// The fame where tomorrow brings one more customer (null at the most customers).
+export function nextCustomerAt(fame) {
+  if (customersForFame(fame) >= TUNING.customersMax) return null;
+  const steps = Math.floor(Math.max(0, fame - TUNING.fameStart) / TUNING.famePerExtraCustomer) + 1;
+  return TUNING.fameStart + steps * TUNING.famePerExtraCustomer;
+}
+
+// Extra tip for a run of perfect cups in a row: 2 in a row +10c, 3 +20c ... up to +50c.
+export const streakBonus = (streak) => Math.min(TUNING.streakTipMax, Math.max(0, streak - 1) * TUNING.streakTipStep);
+
 // Apply one served cup. Returns { paid, tip, fame } for floating feedback text.
-export function applyServe(state, tier, wantedSpec) {
-  const paid = priceOf(wantedSpec);
-  const tip = tier === 'perfect' ? PERFECT_TIP : 0;
+// Perfect pays the full price + a tip (+ bonus, e.g. a streak); close pays part of it; a wrong
+// drink pays nothing (they politely don't pay for it). price overrides the menu price (story guests).
+export function applyServe(state, tier, wantedSpec, { price = priceOf(wantedSpec), bonus = 0 } = {}) {
+  const paid = tier === 'perfect' ? price : tier === 'close' ? Math.round((price * TUNING.closePay) / 10) * 10 : 0;
+  const tip = tier === 'perfect' ? PERFECT_TIP + bonus : 0;
   const fame = TUNING.fameDelta[tier];
   state.money += paid + tip;
   state.earnedToday += paid + tip;

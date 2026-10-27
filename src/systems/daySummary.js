@@ -1,6 +1,6 @@
 // What the day-end card shows: stars, counts, money split, fame change, per-customer rows,
 // the most common slips with Uncle Tan's tip, and a happy quote. Pure, no Phaser.
-import { TIPS, DEFAULT_TIP } from '../data/tips.js';
+import { TIPS, DEFAULT_TIP, WALKOUT_TIP } from '../data/tips.js';
 
 export function tipFor(reason) {
   return TIPS.find((t) => reason?.includes(t.match)) ?? DEFAULT_TIP;
@@ -22,7 +22,8 @@ export function summarizeDay(entry, econ, names = {}) {
   for (const t of timeouts) row(t.who).walkedOut += 1;
 
   const rate = counts.served ? counts.perfect / counts.served : 0;
-  const stars = !counts.served ? 1 : rate >= 0.75 && counts.walkedOut <= 1 ? 3 : rate >= 0.45 ? 2 : 1;
+  // 3 stars: almost all perfect and nobody walked out; 2: mostly right; a rough day: 1
+  const stars = !counts.served ? 1 : rate >= 0.8 && counts.walkedOut === 0 ? 3 : rate >= 0.5 && counts.walkedOut <= 2 ? 2 : 1;
   const topSlips = Object.entries(slips)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 2)
@@ -36,7 +37,7 @@ export function summarizeDay(entry, econ, names = {}) {
     fame: { from: Math.floor(econ.fameStart), to: Math.floor(econ.fame) },
     perCustomer: Object.values(per),
     topSlips,
-    tip: tipFor(topSlips[0]?.reason),
+    tip: topSlips.length || !counts.walkedOut ? tipFor(topSlips[0]?.reason) : WALKOUT_TIP,
     quote: quote ? { who: names[quote.who] ?? quote.who, line: quote.line } : null,
   };
 }

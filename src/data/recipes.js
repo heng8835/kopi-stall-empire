@@ -234,8 +234,8 @@ export const MACHINE_LESSONS = {
 export const BOOK = {
   kopi: { name: 'Kopi', zh: '咖啡', text: 'Coffee + condensed milk. The condensed milk is the sweetness.', example: 'Kopi' },
   teh: { name: 'Teh', zh: '茶', text: 'Tea + condensed milk. Same as kopi, teh pot.', example: 'Teh' },
-  O: { name: 'O', zh: '乌', text: 'No milk. Sweeten with the sugar can instead.', example: 'Kopi O' },
-  C: { name: 'C', zh: '西', text: 'Evaporated milk (to C · NORMAL) + sugar can for sweetness.', example: 'Kopi C' },
+  O: { name: 'O', zh: '乌', text: 'No milk. Sweeten with the sugar jar instead.', example: 'Kopi O' },
+  C: { name: 'C', zh: '西', text: 'Evaporated milk (to C · NORMAL) + the sugar jar for sweetness.', example: 'Kopi C' },
   kosong: { name: 'Kosong', zh: '无糖', text: 'No sugar at all (O and C drinks).', example: 'Kopi C kosong' },
   siewDai: { name: 'Siew dai', zh: '少甜', text: 'Less sweet: stop in the SIEW DAI zone.', example: 'Teh siew dai' },
   gaDai: { name: 'Ga dai', zh: '加甜', text: 'More sweet: the GA DAI zone, before the red.', example: 'Kopi ga dai' },

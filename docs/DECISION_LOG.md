@@ -30,3 +30,9 @@
 | 2026-10-27 | Cards, demos and stories wait for hands free (calm 0.4 s); one teaching moment per drink (featuresSeen); max 2 NEW ORDER cards a day | Alpha: pop-ups landed mid-pour/drag, same drink taught 2-3 times |
 | 2026-10-27 | Pots pour only after resting 140 ms over a cup | Alpha: sweeping across plate 1 poured into it |
 | 2026-10-27 | Mid-day checkpoint (run.midDay) on every serve/walk-out/story/lesson and on page hide; restart asks first and sits top-left | Alpha: reloads lost the day, a restart wiped a Day 4 save |
+| 2026-10-27 | Money follows quality: perfect = price + tip (+10c per perfect in a row, max +50c), close = 60%, wrong drink = no charge; day-end fame bonus +1/+2 for 2/3 stars; +1 customer per 5 fame | Alpha: a wrong drink paid more than the right one, fame and customers didn't move |
+| 2026-10-27 | Walk-ins come in little rushes; an empty stall runs the clock 4x | Alpha: long dead air, rushes were the fun part |
+| 2026-10-27 | Night shop from Day 1; Ice Machine $35/+40c, Cup Warmer $25/+20c, Tip Jar +50%; summary shows "your upgrades earned" | Alpha: nothing to chase early, upgrades didn't feel |
+| 2026-10-27 | Day 1: Aunty Lim says her teh in one line and you make it (no watch-first demo); shorter EP1 intro | Alpha: ~2 min to the first pour |
+| 2026-10-27 | Story teasers say when (tomorrow / Day 5); a story choice can change what the guest pays (guestPays, guestCups) | Alpha: "EP 4" read as tomorrow; "on the house" changed nothing |
+| 2026-10-27 | Shop buys need a second tap; shop/book scroll use world coords (fixes phone scrolling) | Alpha: list wouldn't scroll on phone, a scroll could buy |

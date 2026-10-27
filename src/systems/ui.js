@@ -65,6 +65,7 @@ export function layoutLine(scene, text, x, y, maxW, onTerm, opts = {}) {
   let cx = 0;
   let cy = 0;
   let widest = 0;
+  let terms = 0;
 
   for (const tok of tokenize(text)) {
     const t = addText(scene, 0, 0, tok.text, {
@@ -77,6 +78,7 @@ export function layoutLine(scene, text, x, y, maxW, onTerm, opts = {}) {
       cy += lineH;
     }
     t.setPosition(x + cx, y + cy);
+    if (tok.glossaryKey) terms += 1;
     if (tok.glossaryKey && onTerm) {
       t.setInteractive({ useHandCursor: true });
       t.on('pointerdown', (p, lx, ly, e) => {
@@ -88,7 +90,7 @@ export function layoutLine(scene, text, x, y, maxW, onTerm, opts = {}) {
     widest = Math.max(widest, cx - space);
     objects.push(t);
   }
-  return { objects, width: widest, height: cy + lineH };
+  return { objects, width: widest, height: cy + lineH, terms };
 }
 
 // Modal glossary card. Blocks input underneath; tap anywhere to close.
@@ -106,7 +108,7 @@ export function showGlossary(scene, key, onClose) {
   const title = addText(scene, x + pad, 0, g.term, { size: 22, bold: true, color: TERM_COLOR });
   const en = addText(scene, x + pad, 0, g.en, { size: 14, wrap: cardW - pad * 2 });
   const zh = addText(scene, x + pad, 0, g.zh, { size: 16, wrap: cardW - pad * 2 });
-  const hint = addText(scene, GAME_W / 2, 0, 'tap to close', { size: 12, color: '#8a7a70', origin: [0.5, 0] });
+  const hint = addText(scene, GAME_W / 2, 0, 'tap to close', { size: 13, bold: true, color: '#6b5a50', origin: [0.5, 0] });
   const cardH = pad + title.height + 8 + en.height + 8 + zh.height + 12 + hint.height + pad;
   const top = Math.round((GAME_H - cardH) / 2) - 60;
 

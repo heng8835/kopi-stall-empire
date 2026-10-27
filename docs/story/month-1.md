@@ -81,16 +81,15 @@ The one-month trial is why the tin is for Day 30, and it frames the finale's dec
 - **Oyen:** Meow. *(does not move)*
 - *(a quiet moment; Aunty Lim walks up to the counter)*
 - **Narrator:** The first customer of your life.
-- **Aunty Lim:** Eh! So you are the {owner} Uncle Tan pass his stall to ah?
-- **Aunty Lim:** First day ah? Don't kan cheong. Here everybody very nice one.
-- **Aunty Lim:** We all look after you. I'm Aunty Lim. Every morning I come for teh.
-- **Aunty Lim:** Uncle Tan's teh: 9 out of 10. Yours ah… 我们看看. One teh, please.
-  *(On Day 1 her teh is the tutorial's first order: a ghost hand shows how, then you serve.)*
+- **Aunty Lim:** Eh! You are the {owner} Uncle Tan pass his stall to? First day ah? Don't kan cheong.
+- **Aunty Lim:** I'm Aunty Lim. Every morning I come for teh. Uncle Tan's teh: 9 out of 10.
+- **Aunty Lim:** Yours ah… 我们看看. One teh, please.
+  *(On Day 1 her teh is the tutorial's first order: she says the recipe in one line and you make it yourself, the tools pulsing.)*
 
 *end*
-- **Aunty Lim:** Today: 5 out of 10. 有进步空间 lah.
+- **Aunty Lim:** Today: 5 out of 10. 有进步空间 lah. *(9-10: "Hm. Not bad ah… 不错."; below 6: "Never mind. 明天再努力.")*
 - **Choice:**
-  - "Aunty, teach me!" → flag `humble`, fame +2. **Aunty Lim:** Hm. At least got manners. Tomorrow I watch.
+  - "Aunty, teach me!" → flag `humble`, fame +2. **Aunty Lim:** Hm. At least got manners. Everybody 有进步空间. Tomorrow I watch.
   - "Tomorrow sure 10/10!" → flag `cocky`, fame +1. **Aunty Lim:** Wah, big talk. 我记住了.
 - **Narrator:** She writes the number in a little red notebook. Why does a retired canteen aunty need a notebook?
 - **Caption:** 下集: twenty cents can change everything.
@@ -102,9 +101,9 @@ The one-month trial is why the tin is for Day 30, and it frames the finale's dec
 - **Hafiz:** *(teacher voice)* "Students. In-te-gri-ty."
 - **Jia Hui:** … *(she's already sketching you)*
 - **Choice:**
-  - "Can, owe me lah." → flag `kidsOwe`. **Darren:** BOSS POWER!
-  - "Sorry ah, rules are rules." → flag `kidsNo`. The kids buy 3 and share the 4th with 4 straws. **Hafiz:** Integrity… is thirsty.
-  - "Today on the house!" → flag `kidsFree`, money −$9.80, fame +3. **Wei Ling:** *(writes it down)* We will repay. With interest.
+  - "Can, owe me lah." → flag `kidsOwe`, they pay the $9.80 they have. **Darren:** BOSS POWER!
+  - "Sorry ah, rules are rules." → flag `kidsNo`, they buy 3 cups. The kids buy 3 and share the 4th with 4 straws. **Hafiz:** Integrity… is thirsty.
+  - "Today on the house!" → flag `kidsFree`, their 4 cups are free today, fame +3. **Wei Ling:** *(writes it down)* We will repay. With interest.
 - **Narrator:** Jia Hui closes her sketchbook. She drew something. She won't say what.
 - **Caption:** 下集: a phone falls. The screen tells the truth.
 
