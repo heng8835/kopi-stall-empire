@@ -69,3 +69,16 @@ describe('machines unlock drinks', () => {
     }
   });
 });
+
+describe('ordersFor: teach before the order', () => {
+  const orders = [{ text: 'Milo Dinosaur', weight: 1 }, { text: 'Kopi', weight: 1 }];
+  const day = LESSONS.find((l) => l.features.includes('miloDino')).day;
+  it('a drink taught today is not ordered while its lesson is still to come', () => {
+    expect(ordersFor(orders, day, [], [], ['miloDino']).map((o) => o.text)).toEqual(['Kopi']);
+  });
+  it('once taught it is on the menu (and weighted up)', () => {
+    const menu = ordersFor(orders, day);
+    expect(menu.map((o) => o.text)).toEqual(['Milo Dinosaur', 'Kopi']);
+    expect(menu[0].weight).toBe(3);
+  });
+});

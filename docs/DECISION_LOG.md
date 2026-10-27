@@ -36,3 +36,6 @@
 | 2026-10-27 | Day 1: Aunty Lim says her teh in one line and you make it (no watch-first demo); shorter EP1 intro | Alpha: ~2 min to the first pour |
 | 2026-10-27 | Story teasers say when (tomorrow / Day 5); a story choice can change what the guest pays (guestPays, guestCups) | Alpha: "EP 4" read as tomorrow; "on the house" changed nothing |
 | 2026-10-27 | Shop buys need a second tap; shop/book scroll use world coords (fixes phone scrolling) | Alpha: list wouldn't scroll on phone, a scroll could buy |
+| 2026-10-27 | A cup labelled "for X" goes to X anywhere in the customer area; only a drop on another person's body takes it, and only if it grades as well for them. Bubbles never steal a cup | Alpha 2: Ah Gong hidden behind the front row, 4/5 players' cups went to the wrong person |
+| 2026-10-27 | Pop-ups wait for the tray too (no half-made/unserved cup, or 6 s idle); demos use their own empty plate (skipped if none) and freeze everyone's patience | Alpha 2: demo built in the player's cup, cards mid-cup, patience drained during demos |
+| 2026-10-27 | Today's new recipe is off the menu until its card has been shown (teach before the order) | Alpha 2: Milo Dinosaur ordered at 7:30am, card at 12:45pm |

@@ -28,3 +28,29 @@ describe('pickServeTarget', () => {
     expect(pickServeTarget({ zones: zones.slice(0, 1), ticket: ahGong, point: { x: 330, y: 60 }, inArea: true })).toBe(null);
   });
 });
+
+describe('pickServeTarget: a labelled cup goes to its customer', () => {
+  // the front customer's bubble covers Ah Gong; their body stands in front of his table
+  const fz = (c, rect, body) => ({ c, rect, body, cx: body.x + body.w / 2, cy: body.y + body.h / 2 });
+  const officeGuy = { id: 'officeGuy' };
+  const twin = { id: 'otherKopiO' };
+  const z2 = [
+    fz(officeGuy, { x: 230, y: 80, w: 130, h: 250 }, { x: 245, y: 175, w: 100, h: 145 }),
+    fz(ahGong, { x: 200, y: 105, w: 70, h: 75 }, { x: 205, y: 105, w: 60, h: 70 }),
+    fz(twin, { x: 0, y: 110, w: 135, h: 220 }, { x: 10, y: 185, w: 105, h: 135 }),
+  ];
+  const fits = { ahGong: 9, officeGuy: -5, otherKopiO: 9 };
+  const fit = (c) => fits[c.id];
+  it('dropped on the front customer\'s bubble: Ah Gong', () => {
+    expect(pickServeTarget({ zones: z2, ticket: ahGong, point: { x: 300, y: 120 }, inArea: true, fit })).toBe(ahGong);
+  });
+  it('dropped on the front customer\'s body (a wrong drink for them): Ah Gong', () => {
+    expect(pickServeTarget({ zones: z2, ticket: ahGong, point: { x: 290, y: 250 }, inArea: true, fit })).toBe(ahGong);
+  });
+  it('dropped on someone who wants the same drink: them', () => {
+    expect(pickServeTarget({ zones: z2, ticket: ahGong, point: { x: 60, y: 250 }, inArea: true, fit })).toBe(twin);
+  });
+  it('dropped on that person\'s bubble only: still Ah Gong', () => {
+    expect(pickServeTarget({ zones: z2, ticket: ahGong, point: { x: 60, y: 130 }, inArea: true, fit })).toBe(ahGong);
+  });
+});

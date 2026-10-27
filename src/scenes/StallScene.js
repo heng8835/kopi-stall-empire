@@ -94,6 +94,8 @@ const POUR_DWELL_MS = 140; // a pot only starts pouring once it has stopped over
 const POUR_STILL_PX = 12; // ...within this far (sweeping past a cup pours nothing)
 const SUMMARY_GRACE_MS = 600; // the day-end card's buttons wake up after this
 const CALM_MS = 400; // pop-ups (cards, demos, stories) wait for hands free this long (whenCalm)
+const TIER_RANK = { oops: 0, close: 1, perfect: 2 }; // which customer a dropped cup suits best (serveTarget)
+const TRAY_WAIT_MS = 6000; // ...and for the cups being made to be served, unless they're left sitting this long
 const COMBO_CARDS_PER_DAY = 2; // NEW ORDER cards; the rest wait for another day
 
 // Aunty Lim's word on her own score (Episode 1's ending line).
@@ -128,7 +130,7 @@ export default class StallScene extends Phaser.Scene {
     this.freshFeatures = machineLessons.flatMap((l) => l.features);
     // Today's arrivals: every regular with something to drink comes once at their usual time, and
     // random walk-ins fill up the rest. More fame, more customers (a group counts as one arrival).
-    const regulars = CUSTOMERS.filter((c) => c.regular && c.enabled && c.sprite && (c.fromDay ?? 1) <= this.day && this.menuOf(c).length);
+    const regulars = CUSTOMERS.filter((c) => c.regular && c.enabled && c.sprite && (c.fromDay ?? 1) <= this.day && ordersFor(c.orders, this.day, this.perks.features, this.freshFeatures).length); // (a drink taught later today: they come once it is)
     this.arrivals = daySchedule({
       total: customersForFame(this.econ.fame) + this.perks.extraCustomers,
       regulars,
@@ -669,16 +671,22 @@ export default class StallScene extends Phaser.Scene {
   serveTarget(slot, x, y) {
     const ticket = slot.ticket?.c?.state === 'waiting' ? slot.ticket.c : null;
     const zones = this.waitingCustomers().map((c) => this.dropZone(c));
-    return pickServeTarget({ zones, ticket, point: { x, y }, inArea: y < SERVE_AREA_Y });
+    const fit = (c) => TIER_RANK[gradeCup(slot.cup, c.spec).tier] ?? 0; // how this cup would grade for them
+    return pickServeTarget({ zones, ticket, point: { x, y }, inArea: y < SERVE_AREA_Y, fit });
   }
 
   // One generous drop zone per customer: every member's sprite and the bubble, gaps included.
+  // body = just the people (a drop there can take a labelled cup off its customer, a bubble can't).
   dropZone(c) {
-    const rects = [...c.sprites.map((s) => s.getBounds()), c.bubble?.frame.getBounds()].filter(Boolean);
-    const r = rects.reduce((a, b) => Phaser.Geom.Rectangle.Union(a, b, a), Phaser.Geom.Rectangle.Clone(rects[0]));
-    Phaser.Geom.Rectangle.Inflate(r, 10, 10);
-    const body = c.sprites.reduce((a, s) => a + s.x, 0) / c.sprites.length;
-    return { c, rect: { x: r.x, y: r.y, w: r.width, h: r.height }, cx: body, cy: c.sprites[0].y - c.sprites[0].displayHeight / 2 };
+    const union = (rects, pad) => {
+      const r = rects.reduce((a, b) => Phaser.Geom.Rectangle.Union(a, b, a), Phaser.Geom.Rectangle.Clone(rects[0]));
+      Phaser.Geom.Rectangle.Inflate(r, pad, pad);
+      return { x: r.x, y: r.y, w: r.width, h: r.height };
+    };
+    const people = c.sprites.map((s) => s.getBounds());
+    const rect = union([...people, c.bubble?.frame.getBounds()].filter(Boolean), 10);
+    const cx = c.sprites.reduce((a, s) => a + s.x, 0) / c.sprites.length;
+    return { c, rect, body: union(people, 4), cx, cy: c.sprites[0].y - c.sprites[0].displayHeight / 2 };
   }
 
   // ---------- tools ----------
@@ -966,7 +974,9 @@ export default class StallScene extends Phaser.Scene {
 
   // Plays systems/demo.js steps for customer c. onDone(made) runs after (made = the cup is ready).
   async runDemo(c, onDone = () => {}) {
-    if (this.demo || this.ended || load('demosOff', false)) return onDone(false);
+    // the demo makes its own cup on its own empty plate: the player's cups are never touched
+    const plate = this.freeSlot();
+    if (this.demo || this.ended || load('demosOff', false) || !plate) return onDone(false);
     const demo = (this.demo = { c, say: '', cancelled: false, tool: null });
     const wasTutorial = c.tutorial;
     c.tutorial = true; // their patience waits while we watch
@@ -1013,8 +1023,8 @@ export default class StallScene extends Phaser.Scene {
         break;
       }
       const tool = this.tools[{ cup: 'rack', stir: 'stir', tarik: 'tarik', ice: 'ice', powder: 'powder' }[s.do] ?? s.tool];
-      const target = slot ?? this.freeSlot();
-      if (!tool || !target) break; // e.g. a tool the stall doesn't own
+      const target = slot ?? plate;
+      if (!tool || (s.do === 'cup' && target.cup)) break; // e.g. a tool the stall doesn't own
       // the hand reaches for the tool, picks it up and carries it over the cup
       const home = { x: tool.home.x, y: tool.home.y + LIFT };
       const over = { x: target.x + (s.do === 'pour' ? 14 : 0), y: CUP_BOTTOM - CUP_H - 4 + LIFT - tool.tool.h / 2 };
@@ -1036,7 +1046,11 @@ export default class StallScene extends Phaser.Scene {
         this.onToolDragEnd(tool, { worldX: home.x, worldY: home.y }); // let go away from the cup
       } else {
         this.onToolDragEnd(tool, { worldX: over.x, worldY: over.y }); // drop it on the cup (or the rack's cup on the tray)
-        if (s.do === 'cup') slot = target;
+        if (s.do === 'cup') {
+          slot = target;
+          slot.ticket = { c, spec: c.spec, who: c.def.short ?? c.def.name }; // "for Makcik", not whoever came first
+          this.redrawSlot(slot);
+        }
         await wait(s.do === 'stir' ? (this.perks.stirMs ?? TUNING.autoStirMs) + 250 : s.do === 'tarik' ? TUNING.autoTarikMs + 250 : 450);
       }
       demo.tool = null;
@@ -1075,7 +1089,7 @@ export default class StallScene extends Phaser.Scene {
 
   // Called every frame: show a waiting combination card when nothing else is on screen.
   showNextCombo() {
-    if (!this.comboQueue.length || this.popups.length || !this.calm() || this.calmMs < CALM_MS) return;
+    if (!this.comboQueue.length || this.popups.length || !this.calm() || !this.popupReady()) return;
     const c = this.comboQueue.shift();
     if (load('combosSeen', []).includes(c.orderText) || this.taughtAlready(c.spec)) return;
     if (this.combosToday >= COMBO_CARDS_PER_DAY) return; // stays unseen: it can come up another day
@@ -1135,8 +1149,10 @@ export default class StallScene extends Phaser.Scene {
   }
 
   // What this customer could order today (the recipe calendar + machines bought).
+  // Today's new recipes stay off the menu until their card has been shown (teach before the order).
   menuOf(def) {
-    return ordersFor(def.orders, this.day, this.perks.features, this.freshFeatures);
+    const untaught = [this.lessonState === 'done' ? null : this.lesson, ...(this.lessons ?? [])].filter(Boolean).flatMap((l) => l.features);
+    return ordersFor(def.orders, this.day, this.perks.features, this.freshFeatures, untaught);
   }
 
   // forcedId / forcedOrder let the schedule (a regular), the tutorial, the story (and tests) bring in a
@@ -1682,7 +1698,7 @@ export default class StallScene extends Phaser.Scene {
     }
 
     for (const c of this.waitingCustomers()) {
-      if (c.tutorial) continue; // no time pressure while learning
+      if (c.tutorial || this.demo) continue; // no time pressure while learning (or watching a demo)
       c.patienceMs -= delta;
       this.updatePatienceBar(c);
       if (!c.saidWait && c.patienceMs < c.patienceMax * WAIT_LINE_AT) this.sayWhileWaiting(c);
@@ -1881,9 +1897,17 @@ export default class StallScene extends Phaser.Scene {
 
   runPopups(delta) {
     this.calmMs = this.calm() ? this.calmMs + delta : 0;
-    if (!this.popups.length || this.calmMs < CALM_MS) return;
+    if (!this.popups.length || !this.popupReady()) return;
     this.calmMs = 0;
     this.popups.shift()();
+  }
+
+  // Calm long enough for a pop-up: hands free a moment, and no half-made (or made, unserved) cup on
+  // the tray, so nothing lands in the middle of a drink. A cup left sitting stops blocking after a while.
+  popupReady() {
+    if (this.calmMs < CALM_MS) return false;
+    const busy = this.slots.some(({ cup }) => cup && (cup.base || cup.condensed || cup.evap || cup.sugar || cup.gula || cup.ice || cup.powder));
+    return !busy || this.calmMs >= TRAY_WAIT_MS;
   }
 
   // Pause the day for a modal card; resume when it closes.
