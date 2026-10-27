@@ -26,3 +26,7 @@
 | 2026-10-26 | When counter machines are owned, the radio, cat bed and cup warmer move to the back-wall ledge; tip jar, bell and fan stay at the counter ends | The counter top was too crowded for both |
 | 2026-10-27 | Sugar Scoop / Milk Pump / gula melaka use a timing dial: drop on a cup, a needle sweeps the zones, tap to stop, the cup gets the middle of that zone | Playtest: dropping 1-3 doses was fiddly and the zone hard to read; user picked the dial |
 | 2026-10-27 | Customers are drawn by distance (depth from feet y); groups walk up in single file | Playtest: kids and the queue overlapped in the wrong order |
+| 2026-10-27 | A cup goes to its own customer ("for X") if dropped on them or anywhere up in the customer area; one drop zone per customer/group | Alpha: cups went to whoever stood in front (Ah Gong), drops between kids did nothing |
+| 2026-10-27 | Cards, demos and stories wait for hands free (calm 0.4 s); one teaching moment per drink (featuresSeen); max 2 NEW ORDER cards a day | Alpha: pop-ups landed mid-pour/drag, same drink taught 2-3 times |
+| 2026-10-27 | Pots pour only after resting 140 ms over a cup | Alpha: sweeping across plate 1 poured into it |
+| 2026-10-27 | Mid-day checkpoint (run.midDay) on every serve/walk-out/story/lesson and on page hide; restart asks first and sits top-left | Alpha: reloads lost the day, a restart wiped a Day 4 save |

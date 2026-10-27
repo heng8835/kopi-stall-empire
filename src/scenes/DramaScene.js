@@ -30,6 +30,8 @@ const MOODS = { dark: [0x05060f, 0.82], rain: [0x1d3b5c, 0.62], fire: [0x6b1e05,
 const FADE_IN_MS = 450; // the stall dims
 const TITLE_HOLD_MS = 2300; // the title card moves on by itself after this (a tap skips it)
 const SWAP_MS = 140; // old card out / new card in
+const TAP_GRACE_MS = 350; // a finger still on the screen from the stall can't advance the first line
+const CHOICE_GRACE_MS = 500; // ...or pick a choice the player hasn't seen yet
 
 export default class DramaScene extends Phaser.Scene {
   constructor() {
@@ -42,7 +44,7 @@ export default class DramaScene extends Phaser.Scene {
     this.flags = new Set(data.flags);
     const [tint, alpha] = MOODS[data.ep.mood] ?? [0x000000, 0.55];
     this.shade = { tint, alpha };
-    this.shadeRect = this.add.rectangle(0, 0, GAME_W, GAME_H, tint, alpha).setOrigin(0).setAlpha(0).setInteractive().on('pointerdown', () => this.advance());
+    this.shadeRect = this.add.rectangle(0, 0, GAME_W, GAME_H, tint, alpha).setOrigin(0).setAlpha(0).setInteractive().on('pointerdown', () => this.time.now - this.bornAt >= TAP_GRACE_MS && this.advance());
     this.tweens.add({ targets: this.shadeRect, alpha: 1, duration: FADE_IN_MS, ease: 'Sine.out' });
     // Phaser reuses this scene object for every episode: reset all per-episode state.
     this.layer = []; // what the current card drew
@@ -53,6 +55,7 @@ export default class DramaScene extends Phaser.Scene {
     this.waitingChoice = false;
     this.glossaryOpen = false;
     this.lastWho = null;
+    this.bornAt = this.time.now;
 
     const skip = addText(this, GAME_W - 10, 36, 'Skip ▸▸', { size: 13, bold: true, color: '#fff6dc', origin: [1, 0] }).setDepth(20);
     skip.setInteractive({ useHandCursor: true }).on('pointerdown', (p, x, y, e) => {
@@ -257,6 +260,7 @@ export default class DramaScene extends Phaser.Scene {
   showChoice() {
     this.clear();
     this.waitingChoice = true;
+    this.choiceAt = this.time.now;
     this.layer.push(addText(this, GAME_W / 2, 250, 'What do you do?', { size: 18, bold: true, color: '#fff6dc', origin: 0.5 }));
     this.layer.push(addText(this, GAME_W / 2, 276, '你会怎么做?', { size: 14, color: '#d8cbb5', origin: 0.5 }));
     this.d.ep.choice.options.forEach((opt, i) => {
@@ -268,6 +272,7 @@ export default class DramaScene extends Phaser.Scene {
   }
 
   choose(opt) {
+    if (!this.waitingChoice || this.time.now - this.choiceAt < CHOICE_GRACE_MS) return;
     this.waitingChoice = false;
     this.d.onChoice?.(opt);
     for (const f of opt.flags ?? []) this.flags.add(f);

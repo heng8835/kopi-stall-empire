@@ -8,7 +8,8 @@ import { makeButton, addMuteToggle } from '../systems/ui.js';
 import { load, save } from '../systems/save.js';
 import { playMusic } from '../systems/music.js';
 import { OWNERS } from '../data/owners.js';
-import { newRun, loadRun, saveRun, monthOver, runFromQuery } from '../systems/run.js';
+import { newRun, loadRun, saveRun, monthOver, runFromQuery, midDayOf, dayClock } from '../systems/run.js';
+import { UI } from '../i18n/lines.js';
 
 export default class TitleScene extends Phaser.Scene {
   constructor() {
@@ -19,6 +20,7 @@ export default class TitleScene extends Phaser.Scene {
     fitCamera(this);
     playMusic('title');
     const cx = GAME_W / 2;
+    this.confirming = false;
     this.owner = load('owner', 'mei');
     if (!OWNERS[this.owner]) this.owner = 'mei';
 
@@ -52,8 +54,10 @@ export default class TitleScene extends Phaser.Scene {
     // Continue the month, or start a new one (a finished month can only start again).
     const run = loadRun();
     if (run && !monthOver(run)) {
-      makeButton(this, cx - 110, 500, 220, 54, `Continue  ·  Day ${run.day}`, () => this.start(run), { size: 19, bold: true, fill: 0xbfe3c0 });
-      makeButton(this, cx - 80, 560, 160, 32, 'New month (restart)', () => this.start(newRun()), { size: 12 });
+      const mid = midDayOf(run);
+      makeButton(this, cx - 130, 500, 260, 54, `Continue  ·  Day ${run.day}${mid ? `, ${dayClock(mid.clockMs)}` : ''}`, () => this.start(run), { size: mid ? 16 : 19, bold: true, fill: 0xbfe3c0 });
+      // well away from Continue, and it asks first
+      makeButton(this, 8, 8, 104, 24, 'New month…', () => this.confirmRestart(run), { size: 11 });
     } else {
       if (run) addText(this, cx, 484, 'Month 1 complete ✓  完', { size: 13, bold: true, color: '#2f7a3a', origin: 0.5 });
       makeButton(this, cx - 110, 500, 220, 58, 'Open stall  开档!', () => this.start(newRun()), { size: 20, bold: true, fill: 0xbfe3c0 });
@@ -69,8 +73,31 @@ export default class TitleScene extends Phaser.Scene {
         save('demosOff', false); // the watch-first demos come back too
         save('demosSeen', []);
         save('combosSeen', []); // and the new-order cards
+        save('featuresSeen', []);
         replay.setText('Intro + tutorial will play on Day 1 ✓');
       });
+    }
+  }
+
+  // "Start over?" — keeping the save is the big, safe button.
+  confirmRestart(run) {
+    if (this.confirming) return;
+    this.confirming = true;
+    const cx = GAME_W / 2;
+    const objs = [this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000, 0.5).setOrigin(0).setInteractive().setDepth(50)];
+    objs.push(this.add.rectangle(cx, 320, 290, 190, COLORS.paper).setStrokeStyle(2, COLORS.inkHex).setDepth(51));
+    objs.push(addText(this, cx, 252, UI.restartTitle, { size: 18, bold: true, origin: 0.5 }).setDepth(52));
+    objs.push(addText(this, cx, 282, UI.restartBody.replace('{day}', run.day), { size: 13, origin: 0.5, color: '#6b5a50' }).setDepth(52));
+    const close = () => {
+      objs.forEach((o) => o.destroy());
+      this.confirming = false;
+    };
+    const keep = makeButton(this, cx - 120, 306, 240, 48, UI.restartKeep, close, { size: 16, bold: true, fill: 0xbfe3c0 });
+    const wipe = makeButton(this, cx - 70, 366, 140, 30, UI.restartYes, () => this.start(newRun()), { size: 12 });
+    for (const b of [keep, wipe]) {
+      b.bg.setDepth(52);
+      b.txt.setDepth(53);
+      objs.push(b.bg, b.txt);
     }
   }
 

@@ -198,7 +198,13 @@ export const UI = {
   closing: 'Closing time! 收档啦~',
   dayDone: 'Day {day} done!',
   dayDoneZh: '今天辛苦了!',
-  closeStall: 'Close stall',
+  closeStall: 'Save & back to title',
+  missedServe: 'Drop the cup on a customer (them or their bubble)',
+  welcomeBack: 'Welcome back! Carrying on from {time}',
+  restartTitle: 'Start a new month?',
+  restartBody: 'Your Day {day} save will be lost.',
+  restartKeep: 'Keep my save',
+  restartYes: 'Start over',
 };
 
 export function pickLine(charId, kind, vars = {}, rng = Math.random) {

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { newRun, nextDay, auntyRating, monthOver, loadRun, saveRun, runFromQuery } from '../src/systems/run.js';
+import { newRun, nextDay, auntyRating, monthOver, loadRun, saveRun, runFromQuery, checkpoint, midDayOf, dayClock } from '../src/systems/run.js';
+import { TUNING } from '../src/data/stallTuning.js';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -44,5 +45,19 @@ describe('run + night shop', () => {
     const r = nextDay({ ...newRun(), owned: ['fan', 'twinSock'], newItems: ['twinSock'] }, { money: 0, fame: 10, rating: 5 });
     expect(r.owned).toEqual(['fan', 'twinSock']);
     expect(r.newItems).toEqual([]);
+  });
+
+  it('keeps a mid-day checkpoint for today only, and the next day clears it', () => {
+    const r = checkpoint({ ...newRun(), day: 4 }, { clockMs: 50000, storyDone: ['start'] });
+    expect(midDayOf(r)).toMatchObject({ day: 4, clockMs: 50000, storyDone: ['start'] });
+    expect(midDayOf({ ...r, day: 5 })).toBe(null);
+    expect(nextDay(r, { money: 0, fame: 10, rating: 5 }).midDay).toBe(null);
+    expect(midDayOf(newRun())).toBe(null);
+  });
+
+  it('shows the stall clock', () => {
+    expect(dayClock(0)).toBe('7:00am');
+    expect(dayClock(TUNING.dayMs / 2)).toBe('1:00pm');
+    expect(dayClock(TUNING.dayMs)).toBe('7:00pm');
   });
 });

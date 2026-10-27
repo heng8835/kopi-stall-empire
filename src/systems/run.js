@@ -2,7 +2,8 @@ import { TUNING } from '../data/stallTuning.js';
 import { load, save } from './save.js';
 
 // One month at the stall: which day it is, and what carries from day to day.
-// Saved after every day so the month can be played across sessions.
+// Saved after every day so the month can be played across sessions, plus a mid-day checkpoint
+// (run.midDay) so closing the page mid-day doesn't lose the day.
 export const MONTH_DAYS = 30;
 const KEY = 'run';
 
@@ -20,7 +21,7 @@ export function auntyRating(perfect, served) {
 // Machines bought last night have had their recipe card today, so newItems clears. Friendship
 // (systems/friends.js) carries on.
 export function nextDay(run, { money, fame, flags = run.flags, rating, ending = run.ending, friends = run.friends ?? {} }) {
-  return { ...run, day: run.day + 1, money, fame, flags: [...flags], ratings: [...run.ratings, rating], ending, owned: [...(run.owned ?? [])], newItems: [], friends: { ...friends } };
+  return { ...run, day: run.day + 1, money, fame, flags: [...flags], ratings: [...run.ratings, rating], ending, owned: [...(run.owned ?? [])], newItems: [], friends: { ...friends }, midDay: null };
 }
 
 export const monthOver = (run) => run.day > MONTH_DAYS;
@@ -33,6 +34,20 @@ export function loadRun() {
 }
 
 export const saveRun = (run) => save(KEY, run);
+
+// Today so far (clock, money, stories played...), kept on the run until the day ends.
+export const checkpoint = (run, midDay) => ({ ...run, midDay: { ...midDay, day: run.day } });
+
+// The checkpoint for today, or null (an old one from another day is ignored).
+export const midDayOf = (run) => (run?.midDay?.day === run?.day ? run.midDay : null);
+
+// The stall's clock for ms into the day: "2:15pm" (7am open, 7pm close, quarter hours).
+export function dayClock(ms) {
+  const mins = 7 * 60 + Math.floor((ms / TUNING.dayMs) * 12 * 60);
+  const h24 = Math.floor(mins / 60);
+  const mm = String(Math.floor((mins % 60) / 15) * 15).padStart(2, '0');
+  return `${((h24 + 11) % 12) + 1}:${mm}${h24 < 12 ? 'am' : 'pm'}`;
+}
 
 // Testing shortcut: ?day=14&fame=60&flags=kidsOwe,humble&money=2000&owned=kettle,fan starts straight on that day.
 export function runFromQuery(search) {
