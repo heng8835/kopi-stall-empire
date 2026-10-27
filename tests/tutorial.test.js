@@ -71,3 +71,11 @@ describe('Day-1 tutorial data', () => {
     }
   });
 });
+
+describe('Day 1 order', () => {
+  it('the first cup comes before Episode 1, and the menu card after it', () => {
+    const i = (f) => TUTORIAL_STEPS.findIndex(f);
+    expect(i((s) => s.customer === 'auntyLim')).toBeLessThan(i((s) => s.story === 'start'));
+    expect(i((s) => s.story === 'start')).toBeLessThan(i((s) => s.card === 'starter'));
+  });
+});

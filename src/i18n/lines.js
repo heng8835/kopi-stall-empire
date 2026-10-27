@@ -196,6 +196,8 @@ export const LINES = {
 export const UI = {
   tapHint: 'Psst: tap the orange words in a bubble to learn the lingo 👆',
   closing: 'Closing time! 收档啦~',
+  lastOrders: '7pm! Last orders: serving everyone already here.',
+  closedLine: 'Never mind, tomorrow I come again!',
   dayDone: 'Day {day} done!',
   dayDoneZh: '今天辛苦了!',
   closeStall: 'Save & back to title',

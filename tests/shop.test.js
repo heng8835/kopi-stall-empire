@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SHOP, AISLES } from '../src/data/shop.js';
-import { shopState, buy, gift, perks, itemById } from '../src/systems/shop.js';
+import { shopState, buy, gift, perks, itemById, nextGoal } from '../src/systems/shop.js';
 
 const run = (o = {}) => ({ day: 5, money: 5000, fame: 30, owned: [], newItems: [], ...o });
 
@@ -40,5 +40,25 @@ describe('night shop', () => {
     expect(p.features).toEqual(['horlicks', 'horlicksDino']);
     expect(perks([])).toMatchObject({ famePerDay: 0, pourMult: 1, features: [], plates: 3, tables: 1 });
     expect(perks(['fourthPlate', 'secondTable'])).toMatchObject({ plates: 4, tables: 2 });
+  });
+});
+
+describe('nextGoal', () => {
+  it('points at the cheapest machine in reach, with what is still to go', () => {
+    const g = nextGoal(run({ fame: 10, money: 1500 }));
+    expect(g.item.aisle).toBe('machine');
+    expect(g.item.tier).toBe(0);
+    const cheapest = Math.min(...SHOP.filter((i) => i.aisle === 'machine' && i.tier === 0).map((i) => i.price));
+    expect(g.item.price).toBe(cheapest);
+    expect(g.short).toBe(cheapest - 1500);
+  });
+  it('says 0 to go when it can be bought tonight', () => {
+    expect(nextGoal(run({ fame: 10, money: 99999 })).short).toBe(0);
+  });
+  it('when everything in reach is owned: the next fame tier and how much it unlocks', () => {
+    const owned = SHOP.filter((i) => i.tier === 0).map((i) => i.id);
+    const g = nextGoal(run({ fame: 10, owned }));
+    expect(g.tier).toBe(25);
+    expect(g.unlocks).toBe(SHOP.filter((i) => i.tier === 25 && !i.gift && !i.soon).length);
   });
 });

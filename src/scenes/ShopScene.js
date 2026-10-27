@@ -8,7 +8,7 @@ import { fitCamera } from '../systems/view.js';
 import { makeButton } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
 import { formatMoney } from '../systems/economy.js';
-import { shopState, buy } from '../systems/shop.js';
+import { shopState, buy, nextGoal, goalText } from '../systems/shop.js';
 import { saveRun } from '../systems/run.js';
 import { playMusic } from '../systems/music.js';
 
@@ -19,7 +19,7 @@ const SHOP_ART = { menuBoard: 'propMenuBoard', cupRack: 'toolRack', markedGlass:
 // Started with { run } = tomorrow's run; purchases are saved straight into it.
 
 const LIST = { top: 116, bottom: 546 };
-const CONFIRM_MS = 4000; // a first tap on Buy asks; a second tap within this long buys
+const CONFIRM_MS = 8000; // a first tap on Buy asks; a second tap within this long buys (slow readers too)
 const CARD_H = 84;
 const DEPTH = 10;
 
@@ -46,7 +46,8 @@ export default class ShopScene extends Phaser.Scene {
     if (this.run.day - 1 < SHOP_FROM_DAY) return this.quietNight();
 
     addText(this, GAME_W / 2, 14, "Uncle Tan's Supplier Catalogue", { size: 17, bold: true, color: '#fff6dc', origin: [0.5, 0] });
-    addText(this, GAME_W / 2, 36, '供应商目录 · the stall is closed, time to shop', { size: 11, color: '#d8cbb5', origin: [0.5, 0] });
+    // the subtitle line doubles as "what to save for next" (systems/shop.js nextGoal)
+    this.goalText = addText(this, GAME_W / 2, 36, '', { size: 11, bold: true, color: '#bfe3ff', origin: [0.5, 0] });
     this.wallet = addText(this, 12, 54, '', { size: 14, bold: true, color: '#ffd28a' });
     this.fameText = addText(this, GAME_W - 12, 54, '', { size: 13, bold: true, color: '#fff6dc', origin: [1, 0] });
 
@@ -104,6 +105,8 @@ export default class ShopScene extends Phaser.Scene {
     if (this.leaving) return;
     this.leaving = true;
     this.cameras.main.fadeOut(450, 11, 20, 48);
+    this.run = { ...this.run, night: false }; // tonight's shopping is done: Continue goes to the day now
+    saveRun(this.run);
     this.cameras.main.once('camerafadeoutcomplete', () => this.scene.start('Day', { run: this.run, morning: true }));
   }
 
@@ -124,6 +127,8 @@ export default class ShopScene extends Phaser.Scene {
     this.list.removeAll(true);
     this.wallet.setText(`Money ${formatMoney(this.run.money)}`);
     this.fameText.setText(`名气 ${Math.floor(this.run.fame)}`);
+    this.goalText.setText(goalText(nextGoal(this.run)) ?? '供应商目录 · the stall is closed, time to shop');
+    this.buttons = {}; // item id -> its Buy button (a first tap turns it into "Tap to confirm" in place)
     const items = SHOP.filter((i) => i.aisle === this.aisle);
     const blurb = AISLES.find((a) => a.id === this.aisle);
     this.list.add(addText(this, 12, 0, `${blurb.name} ${blurb.zh} · ${blurb.blurb}`, { size: 11, color: '#d8cbb5' }));
@@ -152,9 +157,8 @@ export default class ShopScene extends Phaser.Scene {
     const tier = addText(this, x + 52, y + h - 16, item.tier ? `Fame ${item.tier}+` : 'Any fame', { size: 9, bold: true, color: '#8a5a1e' });
     this.list.add([bg, icon, name, zh, text, tier]); // bg first so it sits behind
 
-    const asking = this.pending?.id === item.id;
     const label = {
-      buy: asking ? 'Tap to confirm' : `Buy ${formatMoney(item.price)}`,
+      buy: `Buy ${formatMoney(item.price)}`,
       money: `${formatMoney(item.price)}`,
       owned: 'Owned ✓',
       fame: `🔒 Fame ${item.tier}`,
@@ -163,22 +167,39 @@ export default class ShopScene extends Phaser.Scene {
     }[state];
     const bw = 88;
     const btn = makeButton(this, x + w - bw - 8, y + h / 2 - 18, bw, 36, label, () => this.tryBuy(item), {
-      size: 11, bold: true, fill: asking ? 0xf2c14e : state === 'buy' ? 0xbfe3c0 : state === 'owned' ? 0xd7ecd3 : 0xe8e0d0,
+      size: 11, bold: true, fill: state === 'buy' ? 0xbfe3c0 : state === 'owned' ? 0xd7ecd3 : 0xe8e0d0,
     });
     btn.setEnabled(state === 'buy');
+    this.buttons[item.id] = { btn, label: label };
     this.list.add([btn.bg, btn.txt]);
     if (state === 'money') this.list.add(addText(this, x + w - bw / 2 - 8, y + h / 2 + 20, 'not enough yet', { size: 9, color: '#c8402c', origin: [0.5, 0] }));
     return h;
   }
 
+  // id's Buy button shows "Tap to confirm" (gold); null puts the last one back.
+  markPending(id) {
+    const prev = this.pending && this.buttons[this.pending.id];
+    if (prev && !id) {
+      prev.btn.txt.setText(prev.label);
+      prev.btn.refresh();
+    }
+    const b = id && this.buttons[id];
+    if (b) {
+      b.btn.txt.setText('Tap to confirm');
+      b.btn.bg.setFillStyle(0xf2c14e);
+    }
+  }
+
   // First tap asks ("Tap to confirm"), the second buys: a scroll that starts on a button never buys.
+  // The list is NOT rebuilt on the first tap (that used to shift the cards under a slow second tap):
+  // just this button changes, in place.
   tryBuy(item) {
     const keep = this.scroll;
     if (this.pending?.id !== item.id || this.time.now - this.pending.at > CONFIRM_MS) {
+      this.markPending(null);
       this.pending = { id: item.id, at: this.time.now };
+      this.markPending(item.id);
       this.note.setText(`${item.name}: ${formatMoney(item.price)}. Tap again to buy.`);
-      this.renderList();
-      this.setScroll(keep);
       return;
     }
     this.pending = null;

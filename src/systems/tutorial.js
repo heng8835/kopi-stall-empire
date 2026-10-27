@@ -36,6 +36,7 @@ export class Tutorial {
     if (this.i >= this.steps.length) return this.finish();
     const step = this.steps[this.i];
     const T = TUTORIAL_TEXT;
+    if (step.story) return this.scene.playStory(step.story, () => this.active && this.next());
     if (step.card === 'starter') {
       save('combosSeen', [...new Set([...load('combosSeen', []), ...STARTER_MENU.map((r) => r.name)])]); // shown here, no separate cards
       return this.scene.pauseFor((resume) =>
@@ -75,10 +76,10 @@ export class Tutorial {
     const step = this.steps[this.i];
     if (tier !== 'perfect') this.scene.think(TUTORIAL_TEXT.almost, 2500);
     this.scene.lockStall(true); // until the stall opens
-    // she stays a moment to say you're ready, then the menu card
-    c.linger = 3400;
+    // she stays a moment (to say you're ready, if the step has a line), then the next step
+    c.linger = step.ready ? 3400 : 1800;
     if (step.ready) this.scene.time.delayedCall(1100, () => c.state !== 'gone' && this.scene.showBubble(c, step.ready, 'say'));
-    this.scene.time.delayedCall(3600, () => this.active && this.next());
+    this.scene.time.delayedCall(step.ready ? 3600 : 1400, () => this.active && this.next());
   }
 
   finish() {

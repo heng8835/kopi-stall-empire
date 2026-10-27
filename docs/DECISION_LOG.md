@@ -39,3 +39,8 @@
 | 2026-10-27 | A cup labelled "for X" goes to X anywhere in the customer area; only a drop on another person's body takes it, and only if it grades as well for them. Bubbles never steal a cup | Alpha 2: Ah Gong hidden behind the front row, 4/5 players' cups went to the wrong person |
 | 2026-10-27 | Pop-ups wait for the tray too (no half-made/unserved cup, or 6 s idle); demos use their own empty plate (skipped if none) and freeze everyone's patience | Alpha 2: demo built in the player's cup, cards mid-cup, patience drained during demos |
 | 2026-10-27 | Today's new recipe is off the menu until its card has been shown (teach before the order) | Alpha 2: Milo Dinosaur ordered at 7:30am, card at 12:45pm |
+| 2026-10-27 | 7pm: no new arrivals, but the line already there is still served (90 s + 15 s per queued person); if it runs out they say goodbye, no walk-out, no fame lost | Alpha 2: the queue "vanished" at closing (4/5) |
+| 2026-10-27 | Star fame shows on the HUD the moment the day-end card opens; card says "+N today · ★ +M" | Alpha 2: HUD and card fame never matched (5/5) |
+| 2026-10-27 | A next-goal line (systems/shop.js nextGoal) on the day-end card and the shop; every 5th perfect in a row = COMBO pop + $1.00; "Best combo" on the card | Alpha 2: nothing to chase, combo counter paid nothing visible |
+| 2026-10-27 | Day 1: Aunty Lim walks straight in and you make her teh; EP1 (her intro + the note on the tin) plays after that cup | Alpha 2: first cup still ~2 min in |
+| 2026-10-27 | Shop confirm changes the button in place (no list rebuild), 8 s window; "Save & back" on the day-end card resumes at that night's shop (run.night) | Alpha 2: slow confirm lost a purchase; Save & back skipped the shop |

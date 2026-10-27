@@ -52,24 +52,22 @@ const N = (text, extra = {}) => ({ who: 'narrator', text, ...extra });
 export const EVENTS = [
   {
     id: 'ep1-note', day: 1, when: 'start', ep: 1,
-    title: { en: 'The Note on the Pot', zh: '壶上的字条' },
-    guest: { id: 'auntyLim', order: 'Teh' }, // walks in after the note; on Day 1 she is also the tutorial's first order
-    prelude: [
+    title: { en: 'The Note on the Tin', zh: '罐上的字条' },
+    // Day 1: you make Aunty Lim's teh first (the tutorial), then this plays (Tutorial step { story: 'start' })
+    beats: [
+      N('The first teh of your life. Aunty Lim sips it slowly.'),
+      { who: 'auntyLim', text: 'Not bad leh, for first day. You are the {owner} Uncle Tan pass his stall to? Don\'t kan cheong.' },
+      { who: 'auntyLim', text: 'I\'m Aunty Lim. Every morning I come for teh. Uncle Tan\'s teh: 9 out of 10.' },
+      { who: 'auntyLim', text: 'Yours ah… 我们看看. Tonight I tell you.' },
       N('On the counter: Uncle Tan\'s old biscuit tin, with a note taped on it.', { show: 'tin' }),
       { who: 'note', name: 'Uncle Tan', text: '"{owner} — stall is yours for 1 month. Tin for Day 30. Don\'t open. Don\'t let Oyen sit on it. — Tan"', show: 'tin' },
       N('Oyen, the orange stall cat, is already sleeping on it.', { show: 'tinOyen' }),
       { who: 'oyen', text: 'Meow. (does not move)', show: 'tinOyen' },
     ],
-    beats: [
-      N('The first customer of your life.'),
-      { who: 'auntyLim', text: 'Eh! You are the {owner} Uncle Tan pass his stall to? First day ah? Don\'t kan cheong.' },
-      { who: 'auntyLim', text: 'I\'m Aunty Lim. Every morning I come for teh. Uncle Tan\'s teh: 9 out of 10.' },
-      { who: 'auntyLim', text: 'Yours ah… 我们看看. One teh, please.' },
-    ],
   },
   {
     id: 'ep1-rating', day: 1, when: 'end', ep: 1,
-    title: { en: 'The Note on the Pot', zh: '壶上的字条' },
+    title: { en: 'The Note on the Tin', zh: '罐上的字条' },
     beats: [{ who: 'auntyLim', text: 'Today: {rating} out of 10. {ratingNote}' }],
     choice: {
       options: [

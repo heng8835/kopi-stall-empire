@@ -61,3 +61,11 @@ describe('run + night shop', () => {
     expect(dayClock(TUNING.dayMs)).toBe('7:00pm');
   });
 });
+
+describe('night flag', () => {
+  it('a new day clears it (the shop was visited)', async () => {
+    const { nextDay, newRun } = await import('../src/systems/run.js');
+    const r = nextDay({ ...newRun(), night: true }, { money: 0, fame: 10, rating: 5 });
+    expect(r.night).toBe(false);
+  });
+});

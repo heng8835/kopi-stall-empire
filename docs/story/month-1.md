@@ -38,7 +38,7 @@ Edit the data file for wording changes; keep this doc in sync for the secrets/th
 ## Calendar
 | Day | Ep | Title | When |
 |---|---|---|---|
-| 1 | 1 | The Note on the Pot 《壶上的字条》 | start + end |
+| 1 | 1 | The Note on the Tin 《罐上的字条》 | start + end |
 | 2 | 2 | Twenty Cents 《两毛钱》 | mid |
 | 3 | 3 | Fast Fast 《快快》 | mid + end |
 | 5 | 4 | Oyen's Double Life 《橙猫的双面人生》 | mid |
@@ -71,20 +71,22 @@ until Day 28 (he is the Rain Uncle).
 
 The one-month trial is why the tin is for Day 30, and it frames the finale's decision.
 
-## Ep 1 · Day 1 · The Note on the Pot 《壶上的字条》
-**Cast:** narrator, Oyen, Aunty Lim (guest) · **When:** start, then end
+## Ep 1 · Day 1 · The Note on the Tin 《罐上的字条》
+**Cast:** narrator, Oyen, Aunty Lim · **When:** start (after your first cup), then end
 
-*start* (the note plays first; after a short quiet moment at the stall, Aunty Lim walks in and the rest plays)
-- **Narrator:** A note is taped to the old kopi pot.
-- **Note (Uncle Tan):** "{owner} — stall is yours for 1 month. Tin for Day 30. Don't open. Don't let Oyen sit on it. — Tan"
-- **Narrator:** Oyen is already sitting on it.
-- **Oyen:** Meow. *(does not move)*
-- *(a quiet moment; Aunty Lim walks up to the counter)*
-- **Narrator:** The first customer of your life.
-- **Aunty Lim:** Eh! You are the {owner} Uncle Tan pass his stall to? First day ah? Don't kan cheong.
+*before* (gameplay, no scene): the stall opens and Aunty Lim walks straight up: "First day ah? One teh: teh pot to FULL,
+condensed to NORMAL, stir. You try!" You make it yourself, the tools pulsing, and serve it. Then the episode plays:
+
+*start*
+- **Narrator:** The first teh of your life. Aunty Lim sips it slowly.
+- **Aunty Lim:** Not bad leh, for first day. You are the {owner} Uncle Tan pass his stall to? Don't kan cheong.
 - **Aunty Lim:** I'm Aunty Lim. Every morning I come for teh. Uncle Tan's teh: 9 out of 10.
-- **Aunty Lim:** Yours ah… 我们看看. One teh, please.
-  *(On Day 1 her teh is the tutorial's first order: she says the recipe in one line and you make it yourself, the tools pulsing.)*
+- **Aunty Lim:** Yours ah… 我们看看. Tonight I tell you.
+- **Narrator:** On the counter: Uncle Tan's old biscuit tin, with a note taped on it.
+- **Note (Uncle Tan):** "{owner} — stall is yours for 1 month. Tin for Day 30. Don't open. Don't let Oyen sit on it. — Tan"
+- **Narrator:** Oyen, the orange stall cat, is already sleeping on it.
+- **Oyen:** Meow. *(does not move)*
+- *(then the starter menu card, and the stall opens)*
 
 *end*
 - **Aunty Lim:** Today: 5 out of 10. 有进步空间 lah. *(9-10: "Hm. Not bad ah… 不错."; below 6: "Never mind. 明天再努力.")*

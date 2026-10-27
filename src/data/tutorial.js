@@ -7,13 +7,15 @@
 //   say               what they say first (no demo)
 //   highlight         tool ids (TOOL_IDS) that pulse if you make it yourself (demo skipped)
 //   ready             what they say after you serve them
+//   story: 'start'    play today's start episode here (Day 1: after the first cup, not before it)
 //   card: 'starter'   the starter menu card (STARTER_MENU below)
 
 // Tool ids the tutorial can highlight. StallScene registers its tools under these ids.
 export const TOOL_IDS = ['kopi', 'teh', 'sugar', 'condensed', 'evap', 'milo', 'ice', 'powder', 'stir', 'rack', 'bin'];
 
 export const TUTORIAL_STEPS = [
-  { customer: 'auntyLim', order: 'Teh', say: 'Teh: teh pot to FULL, condensed milk to NORMAL, stir. You try!', highlight: ['rack', 'teh', 'condensed', 'stir'], ready: 'Not bad leh! You ready for the next customer liao.' },
+  { customer: 'auntyLim', order: 'Teh', say: 'First day ah? One teh: teh pot to FULL, condensed to NORMAL, stir. You try!', highlight: ['rack', 'teh', 'condensed', 'stir'] },
+  { story: 'start' }, // Episode 1 (her intro, the note on the tin) right after your first cup
   { card: 'starter' },
 ];
 

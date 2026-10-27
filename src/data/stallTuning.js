@@ -5,7 +5,8 @@ export const TUNING = {
   // Chill pacing (playtest 2026-10-23): ~3 real minutes, then closing time waits for the
   // customers already at the counter (closingGraceMs at most).
   dayMs: 120_000, // 2 real minutes, 7am -> 7pm
-  closingGraceMs: 60_000,
+  closingGraceMs: 90_000, // after 7pm everyone already here still gets served, this long at most...
+  closingGracePerQueuedMs: 15_000, // ...plus this per person still in line at 7pm
   firstSpawnMs: 1800, // the first customer walks in as the shutter goes up
   lastSpawnBeforeEndMs: 18_000,
   spawnJitter: 0.35, // each arrival lands within +-35% of its even share of the day
@@ -21,6 +22,8 @@ export const TUNING = {
   closePay: 0.6, // a close cup pays this share of the price (a wrong drink pays nothing)
   streakTipStep: 10, // cents: each perfect cup in a row adds this to the tip...
   streakTipMax: 50, // ...up to this
+  comboEvery: 5, // every 5th perfect in a row...
+  comboBonus: 100, // ...pays this bonus (cents) with a big COMBO pop
   // Few customers at first; upgrades make you faster before the crowd grows.
   customersMin: 8,
   customersMax: 15,

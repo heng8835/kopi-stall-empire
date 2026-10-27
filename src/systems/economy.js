@@ -39,6 +39,9 @@ export function nextCustomerAt(fame) {
 }
 
 // Extra tip for a run of perfect cups in a row: 2 in a row +10c, 3 +20c ... up to +50c.
+// Every comboEvery-th perfect in a row pays a combo bonus on top (0 otherwise).
+export const comboBonus = (streak) => (streak > 0 && streak % TUNING.comboEvery === 0 ? TUNING.comboBonus : 0);
+
 export const streakBonus = (streak) => Math.min(TUNING.streakTipMax, Math.max(0, streak - 1) * TUNING.streakTipStep);
 
 // Apply one served cup. Returns { paid, tip, fame } for floating feedback text.

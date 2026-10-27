@@ -61,7 +61,8 @@ export default class TitleScene extends Phaser.Scene {
     const run = loadRun();
     if (run && !monthOver(run)) {
       const mid = midDayOf(run);
-      makeButton(this, cx - 130, 500, 260, 54, `Continue  ·  Day ${run.day}${mid ? `, ${dayClock(mid.clockMs)}` : ''}`, () => this.start(run), { size: mid ? 16 : 19, bold: true, fill: 0xbfe3c0 });
+      const where = run.night ? `Night shop (Day ${run.day - 1})` : `Day ${run.day}${mid ? `, ${dayClock(mid.clockMs)}` : ''}`;
+      makeButton(this, cx - 130, 500, 260, 54, `Continue  ·  ${where}`, () => this.start(run), { size: mid || run.night ? 16 : 19, bold: true, fill: 0xbfe3c0 });
       // well away from Continue, and it asks first
       makeButton(this, 8, 8, 104, 24, 'New month…', () => this.confirmRestart(run), { size: 11 });
     } else {
@@ -124,6 +125,7 @@ export default class TitleScene extends Phaser.Scene {
     saveRun(today);
     // A brand-new month: the opening cutscene plays once first.
     if (!jump && today.day === 1 && !openingSeen()) return this.scene.start('Opening', { run: today });
+    if (!jump && today.night) return this.scene.start('Shop', { run: today }); // left from the day-end card: tonight's shop first
     this.scene.start('Day', { run: today });
   }
 }

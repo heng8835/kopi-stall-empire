@@ -1,5 +1,6 @@
 // Night-shop rules: what can be bought, buying, and what everything owned adds up to. Pure.
 import { SHOP } from '../data/shop.js';
+import { formatMoney } from './economy.js';
 
 export const itemById = (id) => SHOP.find((i) => i.id === id) ?? null;
 
@@ -52,4 +53,30 @@ export function perks(owned = []) {
   }
   p.famePerDay = Math.round(p.famePerDay * 10) / 10;
   return p;
+}
+
+// The next thing to save up for (the day-end card and the night shop show it): the cheapest machine
+// (a new drink) the player is famous enough for, else the cheapest anything. { item, short } with
+// short = cents still to go (0 = can buy tonight), or { tier, unlocks } when everything in reach is owned.
+export function nextGoal(run) {
+  const open = SHOP.filter((i) => !i.gift && !i.soon && !run.owned?.includes(i.id));
+  const reach = open.filter((i) => run.fame >= i.tier);
+  const cheapest = (list) => list.reduce((a, b) => (b.price < a.price ? b : a));
+  const machines = reach.filter((i) => i.aisle === 'machine');
+  if (reach.length) {
+    const item = cheapest(machines.length ? machines : reach);
+    return { item, short: Math.max(0, item.price - run.money) };
+  }
+  const later = open.filter((i) => i.tier > run.fame);
+  if (!later.length) return null;
+  const tier = Math.min(...later.map((i) => i.tier));
+  return { tier, unlocks: later.filter((i) => i.tier === tier).length };
+}
+
+// nextGoal as one line for the day-end card and the night shop.
+export function goalText(goal) {
+  if (!goal) return null;
+  if (goal.tier) return `名气 ${goal.tier} unlocks ${goal.unlocks} more in the shop`;
+  const { item, short } = goal;
+  return short ? `Next: ${item.name} ${formatMoney(item.price)}, ${formatMoney(short)} to go` : `You can buy the ${item.name} tonight!`;
 }

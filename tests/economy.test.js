@@ -51,3 +51,10 @@ describe('economy', () => {
 
   it('formats money', () => expect(formatMoney(310)).toBe('$3.10'));
 });
+
+describe('comboBonus', () => {
+  it('pays on every 5th perfect in a row only', async () => {
+    const { comboBonus } = await import('../src/systems/economy.js');
+    expect([1, 4, 5, 6, 10].map(comboBonus)).toEqual([0, 0, 100, 0, 100]);
+  });
+});
