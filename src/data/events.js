@@ -54,9 +54,9 @@ export const EVENTS = [
   {
     id: 'ep1-note', day: 1, when: 'start', ep: 1,
     title: { en: 'The Note on the Tin', zh: '罐上的字条' },
-    // Day 1: you make Aunty Lim's teh first (the tutorial), then this plays (Tutorial step { story: 'start' })
+    // Day 1: she shows you her teh, you make her a second one (the tutorial), then this plays (Tutorial step { story: 'start' })
     beats: [
-      N('The first teh of your life. Aunty Lim sips it slowly.'),
+      N('Your own first teh at this stall. Aunty Lim sips it slowly.'),
       { who: 'auntyLim', text: 'Not bad leh, for first day. You are the {owner} Uncle Tan pass his stall to? Don\'t kan cheong.' },
       { who: 'auntyLim', text: 'I\'m Aunty Lim. Every morning I come for teh. Uncle Tan\'s teh: 9 out of 10.' },
       { who: 'auntyLim', text: 'Yours ah… 我们看看. Tonight I tell you.' },

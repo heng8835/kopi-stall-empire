@@ -1,9 +1,10 @@
 // Day-1 tutorial: Aunty Lim walks straight in, greets you, and the ghost hand makes her teh with the real
 // tools while she says each step (if demos are off, the tools to use pulse and you make it yourself).
-// You serve it, Episode 1 plays, then the starter menu card shows the four drinks as tools: pot + milk/sugar + spoon = drink.
+// You serve it, then she asks for a second teh that you make yourself (the tools pulse). Episode 1 plays, then the starter menu card shows the four drinks as tools: pot + milk/sugar + spoon = drink.
 // OK opens the stall and Day 1 begins.
 //   customer, order   who comes and what they order       demo   the ghost hand makes it first
 //   say               what they say first (before the demo, if there is one)
+//   cups, again       cups they want (default 1); after each cup but the last they say `again` and wait
 //   highlight         tool ids (TOOL_IDS) that pulse if you make it yourself (demo skipped)
 //   ready             what they say after you serve them
 //   story: 'start'    play today's start episode here (Day 1: after the first cup, not before it)
@@ -13,8 +14,8 @@
 export const TOOL_IDS = ['kopi', 'teh', 'sugar', 'condensed', 'evap', 'milo', 'ice', 'powder', 'stir', 'rack', 'bin'];
 
 export const TUTORIAL_STEPS = [
-  { customer: 'auntyLim', order: 'Teh', say: 'First day ah? Come, I show you how to make my teh. Watch!', demo: true, highlight: ['rack', 'teh', 'condensed', 'stir'] },
-  { story: 'start' }, // Episode 1 (her intro, the note on the tin) right after your first cup
+  { customer: 'auntyLim', order: 'Teh', say: 'First day ah? Come, I show you how to make my teh. Watch!', demo: true, cups: 2, again: 'Now you try! One more for me, same same.', highlight: ['rack', 'teh', 'condensed', 'stir'] },
+  { story: 'start' }, // Episode 1 (her intro, the note on the tin) right after the teh you made
   { card: 'starter' },
 ];
 

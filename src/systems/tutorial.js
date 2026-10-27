@@ -60,6 +60,7 @@ export class Tutorial {
     const c = here ?? s.spawnCustomer(step.customer, step.order);
     if (!c) return s.time.delayedCall(500, () => this.trySpawn(step)); // slot still busy
     c.tutorial = true;
+    if (step.cups) c.n = step.cups;
     // made = the demo made their cup (you just serve it); otherwise the tools to use pulse
     const yourTurn = (made = false) => {
       if (!this.active) return;
@@ -82,8 +83,17 @@ export class Tutorial {
 
   // Called by StallScene.serveCup() for every serve.
   onServed(c, tier) {
-    if (!this.active || !c.tutorial || c.served < c.n) return;
+    if (!this.active || !c.tutorial) return;
     const step = this.steps[this.i];
+    if (c.served < c.n) {
+      // one more cup: she asks you to make this one yourself, and the tools pulse
+      this.clearGlows();
+      const s = this.scene;
+      s.time.delayedCall(1300, () => c.state === 'waiting' && step.again && s.showBubble(c, step.again, 'say'));
+      s.time.delayedCall(4000, () => c.state === 'waiting' && c.served < c.n && s.showBubble(c, c.orderLine, 'order'));
+      s.time.delayedCall(1300, () => this.active && (s.lockStall(false), this.highlight(step.highlight)));
+      return;
+    }
     this.clearGlows(); // the pulsing boxes go as soon as the cup is served
     if (tier !== 'perfect') this.scene.think(TUTORIAL_TEXT.almost, 2500);
     this.scene.lockStall(true); // until the stall opens

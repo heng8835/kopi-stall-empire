@@ -72,14 +72,15 @@ until Day 28 (he is the Rain Uncle).
 The one-month trial is why the tin is for Day 30, and it frames the finale's decision.
 
 ## Ep 1 · Day 1 · The Note on the Tin 《罐上的字条》
-**Cast:** narrator, Oyen, Aunty Lim · **When:** start (after your first cup), then end
+**Cast:** narrator, Oyen, Aunty Lim · **When:** start (after the demo teh and the teh you make), then end
 
 *before* (gameplay, no scene): the stall opens and Aunty Lim walks straight up: "First day ah? Come, I show you how to
-make my teh. Watch!" The ghost hand makes it with the real tools while she says each step; you drag it to her. She
+make my teh. Watch!" The ghost hand makes it with the real tools while she says each step; you drag it to her.
+Then: "Now you try! One more for me, same same." You make the second teh yourself (the tools pulse). She
 stays at the counter, and the episode plays:
 
 *start*
-- **Narrator:** The first teh of your life. Aunty Lim sips it slowly.
+- **Narrator:** Your own first teh at this stall. Aunty Lim sips it slowly.
 - **Aunty Lim:** Not bad leh, for first day. You are the {owner} Uncle Tan pass his stall to? Don't kan cheong.
 - **Aunty Lim:** I'm Aunty Lim. Every morning I come for teh. Uncle Tan's teh: 9 out of 10.
 - **Aunty Lim:** Yours ah… 我们看看. Tonight I tell you.
