@@ -1,7 +1,7 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-27
 phase: development
-next: "Alpha P0+P1+P2 fixes pushed. Re-run the alpha (tools/playtest/harness.js, brief in the 2026-10-27 report) to measure. Leftovers in IDEAS.md (art: walk-ins holding drinks, Oyen at the stall, shop icons; bubble overlap in rushes)."
+next: "Alpha round 2 done (docs/playtest/2026-10-27-alpha2-report.md): clarity 5.4->6.6, fun 5.8->6.2. Next: ticketed cups always reach their customer (bubbles never steal), demos never touch player cups + freeze patience, teach before the order, closing serves the queue, one fame number."
 tier_hint: 1
 blockers: []
 touched: [src/scenes/StallScene.js, src/scenes/ShopScene.js, src/scenes/DramaScene.js, src/scenes/TitleScene.js, src/systems/economy.js, src/systems/queue.js, src/systems/daySummary.js, src/data/shop.js, src/data/events.js, src/data/tutorial.js, src/data/stallTuning.js]
