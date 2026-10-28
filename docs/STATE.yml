@@ -1,7 +1,7 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-28
 phase: development
-next: "Alpha-3 P1s + quick P2s fixed and live. Alpha round 4 (same 5 players) running/next; then its P0s."
+next: "Alpha round 4 done (docs/playtest/2026-10-28-alpha4-report.md). Next: its P0s (stories/cards eat taps + wait for free tray, cards before order, swallowed post-demo drag, day-end numbers match, tool row stays put)."
 tier_hint: 1
 blockers: []
 touched: [src/scenes/StallScene.js, src/systems/queue.js, src/systems/economy.js, src/systems/menu.js, src/systems/hints.js, src/systems/serve.js, src/systems/cards.js, src/systems/drinkArt.js, src/systems/ui.js, src/scenes/DramaScene.js, src/scenes/OpeningScene.js, src/data/drinks.js, src/data/glossary.js, src/data/tools.js]
