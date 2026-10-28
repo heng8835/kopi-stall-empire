@@ -32,7 +32,8 @@ const MOODS = { dark: [0x05060f, 0.82], rain: [0x1d3b5c, 0.62], fire: [0x6b1e05,
 const FADE_IN_MS = 450; // the stall dims
 const TITLE_HOLD_MS = 2300; // the title card moves on by itself after this (a tap skips it)
 const SWAP_MS = 140; // old card out / new card in
-const TAP_GRACE_MS = 350; // a finger still on the screen from the stall can't advance the first line
+const TAP_GRACE_MS = 900; // taps still coming from the stall (a rush) can't skip the opening (round 4: 350 wasn't enough)
+const LINE_GRACE_MS = 250; // ...and a fresh line can't be skipped by the same burst of taps
 const CHOICE_GRACE_MS = 500; // ...or pick a choice the player hasn't seen yet
 
 // When the next episode comes, so a teaser never reads as "tomorrow" when it's days away.
@@ -50,7 +51,7 @@ export default class DramaScene extends Phaser.Scene {
     this.flags = new Set(data.flags);
     const [tint, alpha] = MOODS[data.ep.mood] ?? [0x000000, 0.55];
     this.shade = { tint, alpha };
-    this.shadeRect = this.add.rectangle(0, 0, GAME_W, GAME_H, tint, alpha).setOrigin(0).setAlpha(0).setInteractive().on('pointerdown', () => this.time.now - this.bornAt >= TAP_GRACE_MS && this.advance());
+    this.shadeRect = this.add.rectangle(0, 0, GAME_W, GAME_H, tint, alpha).setOrigin(0).setAlpha(0).setInteractive().on('pointerdown', () => this.tapReady() && this.advance());
     this.tweens.add({ targets: this.shadeRect, alpha: 1, duration: FADE_IN_MS, ease: 'Sine.out' });
     // Phaser reuses this scene object for every episode: reset all per-episode state.
     this.layer = []; // what the current card drew
@@ -70,11 +71,17 @@ export default class DramaScene extends Phaser.Scene {
     skip.setStroke('#2b2420', 3);
     skip.setInteractive({ useHandCursor: true }).on('pointerdown', (p, x, y, e) => {
       e?.stopPropagation?.();
-      this.skip();
+      if (this.time.now - this.bornAt >= TAP_GRACE_MS) this.skip();
     });
 
     if (data.ep.noTitle) this.skipTitle(); // the second part of an episode that already had its title card
     else this.titleCard();
+  }
+
+  // A tap counts once the scene has been up a moment and the current line has been seen.
+  tapReady() {
+    const now = this.time.now;
+    return now - this.bornAt >= TAP_GRACE_MS && now - (this.lineAt ?? 0) >= LINE_GRACE_MS;
   }
 
   skipTitle() {
@@ -339,7 +346,7 @@ export default class DramaScene extends Phaser.Scene {
 
   // A tap on an orange word right as its line comes up was meant to move on (round 3: the word stole it).
   openGlossary(key) {
-    if (this.time.now - (this.lineAt ?? 0) < GLOSS_SETTLE_MS) return this.advance();
+    if (this.time.now - (this.lineAt ?? 0) < GLOSS_SETTLE_MS) return this.tapReady() && this.advance();
     this.glossaryOpen = true;
     showGlossary(this, key, () => this.time.delayedCall(0, () => (this.glossaryOpen = false)));
   }

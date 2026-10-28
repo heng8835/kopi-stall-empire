@@ -5,7 +5,7 @@ import { addText } from '../systems/text.js';
 import { STALL_PROPS } from '../data/stallProps.js';
 import { MACHINE_TOOLS } from '../data/tools.js';
 import { fitCamera } from '../systems/view.js';
-import { makeButton } from '../systems/ui.js';
+import { makeButton, layoutLine, showGlossary } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
 import { formatMoney } from '../systems/economy.js';
 import { shopState, buy, nextGoal, goalText } from '../systems/shop.js';
@@ -130,7 +130,7 @@ export default class ShopScene extends Phaser.Scene {
   renderList() {
     this.list.removeAll(true);
     this.wallet.setText(`Money ${formatMoney(this.run.money)}`);
-    this.fameText.setText(`名气 ${Math.floor(this.run.fame)}`);
+    this.fameText.setText(`Fame 名气 ${Math.floor(this.run.fame)}`);
     this.goalText.setText(goalText(nextGoal(this.run)) ?? '供应商目录 · the stall is closed, time to shop');
     this.buttons = {}; // item id -> its Buy button (a first tap turns it into "Tap to confirm" in place)
     const items = SHOP.filter((i) => i.aisle === this.aisle);
@@ -148,8 +148,9 @@ export default class ShopScene extends Phaser.Scene {
     const x = 8;
     const w = GAME_W - 16;
     const dim = state === 'soon' || state === 'fame';
-    const text = addText(this, x + 52, y + 27, item.text, { size: 11, wrap: w - 52 - 96, color: '#3a2e2a', lineSpacing: 1 });
-    const h = Math.max(CARD_H, 27 + text.height + 22);
+    // local words (pakciks, chope…) are tappable here too (round 4: Alex)
+    const text = layoutLine(this, item.text, x + 52, y + 27, w - 52 - 96, (k) => showGlossary(this, k, () => {}), { size: 11, color: '#3a2e2a' });
+    const h = Math.max(CARD_H, 27 + text.height + 18);
     const bg = this.add.rectangle(x, y, w, h, state === 'owned' ? 0xe6f2e1 : COLORS.paper, dim ? 0.82 : 1).setOrigin(0).setStrokeStyle(2, state === 'owned' ? 0x2f7a3a : COLORS.inkHex, 0.9);
     // the item's own art when it has some (stall props, machine tools), else its emoji
     const art = STALL_PROPS[item.id]?.[0]?.key ?? MACHINE_TOOLS[item.id]?.sprite ?? SHOP_ART[item.id] ?? null;
@@ -160,7 +161,7 @@ export default class ShopScene extends Phaser.Scene {
     const name = addText(this, x + 52, y + 8, item.name, { size: 14, bold: true, color: dim ? '#8a7a70' : '#3a2e2a' });
     const zh = addText(this, x + 52 + name.width + 6, y + 10, item.zh, { size: 11, color: '#8a7a70' });
     const tier = addText(this, x + 52, y + h - 16, item.tier ? `Fame ${item.tier}+` : 'Any fame', { size: 9, bold: true, color: '#8a5a1e' });
-    this.list.add([bg, icon, name, zh, text, tier]); // bg first so it sits behind
+    this.list.add([bg, icon, name, zh, ...text.objects, tier]); // bg first so it sits behind
 
     const label = {
       buy: `Buy ${formatMoney(item.price)}`,
@@ -216,5 +217,21 @@ export default class ShopScene extends Phaser.Scene {
     this.note.setText(item.unlocks ? `${item.name} bought! A regular will order the new drink tomorrow.` : `${item.name} bought! It works from tomorrow.`);
     this.renderList();
     this.setScroll(keep);
+    this.boughtPop(item);
+  }
+
+  // A purchase is a moment, not one line of text (round 4): a big "Bought!" pops over the list.
+  boughtPop(item) {
+    play('cheer');
+    const cx = GAME_W / 2;
+    const glow = this.add.circle(cx, 300, 70, 0xffe7a8, 0.85).setDepth(80).setScale(0.2);
+    const t = addText(this, cx, 284, 'Bought!', { size: 30, bold: true, color: '#ffd23a', origin: 0.5 }).setDepth(81);
+    const n = addText(this, cx, 318, item.name, { size: 15, bold: true, color: '#fff6dc', origin: 0.5, wrap: 260, align: 'center' }).setDepth(81);
+    t.setStroke('#5a2e0e', 6);
+    n.setStroke('#3a2414', 4);
+    const objs = [glow, t, n];
+    [t, n].forEach((o) => o.setScale(0.4));
+    this.tweens.add({ targets: [t, n, glow], scale: 1, duration: 280, ease: 'Back.out' });
+    this.tweens.add({ targets: objs, alpha: 0, y: '-=18', delay: 1100, duration: 450, onComplete: () => objs.forEach((o) => o.destroy()) });
   }
 }

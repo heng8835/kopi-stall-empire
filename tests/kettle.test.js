@@ -54,17 +54,17 @@ describe('Big Brass Kettle: gao / poh', () => {
 });
 
 describe('the bottom rail', () => {
-  it('fits up to 7 tools at their own spots, more share it without overlapping', async () => {
+  it('every tool keeps its own spot whatever is bought, and nothing overlaps', async () => {
     const { TOOLS, MACHINE_TOOLS, layoutRail } = await import('../src/data/tools.js');
-    const base = layoutRail(TOOLS);
-    for (const t of TOOLS.filter((x) => x.feet === 626)) expect(base[t.id]).toEqual({ x: t.x, scale: 1 });
     const all = [...TOOLS, ...Object.values(MACHINE_TOOLS)];
-    const crowded = layoutRail(all);
-    const rail = all.filter((t) => crowded[t.id]).sort((a, b) => crowded[a.id].x - crowded[b.id].x);
-    for (let i = 1; i < rail.length; i++) {
-      const a = rail[i - 1], b = rail[i];
-      expect(crowded[a.id].x + (a.w * crowded[a.id].scale) / 2).toBeLessThanOrEqual(crowded[b.id].x - (b.w * crowded[b.id].scale) / 2 + 0.01);
+    const base = layoutRail(TOOLS);
+    const full = layoutRail(all);
+    for (const t of TOOLS.filter((x) => x.feet === 626)) {
+      expect(base[t.id]).toEqual({ x: t.x, scale: 1 });
+      expect(full[t.id]).toEqual(base[t.id]); // round 4: buying the Tarik Mugs moved Ice, Spoon and Cups
     }
-    expect(Math.max(...rail.map((t) => crowded[t.id].x))).toBeLessThan(360);
+    const rail = all.filter((t) => full[t.id]).sort((a, b) => full[a.id].x - full[b.id].x);
+    for (let i = 1; i < rail.length; i++) expect(rail[i - 1].x + rail[i - 1].w / 2 - (rail[i].x - rail[i].w / 2)).toBeLessThanOrEqual(12);
+    expect(Math.max(...rail.map((t) => full[t.id].x + t.w / 2))).toBeLessThanOrEqual(360);
   });
 });

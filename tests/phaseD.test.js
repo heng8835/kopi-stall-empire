@@ -139,11 +139,13 @@ describe('the counter top', () => {
   it('spreads the counter machines out without overlapping', async () => {
     const { MACHINE_TOOLS, COUNTER, layoutCounter } = await import('../src/data/tools.js');
     const counter = Object.values(MACHINE_TOOLS).filter((t) => t.feet === COUNTER);
-    expect(counter.length).toBe(6);
-    for (const n of [1, 3, 6]) {
+    expect(counter.length).toBe(7);
+    const full = layoutCounter(counter);
+    for (const n of [1, 3, 7]) {
       const some = counter.slice(0, n);
       const at = layoutCounter(some);
       const row = some.map((t) => ({ l: at[t.id].x - (t.w * at[t.id].scale) / 2, r: at[t.id].x + (t.w * at[t.id].scale) / 2 })).sort((a, b) => a.l - b.l);
+      for (const t of some) expect(at[t.id]).toEqual(full[t.id]); // a machine's slot never moves
       for (let i = 1; i < row.length; i++) expect(row[i - 1].r).toBeLessThanOrEqual(row[i].l);
       expect(row[0].l).toBeGreaterThanOrEqual(0);
       expect(row.at(-1).r).toBeLessThanOrEqual(360);

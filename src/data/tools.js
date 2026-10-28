@@ -31,7 +31,8 @@ export const TOOLS = [
 // Tools that come with a night-shop machine (shown only when it's owned), keyed by shop item id.
 export const MACHINE_TOOLS = {
   kettle: { id: 'water', label: 'Hot water', kind: 'pour', ingredient: 'water', sprite: 'toolTehPot', tint: 0xf2c46b, spriteH: 50, x: 70, feet: RAIL, w: 44, h: 58 }, // brass stand-in until its own art
-  tarikMugs: { id: 'tarik', label: 'Tarik', kind: 'tarik', x: 200, feet: RAIL, w: 44, h: 58, color: 0xc9ced4 }, // drawn in code until its art
+  // on the counter top (round 4: squeezed onto the rail it pushed Ice, Spoon and Cups out of their spots)
+  tarikMugs: { id: 'tarik', label: 'Tarik', kind: 'tarik', x: 230, feet: COUNTER, w: 44, h: 52, color: 0xc9ced4 }, // drawn in code until its art
   horlicksShelf: { id: 'horlicks', label: 'Horlicks', kind: 'pour', ingredient: 'horlicks', sprite: 'toolHorlicks', pourSprite: 'pourHorlicks', x: 22, feet: RAIL, w: 46, h: 58, color: 0xd9c49a },
   // phase D: small machines standing on the counter top, drawn in code until their art arrives (shape = drawToolShape)
   gulaMelaka: { id: 'gula', label: 'Gula', kind: 'pour', ingredient: 'gula', // always poured in doses (StallScene.dosed)
@@ -44,33 +45,24 @@ export const MACHINE_TOOLS = {
 };
 for (const t of Object.values(MACHINE_TOOLS)) t.y = t.feet - t.h / 2;
 
-// The bottom rail fits 7 tools at their own spots. With more (machines bought), or when a machine's spot
-// would crowd its neighbour, they share it evenly,
-// in their usual left-to-right order, and shrink a little to fit. Returns { id: { x, scale } }.
-export const layoutRail = (tools) => layoutRow(tools, RAIL, 7);
+// Every tool keeps its own spot, whatever else is bought (round 4: spreading the rail out when a machine
+// came moved Ice, Spoon and Cups, and broke muscle memory). The rail machines use the free left end.
+// Returns { id: { x, scale } }.
+export const layoutRail = (tools) => layoutRow(tools, RAIL);
 
-// The counter top: whatever is owned spreads out evenly across it, in the usual order.
+// The counter top: each machine has its own fixed slot (COUNTER_ORDER), so buying one never moves the rest.
+export const COUNTER_ORDER = ['gula', 'halia', 'limau', 'butter', 'tarik', 'icecream', 'bag'];
 export function layoutCounter(tools, left = 6, right = 354) {
-  const row = tools.filter((t) => t.feet === COUNTER).sort((a, b) => a.x - b.x);
-  const gap = (right - left) / Math.max(1, row.length);
-  return Object.fromEntries(row.map((t, i) => [t.id, { x: left + gap * (i + 0.5), scale: Math.min(1, (gap - 4) / t.w) }]));
+  const row = tools.filter((t) => t.feet === COUNTER);
+  const gap = (right - left) / COUNTER_ORDER.length;
+  return Object.fromEntries(row.map((t) => {
+    const i = Math.max(0, COUNTER_ORDER.indexOf(t.id));
+    return [t.id, { x: left + gap * (i + 0.5), scale: Math.min(1, (gap - 4) / t.w) }];
+  }));
 }
 
-export function layoutRow(tools, feet, fits, left = 4, right = 356) {
-  const rail = tools.filter((t) => t.feet === feet).sort((a, b) => a.x - b.x);
-  // at their own spots unless that crowds two of them (the Tarik mugs' spot sat on the Spoon's label)
-  const crowded = rail.some((t, i) => i && rail[i - 1].x + rail[i - 1].w / 2 - (t.x - t.w / 2) > 12);
-  if (rail.length <= fits && !crowded) return Object.fromEntries(rail.map((t) => [t.id, { x: t.x, scale: 1 }]));
-  const total = rail.reduce((s, t) => s + t.w, 0);
-  const scale = Math.min(1, (right - left) / total);
-  const spare = (right - left - total * scale) / rail.length; // room left over: shared out as gaps
-  const out = {};
-  let x = left;
-  for (const t of rail) {
-    out[t.id] = { x: x + spare / 2 + (t.w * scale) / 2, scale };
-    x += t.w * scale + spare;
-  }
-  return out;
+export function layoutRow(tools, feet) {
+  return Object.fromEntries(tools.filter((t) => t.feet === feet).map((t) => [t.id, { x: t.x, scale: 1 }]));
 }
 
 // Cup spots on the tray plates of the background (x of each cup's centre). The Fourth Tray Plate

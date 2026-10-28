@@ -466,7 +466,7 @@ export class DrinkArt {
         g.lineWidth = 7;
         g.strokeStyle = 'rgba(255,255,255,0.9)';
         g.beginPath(); g.ellipse(o.cx, o.cy, o.rx + 1, o.ry + 1, 0, Math.PI * 0.05, Math.PI * 0.95); g.stroke();
-        g.font = 'bold 26px sans-serif';
+        g.font = 'bold 34px sans-serif'; // round 4: Mary couldn't read them at 26
         g.textAlign = side > 0 ? 'right' : 'left';
         g.textBaseline = 'middle';
         g.lineWidth = 6;

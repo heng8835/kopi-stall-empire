@@ -211,6 +211,9 @@ export const UI = {
   pausedIdle: 'Paused while you were away',
   pausedHint: 'tap anywhere to carry on',
   pickedCup: 'Cup {cup} is for {who} now',
+  demoSample: 'Mm… like that lah. Now you make one for me!',
+  demoYourTurn: 'Your turn! Make one for {who}, same same',
+  inLine: '+{n} in line',
   newAtStall: 'New at your stall!',
   newAtStallGo: 'Open up!',
   restartTitle: 'Start a new month?',
@@ -226,7 +229,10 @@ export function greetAt(ms, dayMs = TUNING.dayMs) {
 }
 
 export function pickLine(charId, kind, vars = {}, rng = Math.random) {
-  const list = LINES[charId]?.[kind] ?? ['...'];
+  const all = LINES[charId]?.[kind] ?? ['...'];
+  // a hot drink never gets an "extra cold ah" line (round 4: Makcik asked for a cold hot teh tarik)
+  const fits = vars.hot ? all.filter((l) => !/cold/i.test(l)) : all;
+  const list = fits.length ? fits : all;
   const line = list[Math.floor(rng() * list.length)];
   return line.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
 }

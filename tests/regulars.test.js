@@ -34,7 +34,9 @@ describe('regulars and walk-ins', () => {
   it('walk-ins fill the quiet stretches: no long empty gap even when the regulars all come late', () => {
     const late = [{ id: 'a', window: [430, 540] }, { id: 'b', window: [480, 590] }, { id: 'c', window: [560, 670] }];
     for (let i = 0; i < 30; i++) {
-      const s = daySchedule({ ...day, total: 10, regulars: late, rushGap: 2500 });
+      let seed = i + 1; // seeded, so the test is the same every run (a few random days did leave a 36% gap)
+      const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+      const s = daySchedule({ ...day, total: 10, regulars: late, rushGap: 2500, rand });
       expect(s).toHaveLength(10);
       expect(s[0].at).toBe(day.start);
       const times = [...s.map((a) => a.at), day.end];

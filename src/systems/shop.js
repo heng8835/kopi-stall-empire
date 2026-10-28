@@ -77,7 +77,7 @@ export function nextGoal(run) {
 // nextGoal as one line for the day-end card and the night shop.
 export function goalText(goal) {
   if (!goal) return null;
-  if (goal.tier) return `名气 ${goal.tier} unlocks ${goal.unlocks} more in the shop`;
+  if (goal.tier) return `Fame 名气 ${goal.tier} unlocks ${goal.unlocks} more in the shop`;
   const { item, short } = goal;
   return short ? `Next: ${item.name} ${formatMoney(item.price)}, ${formatMoney(short)} to go` : `You can buy the ${item.name} tonight!`;
 }

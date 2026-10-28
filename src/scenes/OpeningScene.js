@@ -54,7 +54,7 @@ export default class OpeningScene extends Phaser.Scene {
     this.done = false;
     this.glossaryOpen = false;
 
-    this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000).setOrigin(0).setInteractive().on('pointerdown', () => this.advance());
+    this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000).setOrigin(0).setInteractive().on('pointerdown', () => this.time.now - (this.lineAt ?? 0) >= 200 && this.advance()); // a double tap can't skip a line
     const skip = addText(this, GAME_W - 10, 12, 'Skip ▸▸', { size: 13, bold: true, color: '#fff6dc', origin: [1, 0] }).setDepth(30);
     skip.setStroke('#2b2420', 3);
     skip.setInteractive({ useHandCursor: true }).on('pointerdown', (p, x, y, e) => {

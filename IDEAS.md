@@ -20,3 +20,10 @@
   "on the house" reply); only Jia Hui in EP2; kids hold drinks before served; repeated reaction lines; switching
   owner mid-month keeps Jun's story; glossary words in the night-shop item text and on cup labels ("kopi kakis",
   "pakciks") aren't tappable; the "+N waiting" chip sticking (not reproduced); Ah Gong partly behind standing customers.
+- Alpha 4 (2026-10-29) leftovers, not fixed yet (design-scale, need a plan of their own): a long-term pull — no story
+  on Days 8–9, no empire / second-stall teaser, the night "Next:" goal flips and points at items buried in the list;
+  catalogue balance (Ken) — "gao" has no mechanic, Cham works without the Twin Sock, half the comforts are "+0.3 fame"
+  filler, customers cap at 15 from Day 5, plain Milo taught after Milo Dinosaur; crowded counter with 4+ customers (Ah
+  Gong hidden, bubbles stack); Chinese-only lines have no translation in the bubble; Uncle Tan's day-end line repeats;
+  story characters not drawn in their own episodes; switching owner on Continue; group orders block a free counter;
+  the feedback line covers counter-machine labels; Aunty Lim's art holds an iced cup.

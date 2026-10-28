@@ -12,7 +12,8 @@ export const TUNING = {
   spawnJitter: 0.35, // each arrival lands within +-35% of its even share of the day
   queueRetryMs: 3000, // queue full: try that arrival again this much later
   rushGapMs: 2500, // walk-ins come in little rushes of 1-3, this far apart (queue.js bunch)
-  emptyClockSpeed: 4, // nobody at the stall: the clock runs this much faster (no dead air)
+  emptyClockSpeed: 6, // nobody at the stall: the clock runs this much faster (no dead air)
+  emptyCloseSpeed: 15, // ...and nobody left to come today: this fast, on to 7pm
   regularVariety: 0.25, // chance a regular orders something other than their usual
 
   // Fame (名气, 0-100) decides how many arrivals a day brings (a group counts as one).
