@@ -68,7 +68,7 @@ export const measureOf = (ingredient, cup) => KIND[ingredient].value(cup);
 
 const X = 8;
 const W = GAME_W - 16;
-const BAR_H = 28;
+const BAR_H = 22; // slim: it sits over the customers' faces while you pour (round 3)
 const TOP = 19; // the bar's top, under the header line
 const HEAD = 13; // header text size
 
@@ -77,7 +77,7 @@ export class PourBar {
     this.scene = scene;
     this.y = y;
     this.c = scene.add.container(0, y).setDepth(depth).setAlpha(0);
-    this.panel = scene.add.rectangle(X - 4, -4, W + 8, TOP + BAR_H + 10, COLORS.paper, 0.97).setOrigin(0).setStrokeStyle(2, COLORS.inkHex, 0.9);
+    this.panel = scene.add.rectangle(X - 4, -4, W + 8, TOP + BAR_H + 10, COLORS.paper, 0.86).setOrigin(0).setStrokeStyle(2, COLORS.inkHex, 0.9); // faces show through a little
     this.label = addText(scene, X, -1, '', { size: HEAD, bold: true });
     this.now = addText(scene, X + W, -1, '', { size: HEAD, bold: true, color: '#c8562e', origin: [1, 0] });
     this.g = scene.add.graphics();

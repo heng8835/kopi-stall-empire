@@ -18,10 +18,10 @@ export function auntyRating(perfect, served) {
 }
 
 // The run for tomorrow, after today ends with this money / fame / flags / rating.
-// Machines bought last night have had their recipe card today, so newItems clears. Friendship
+// Machines bought last night have had their recipe card today, so newItems (and bought) clear. Friendship
 // (systems/friends.js) carries on.
 export function nextDay(run, { money, fame, flags = run.flags, rating, ending = run.ending, friends = run.friends ?? {} }) {
-  return { ...run, day: run.day + 1, money, fame, flags: [...flags], ratings: [...run.ratings, rating], ending, owned: [...(run.owned ?? [])], newItems: [], friends: { ...friends }, midDay: null, night: false };
+  return { ...run, day: run.day + 1, money, fame, flags: [...flags], ratings: [...run.ratings, rating], ending, owned: [...(run.owned ?? [])], newItems: [], bought: [], friends: { ...friends }, midDay: null, night: false };
 }
 
 export const monthOver = (run) => run.day > MONTH_DAYS;

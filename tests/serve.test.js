@@ -53,4 +53,8 @@ describe('pickServeTarget: a labelled cup goes to its customer', () => {
   it('dropped on that person\'s bubble only: still Ah Gong', () => {
     expect(pickServeTarget({ zones: z2, ticket: ahGong, point: { x: 60, y: 130 }, inArea: true, fit })).toBe(ahGong);
   });
+  it('a spare drink dropped on the bubble of someone it suits better than its label: them', () => {
+    const better = (c) => ({ ahGong: 1, officeGuy: -5, otherKopiO: 2 })[c.id];
+    expect(pickServeTarget({ zones: z2, ticket: ahGong, point: { x: 60, y: 130 }, inArea: true, fit: better })).toBe(twin);
+  });
 });

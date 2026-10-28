@@ -94,7 +94,11 @@ export function nextStep(cup, spec, who) {
       return { text: 'Too watery! Bin it and try again', bin: true };
     }
   }
-  if (!cup.base || fill < lo) return { text: `Hold the ${spec.base === 'cham' ? 'pot' : POT[spec.base]} over the cup till ${zone}` };
+  // sugar or milk in first is how a real uncle does it too: fine, the pot goes on top
+  const first = !cup.base && !malt && (cup.sugar > ZONES.trace || cup.condensed > ZONES.trace || cup.evap > ZONES.trace);
+  const potName = spec.base === 'cham' ? 'pot' : POT[spec.base];
+  if (first) return { text: `${cup.sugar > ZONES.trace ? 'Sugar' : 'Milk'} first, like the uncles! Now the ${potName} till ${zone}` };
+  if (!cup.base || fill < lo) return { text: `Hold the ${potName} over the cup till ${zone}` };
   if (cup.fill > ZONES.fill.spill || (peng && !cup.ice && fill >= hi + 0.03)) return { text: peng ? 'Too full for peng! Bin it and pour to ¾' : 'Spilled! Bin it and try again', bin: true };
 
   if (!malt) {

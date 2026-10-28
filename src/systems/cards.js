@@ -233,3 +233,41 @@ export function showRecipeBook(scene, { entries, onClose }) {
   btn.txt.setDepth(DEPTH + 5);
   play('tap');
 }
+
+// The morning after the night shop: what you bought last night, now at the stall.
+// rows: [{ icon, name, text }] (icon = the catalogue's placeholder icon).
+export function showBoughtCard(scene, { title, rows, button, onClose }) {
+  const m = modal(scene);
+  const W = 320;
+  const x = (GAME_W - W) / 2;
+  const pad = 16;
+  const blocks = rows.map((r) => [
+    addText(scene, x + pad, 0, r.icon, { size: 22 }),
+    addText(scene, x + pad + 34, 0, r.name, { size: 15, bold: true, wrap: W - pad * 2 - 34 }),
+    addText(scene, x + pad + 34, 0, r.text, { size: 12, color: '#3a2e2a', wrap: W - pad * 2 - 34 }),
+  ]);
+  const head = addText(scene, GAME_W / 2, 0, title, { size: 19, bold: true, origin: [0.5, 0] });
+  const rowH = (b) => Math.max(b[0].height, b[1].height + 2 + b[2].height);
+  const h = pad + head.height + 12 + blocks.reduce((sum, b) => sum + rowH(b) + 12, 0) + 48 + pad;
+  const top = Math.max(50, Math.round((GAME_H - h) / 2) - 20);
+  m.add(scene.add.rectangle(x, top, W, h, COLORS.paper).setOrigin(0).setStrokeStyle(3, COLORS.inkHex), 1);
+  m.add(scene.add.rectangle(GAME_W / 2, top - 2, 70, 16, 0xf2e3a8, 0.9).setAngle(-3), 3);
+  m.add(head.setY(top + pad));
+  let y = top + pad + head.height + 12;
+  blocks.forEach((b, i) => {
+    m.add(b[0].setY(y - 2));
+    m.add(b[1].setY(y));
+    m.add(b[2].setY(y + b[1].height + 2));
+    scene.tweens.add({ targets: b, alpha: { from: 0, to: 1 }, duration: 250, delay: 150 + i * 180 });
+    y += rowH(b) + 12;
+  });
+  const btn = makeButton(scene, GAME_W / 2 - 90, top + h - pad - 40, 180, 40, button, () => {
+    m.close();
+    btn.bg.destroy();
+    btn.txt.destroy();
+    onClose?.();
+  }, { size: 15, bold: true, fill: 0xbfe3c0 });
+  btn.bg.setDepth(DEPTH + 2);
+  btn.txt.setDepth(DEPTH + 3);
+  play('perfect');
+}

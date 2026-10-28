@@ -31,6 +31,18 @@ describe('regulars and walk-ins', () => {
     }
   });
 
+  it('walk-ins fill the quiet stretches: no long empty gap even when the regulars all come late', () => {
+    const late = [{ id: 'a', window: [430, 540] }, { id: 'b', window: [480, 590] }, { id: 'c', window: [560, 670] }];
+    for (let i = 0; i < 30; i++) {
+      const s = daySchedule({ ...day, total: 10, regulars: late, rushGap: 2500 });
+      expect(s).toHaveLength(10);
+      expect(s[0].at).toBe(day.start);
+      const times = [...s.map((a) => a.at), day.end];
+      const gaps = times.slice(1).map((t, j) => t - times[j]);
+      expect(Math.max(...gaps)).toBeLessThan((day.end - day.start) * 0.35);
+    }
+  });
+
   it('walk-ins come in little rushes', () => {
     // sizes: 2 (rand 0.5), then 3 (rand 0.9), then 1 (rand 0.1)
     expect(bunch([0, 100, 200, 300, 400, 500], 10, 1000, seq(0.5, 0.9, 0.1))).toEqual([0, 10, 200, 210, 220, 500]);

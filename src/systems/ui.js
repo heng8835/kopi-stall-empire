@@ -1,3 +1,4 @@
+import Phaser from 'phaser';
 import { COLORS, GAME_W, GAME_H } from '../config.js';
 import { GLOSSARY } from '../data/glossary.js';
 import { addText } from './text.js';
@@ -80,7 +81,9 @@ export function layoutLine(scene, text, x, y, maxW, onTerm, opts = {}) {
     t.setPosition(x + cx, y + cy);
     if (tok.glossaryKey) terms += 1;
     if (tok.glossaryKey && onTerm) {
-      t.setInteractive({ useHandCursor: true });
+      // a one- or two-letter word ("O", "C") gets a bigger target, so the tap doesn't land on "Kopi"
+      const pad = tok.text.replace(/[^\p{L}]/gu, '').length <= 2 ? Math.round(size * 0.5) : 0;
+      t.setInteractive({ hitArea: new Phaser.Geom.Rectangle(-pad, -pad / 2, t.width + pad * 2, t.height + pad), hitAreaCallback: Phaser.Geom.Rectangle.Contains, useHandCursor: true });
       t.on('pointerdown', (p, lx, ly, e) => {
         e?.stopPropagation?.();
         onTerm(tok.glossaryKey);

@@ -55,6 +55,12 @@ export const GLOSSARY = {
   有进步空间: { term: '有进步空间', en: '"Room for improvement." Polite aunty for "not good yet".', zh: '还可以更好。' },
   等我吃完先: { term: '等我吃完先', en: '"Wait, let me finish eating first." Nothing interrupts Aunty Lim’s meal.', zh: '等我先吃完。' },
   房东: { term: '房东', en: 'Landlord — the owner of the building.', zh: '房东。' },
+  慢慢来: { term: '慢慢来', en: '"Take your time." Màn màn lái: no rush, the customer is happy to wait.', zh: '不着急。' },
+  可以啦: { term: '可以啦', en: '"It is okay lah, good enough." Kě yǐ la: not perfect, but they will drink it.', zh: '还行吧。' },
+  好喝: { term: '好喝', en: '"Tasty!" Hǎo hē: a drink that hits the spot.', zh: '很好喝。' },
+  刚刚好: { term: '刚刚好', en: '"Just right." Gāng gāng hǎo: not too sweet, not too strong.', zh: '恰到好处。' },
+  一杯: { term: '一杯', en: '"One cup." Yì bēi: how you order one drink in Mandarin.', zh: '一杯。' },
+  好: { term: '好', en: '"Good!" Hǎo.', zh: '好。' },
   有心: { term: '有心', en: '"You have heart" — sincere, thoughtful.', zh: '有心意，真诚。' },
   // Night-shop machines
   'terima kasih': { term: 'Terima kasih', en: 'Thank you (Malay).', zh: '谢谢（马来语）。' },

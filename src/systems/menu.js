@@ -35,15 +35,20 @@ export const canMake = (orderText, unlocked) => featuresOf(parseOrder(orderText)
 export const lessonFor = (day) => LESSONS.find((l) => l.day === day) ?? null;
 
 // A customer's orders that can be made today. On a lesson day, orders using the new word are
-// weighted up so the player practises it. locked = features whose lesson hasn't been shown yet
+// weighted up so the player practises it, and drinks from a machine you bought come up twice as often
+// (so it pays for itself). locked = features whose lesson hasn't been shown yet
 // today: nobody orders those until the recipe card has taught them.
 export function ordersFor(orders, day, extra = [], freshExtra = [], locked = []) {
   const unlocked = unlockedFeatures(day, extra);
   locked.forEach((f) => unlocked.delete(f));
   const fresh = new Set([...(lessonFor(day)?.features ?? []), ...freshExtra]);
+  const bought = new Set(extra);
   return orders
     .filter((o) => canMake(o.text, unlocked))
-    .map((o) => (featuresOf(parseOrder(o.text)).some((f) => fresh.has(f)) ? { ...o, weight: o.weight * 3 } : o));
+    .map((o) => {
+      const f = featuresOf(parseOrder(o.text));
+      return f.some((x) => fresh.has(x)) ? { ...o, weight: o.weight * 3 } : f.some((x) => bought.has(x)) ? { ...o, weight: o.weight * 2 } : o;
+    });
 }
 
 // Lessons taught so far (for the recipe book), oldest first.

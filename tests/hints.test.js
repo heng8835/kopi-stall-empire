@@ -73,3 +73,16 @@ describe('the coach (next step)', () => {
     expect(step(cup, 'Cham')).toBe('Now the teh pot on top, till FULL');
   });
 });
+
+describe('sugar first (the uncles\' way)', () => {
+  it('sugar before the pot is fine: the coach says pour on top, and it grades perfect', async () => {
+    const { gradeCup, formatCup } = await import('../src/systems/cup.js');
+    const cup = pour(newCup(), 'sugar', hold('sugar', 0.85));
+    expect(step(cup, 'Kopi O')).toBe('Sugar first, like the uncles! Now the kopi pot till FULL');
+    expect(formatCup(cup)).toBe('sugar so far');
+    pour(cup, 'kopi', hold('kopi', 0.95));
+    expect(step(cup, 'Kopi O')).toBe('Drop the spoon on the cup to stir');
+    for (let i = 0; i < 6; i++) stirStep(cup);
+    expect(gradeCup(cup, parseOrder('Kopi O')).tier).toBe('perfect');
+  });
+});

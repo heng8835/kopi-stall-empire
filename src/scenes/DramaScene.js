@@ -8,6 +8,8 @@ import { makeButton, layoutLine, showGlossary } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
 import { visibleBeats, endingFor, fill, nextEpisode } from '../systems/story.js';
 
+const GLOSS_SETTLE_MS = 900; // see openGlossary
+
 // One story episode, played as a short-drama overlay on top of the paused stall:
 // title card -> lines (tap to advance) -> choice -> reply -> ending (finale) -> "下集" card (next
 // episode's number + title only, so nothing is given away early).
@@ -164,6 +166,7 @@ export default class DramaScene extends Phaser.Scene {
     this.clear();
     const who = this.speaker(beat.who, beat);
     const text = fill(beat.text, this.d.vars);
+    this.lineAt = this.time.now; // an orange word only opens once the line has settled (openGlossary)
     const start = this.layer.length;
     if (beat.show) this.layer.push(...this.prop(beat.show));
     const inProp = beat.show === 'tinOyen' && beat.who === 'oyen'; // he's already there, asleep on the tin
@@ -334,7 +337,9 @@ export default class DramaScene extends Phaser.Scene {
     this.finish();
   }
 
+  // A tap on an orange word right as its line comes up was meant to move on (round 3: the word stole it).
   openGlossary(key) {
+    if (this.time.now - (this.lineAt ?? 0) < GLOSS_SETTLE_MS) return this.advance();
     this.glossaryOpen = true;
     showGlossary(this, key, () => this.time.delayedCall(0, () => (this.glossaryOpen = false)));
   }

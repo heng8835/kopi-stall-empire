@@ -16,3 +16,7 @@
   Oyen is talked about but never at the stall (needs a counter sprite); shop emoji icons next to pixel art (part 5 shop
   icons); order bubbles still overlap in big rushes; "gao" grades like normal (no water either way, by design);
   a lesson taught after a story (Milo Dinosaur, Day 2) gets no ghost-hand demo.
+- Alpha 3 (2026-10-28) leftovers, not fixed yet: story choices with no effect ("owe me lah" kids pay in full, EP2
+  "on the house" reply); only Jia Hui in EP2; kids hold drinks before served; repeated reaction lines; switching
+  owner mid-month keeps Jun's story; glossary words in the night-shop item text and on cup labels ("kopi kakis",
+  "pakciks") aren't tappable; the "+N waiting" chip sticking (not reproduced); Ah Gong partly behind standing customers.

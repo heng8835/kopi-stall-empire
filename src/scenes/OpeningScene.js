@@ -11,6 +11,8 @@ import { fill } from '../systems/story.js';
 import { load, save } from '../systems/save.js';
 import { playMusic } from '../systems/music.js';
 
+const GLOSS_SETTLE_MS = 900; // see openGlossary
+
 // The opening cutscene, the month's prologue (src/data/opening.js): an episode-style title card,
 // full-screen backgrounds that slowly drift, narration and spoken lines in a box at the bottom,
 // a phone chat that fills up message by message, tap to go on, Skip at any time. Then Day 1.
@@ -196,6 +198,7 @@ export default class OpeningScene extends Phaser.Scene {
     const spoken = typeof entry === 'object';
     const text = fill(spoken ? entry.text : entry, this.vars);
     const box = this.add.rectangle(12, BOX_Y, GAME_W - 24, BOX_H, spoken ? COLORS.paper : 0x2b2420, spoken ? 1 : 0.92).setOrigin(0).setStrokeStyle(3, COLORS.inkHex).setDepth(10);
+    this.lineAt = this.time.now; // an orange word only opens once the line has settled (openGlossary)
     const words = layoutLine(this, text, 28, BOX_Y + 22, GAME_W - 56, (k) => this.openGlossary(k), spoken ? { size: 16 } : { size: 16, color: '#fff6dc', termColor: '#f2c14e' });
     words.objects.forEach((o) => o.setDepth(11).setAlpha(0));
     this.tweens.add({ targets: words.objects, alpha: 1, duration: 300 });
@@ -217,7 +220,9 @@ export default class OpeningScene extends Phaser.Scene {
     }
   }
 
+  // A tap on an orange word right as its line comes up was meant to move on (round 3: the word stole it).
   openGlossary(key) {
+    if (this.time.now - (this.lineAt ?? 0) < GLOSS_SETTLE_MS) return this.advance();
     this.glossaryOpen = true;
     showGlossary(this, key, () => this.time.delayedCall(0, () => (this.glossaryOpen = false)));
   }

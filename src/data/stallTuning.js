@@ -33,7 +33,7 @@ export const TUNING = {
   queueMax: 3,
   walkSpeed: 70, // logical px per second
   walkFarScale: 0.62, // size at the door (far away) vs 1 at the counter
-  patienceScale: 2.2, // customer.patience (seconds) x this: chill, nobody rushes you
+  patienceScale: 1.9, // customer.patience (seconds) x this: chill, but a long wait shows (round 3: 2.2 had no tension)
   groupCupBonusMs: 8000, // patience given back after each cup of a group order
 
   // Pour speeds, in "units per second" while holding a tool over a cup.

@@ -44,7 +44,8 @@ export const MACHINE_TOOLS = {
 };
 for (const t of Object.values(MACHINE_TOOLS)) t.y = t.feet - t.h / 2;
 
-// The bottom rail fits 7 tools at their own spots. With more (machines bought), they share it evenly,
+// The bottom rail fits 7 tools at their own spots. With more (machines bought), or when a machine's spot
+// would crowd its neighbour, they share it evenly,
 // in their usual left-to-right order, and shrink a little to fit. Returns { id: { x, scale } }.
 export const layoutRail = (tools) => layoutRow(tools, RAIL, 7);
 
@@ -57,14 +58,17 @@ export function layoutCounter(tools, left = 6, right = 354) {
 
 export function layoutRow(tools, feet, fits, left = 4, right = 356) {
   const rail = tools.filter((t) => t.feet === feet).sort((a, b) => a.x - b.x);
-  if (rail.length <= fits) return Object.fromEntries(rail.map((t) => [t.id, { x: t.x, scale: 1 }]));
+  // at their own spots unless that crowds two of them (the Tarik mugs' spot sat on the Spoon's label)
+  const crowded = rail.some((t, i) => i && rail[i - 1].x + rail[i - 1].w / 2 - (t.x - t.w / 2) > 12);
+  if (rail.length <= fits && !crowded) return Object.fromEntries(rail.map((t) => [t.id, { x: t.x, scale: 1 }]));
   const total = rail.reduce((s, t) => s + t.w, 0);
   const scale = Math.min(1, (right - left) / total);
+  const spare = (right - left - total * scale) / rail.length; // room left over: shared out as gaps
   const out = {};
   let x = left;
   for (const t of rail) {
-    out[t.id] = { x: x + (t.w * scale) / 2, scale };
-    x += t.w * scale;
+    out[t.id] = { x: x + spare / 2 + (t.w * scale) / 2, scale };
+    x += t.w * scale + spare;
   }
   return out;
 }

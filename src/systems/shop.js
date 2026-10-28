@@ -23,6 +23,7 @@ export function buy(run, item) {
     money: run.money - item.price,
     owned: [...(run.owned ?? []), item.id],
     newItems: item.unlocks ? [...(run.newItems ?? []), item.id] : run.newItems ?? [],
+    bought: [...(run.bought ?? []), item.id], // shown off at the stall next morning ("New at your stall!")
   };
 }
 

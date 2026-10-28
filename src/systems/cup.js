@@ -177,7 +177,11 @@ export function gradeCup(cup, spec) {
 // Describe a cup in kopitiam lingo (for the label under each cup and the playtest log).
 export function formatCup(cup) {
   if (isEmpty(cup)) return 'empty cup';
-  if (!cup.base) return 'no kopi or teh yet';
+  if (!cup.base) {
+    // sugar or milk first (the uncles' way): say what's in so far
+    const so = [cup.sugar > ZONES.trace && 'sugar', cup.condensed > ZONES.trace && 'condensed', cup.evap > ZONES.trace && 'evap', (cup.gula ?? 0) > ZONES.trace && 'gula melaka'].filter(Boolean);
+    return so.length ? `${so.join(' + ')} so far` : 'empty cup';
+  }
   const s = sugarBucket(sweetness(cup));
   const sugar = s <= 1 ? 'none' : s <= 3 ? 'less' : s <= 5 ? 'normal' : 'more';
   const mt = milkType(cup);

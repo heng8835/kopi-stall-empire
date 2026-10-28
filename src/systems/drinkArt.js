@@ -457,6 +457,28 @@ export class DrinkArt {
       g.restore();
     }
 
+    // Marked Glasses (night shop): etched ¾ PENG and FULL marks on the glass, labelled, always there
+    if (this.marked) {
+      // FULL's tag on the left of the glass, ¾'s on the right, so the two never sit on each other
+      for (const [lv, name, side] of [[0.68, '¾', 1], [0.94, 'FULL', -1]]) {
+        const o = oval(levelY(lv));
+        g.save();
+        g.lineWidth = 7;
+        g.strokeStyle = 'rgba(255,255,255,0.9)';
+        g.beginPath(); g.ellipse(o.cx, o.cy, o.rx + 1, o.ry + 1, 0, Math.PI * 0.05, Math.PI * 0.95); g.stroke();
+        g.font = 'bold 26px sans-serif';
+        g.textAlign = side > 0 ? 'right' : 'left';
+        g.textBaseline = 'middle';
+        g.lineWidth = 6;
+        g.strokeStyle = 'rgba(58,46,42,0.9)';
+        g.fillStyle = '#ffffff';
+        const tx = o.cx + side * o.rx * 0.92;
+        const ty = o.cy + o.ry + 12;
+        g.strokeText(name, tx, ty); g.fillText(name, tx, ty);
+        g.restore();
+      }
+    }
+
     // particles
     for (const p of this.parts) {
       const a = Math.max(0, Math.min(1, p.life / 400));

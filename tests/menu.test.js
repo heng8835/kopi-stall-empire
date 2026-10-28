@@ -82,3 +82,12 @@ describe('ordersFor: teach before the order', () => {
     expect(menu[0].weight).toBe(3);
   });
 });
+
+describe('ordersFor: bought machines get used', () => {
+  it('a drink from an owned machine comes up twice as often', () => {
+    const orders = [{ text: 'Kopi gu you', weight: 1 }, { text: 'Kopi', weight: 1 }];
+    const menu = ordersFor(orders, 20, ['guYou']);
+    expect(menu.find((o) => o.text === 'Kopi gu you').weight).toBe(2);
+    expect(menu.find((o) => o.text === 'Kopi').weight).toBe(1);
+  });
+});

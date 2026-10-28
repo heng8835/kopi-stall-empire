@@ -9,6 +9,11 @@ describe('economy', () => {
     expect(priceOf(p('Kopi O'))).toBe(120);
     expect(priceOf(p('Kopi O peng'))).toBe(140);
     expect(priceOf(p('Milo Dinosaur'))).toBe(280);
+    // a machine's extra costs a little more, so the machine pays for itself
+    expect(priceOf(p('Kopi gu you'))).toBe(200);
+    expect(priceOf(p('Teh tarik'))).toBe(190);
+    expect(priceOf(p('Teh O limau peng'))).toBe(190);
+    expect(priceOf(p('Kopi O gao'))).toBe(140);
   });
 
   it('perfect pays in full + tip, close pays 60%, a wrong drink pays nothing', () => {

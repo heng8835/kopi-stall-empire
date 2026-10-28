@@ -41,17 +41,37 @@ export function bunch(times, gap, end, rand = Math.random) {
 }
 
 // A whole day's arrivals, sorted by time: each regular once, at a random moment inside their usual
-// window (minutes after opening; the day is 720 minutes, 7am -> 7pm), plus walk-ins spread over the
-// day so the total comes to `total`. Regulars -> { at, id }, walk-ins -> { at, id: null }.
-// The first walk-in always comes right at `start`. Walk-ins come in little rushes (rushGap ms
-// apart, 1-3 at a time) with calm in between, which plays better than an even trickle.
+// window (minutes after opening; the day is 720 minutes, 7am -> 7pm), plus walk-ins so the total
+// comes to `total`. Regulars -> { at, id }, walk-ins -> { at, id: null }.
+// The first walk-in always comes right at `start`. The rest come in little rushes (rushGap ms apart,
+// 1-3 at a time), each one dropped into the longest quiet stretch left between the arrivals so far
+// (playtest round 3: the regulars bunch up late, and an even spread left the afternoon empty).
 export function daySchedule({ total, regulars, dayMs, start, end, jitter, rushGap = 0, rand = Math.random }) {
   const msPerMin = dayMs / 720;
   const regs = regulars.map(({ id, window: [from, to] }) => {
     const at = (from + rand() * (to - from)) * msPerMin;
     return { at: Math.round(Math.max(start, Math.min(end, at))), id };
   });
-  const walkIns = bunch(arrivalSchedule(Math.max(0, total - regs.length), start, end, jitter, rand), rushGap, end, rand).map((at) => ({ at, id: null }));
-  if (walkIns[0]) walkIns[0].at = start; // nobody waits long for the first customer (regulars keep their own time)
-  return [...regs, ...walkIns].sort((a, b) => a.at - b.at);
+  let left = Math.max(0, total - regs.length);
+  const walkIns = [];
+  if (left) {
+    walkIns.push(start); // nobody waits long for the first customer (regulars keep their own time)
+    left -= 1;
+  }
+  while (left > 0) {
+    const r = rand();
+    const size = Math.min(left, !rushGap ? 1 : r < 0.35 ? 1 : r < 0.75 ? 2 : 3);
+    // the longest gap between everyone placed so far (and the end of the day)
+    const times = [...regs.map((a) => a.at), ...walkIns, end].sort((a, b) => a - b);
+    let gapAt = start;
+    let gapLen = -1;
+    for (let i = 0, prev = start; i < times.length; prev = times[i++]) {
+      if (times[i] - prev > gapLen) [gapAt, gapLen] = [prev, times[i] - prev];
+    }
+    const spread = (size - 1) * rushGap;
+    const mid = gapAt + (gapLen - spread) / 2 + (rand() * 2 - 1) * Math.min(jitter, 0.1) * gapLen;
+    for (let j = 0; j < size; j++) walkIns.push(Math.round(Math.max(start, Math.min(end, mid + j * rushGap))));
+    left -= size;
+  }
+  return [...regs, ...walkIns.map((at) => ({ at, id: null }))].sort((a, b) => a.at - b.at);
 }

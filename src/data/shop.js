@@ -29,11 +29,11 @@ export const SHOP = [
   { id: 'tapau', aisle: 'machine', name: 'Tapau Station', zh: '打包站', price: 4000, tier: 50, icon: '🛍️', text: 'Takeaway bags with a red string. Tapau orders, and delivery riders with bulk orders.', effect: {}, unlocks: ['tapau'] },
   { id: 'fourthPlate', aisle: 'machine', name: 'Fourth Tray Plate', zh: '第四个杯位', price: 6500, tier: 50, icon: '🍽️', text: 'Make 4 cups at once.', effect: { plates: 4 } },
   // tools
-  { id: 'longSpout', aisle: 'tool', name: 'Long-Spout Pot', zh: '长嘴壶', price: 2500, tier: 0, icon: '🫗', text: 'Kopi, teh and malt drinks pour 25% faster.', effect: { pourMult: 1.25 } },
+  { id: 'longSpout', aisle: 'tool', name: 'Long-Spout Pot', zh: '长嘴壶', price: 2500, tier: 0, icon: '🫗', text: 'Kopi, teh and malt drinks pour 40% faster.', effect: { pourMult: 1.4 } },
   { id: 'sugarScoop', aisle: 'tool', name: 'Sugar Scoop', zh: '糖匙', price: 1500, tier: 0, icon: '🥄', text: 'Drop the scoop on a cup, then tap to stop the dial: siew dai, normal or ga dai in one go.', effect: { sugarScoop: true } },
   { id: 'milkPump', aisle: 'tool', name: 'Milk Pump', zh: '炼奶泵', price: 2000, tier: 25, icon: '🥫', text: 'Drop condensed or evap milk on a cup, then tap to stop the dial on the zone you want.', effect: { milkPump: true } },
   { id: 'brassSpoon', aisle: 'tool', name: 'Brass Spoon', zh: '铜汤匙', price: 1200, tier: 0, icon: '🥄', text: 'Stirs in 0.6 seconds instead of 1.', effect: { stirMs: 600 } },
-  { id: 'markedGlass', aisle: 'tool', name: 'Marked Glasses', zh: '刻度杯', price: 1000, tier: 0, icon: '🥃', text: 'Every glass shows its ¾ and FULL lines.', effect: { marked: true } },
+  { id: 'markedGlass', aisle: 'tool', name: 'Marked Glasses', zh: '刻度杯', price: 1000, tier: 0, icon: '🥃', text: 'Every glass shows its ¾ PENG and FULL lines, labelled, even with an order on it.', effect: { marked: true } },
   { id: 'cupRack', aisle: 'tool', name: 'Cup Rack Pro', zh: '自动杯架', price: 1800, tier: 25, icon: '🗄️', text: 'After you serve, a fresh cup drops onto that plate.', effect: { autoCup: true } },
   { id: 'towel', aisle: 'tool', name: "Uncle Tan's Towel", zh: '陈伯毛巾', price: 0, tier: 0, icon: '🧣', text: 'A gift on Day 21. The first spill each day is forgiven.', effect: { towel: true }, gift: true },
   // comfort

@@ -1,4 +1,4 @@
-import { ICED_SURCHARGE, PERFECT_TIP } from '../data/drinks.js';
+import { ICED_SURCHARGE, PERFECT_TIP, EXTRA_PRICE } from '../data/drinks.js';
 import { TUNING } from '../data/stallTuning.js';
 import { findDrink } from './order.js';
 
@@ -20,7 +20,8 @@ export function createDayState(carry = {}) {
 export function priceOf(spec) {
   const drink = findDrink(spec);
   const base = drink?.price ?? 120;
-  return base + (spec.iced && spec.base !== 'milo' ? ICED_SURCHARGE : 0);
+  const extras = ['halia', 'limau', 'tarik', 'butter', 'tapau'].reduce((sum, k) => sum + (spec[k] ? EXTRA_PRICE[k] : 0), 0);
+  return base + (spec.iced && spec.base !== 'milo' ? ICED_SURCHARGE : 0) + extras + (EXTRA_PRICE[spec.strength] ?? 0);
 }
 
 export const clampFame = (f) => Math.max(0, Math.min(100, Math.round(f * 100) / 100));

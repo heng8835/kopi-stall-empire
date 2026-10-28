@@ -3,7 +3,7 @@ import { GAME_W, GAME_H, COLORS } from '../config.js';
 import { CUSTOMERS, WALK_INS } from '../data/customers.js';
 import { OWNERS } from '../data/owners.js';
 import { TOOLS, SLOT_X, SLOT_X4, SPOT_X, MACHINE_TOOLS, COUNTER, layoutRail, layoutCounter } from '../data/tools.js';
-import { TUNING } from '../data/stallTuning.js';
+import { TUNING, ZONES } from '../data/stallTuning.js';
 import { pickLine, greetAt, UI } from '../i18n/lines.js';
 import { addText } from '../systems/text.js';
 import { fitCamera } from '../systems/view.js';
@@ -12,13 +12,13 @@ import { needleAt, zoneAt, doseFor } from '../systems/dial.js';
 import { makeButton, layoutLine, showGlossary } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
 import { parseOrder, plainOrder } from '../systems/order.js';
-import { newCup, pour, addIce, addPowder, addExtra, stirStep, tarikStep, gradeCup, formatCup } from '../systems/cup.js';
+import { newCup, pour, addIce, addPowder, addExtra, stirStep, tarikStep, gradeCup, formatCup, isEmpty } from '../systems/cup.js';
 import { DRINKS } from '../data/drinks.js';
 import { DrinkArt, ART_ORIGIN } from '../systems/drinkArt.js';
 import { PourBar, dialZonesFor, measureOf } from '../systems/pourBar.js';
-import { showRecipeCard, showRecipeBook, showComboCard } from '../systems/cards.js';
+import { showRecipeCard, showRecipeBook, showComboCard, showBoughtCard } from '../systems/cards.js';
 import { ordersFor, lessonFor, unlockedFeatures, regularOrder, featuresOf } from '../systems/menu.js';
-import { perks, gift, nextGoal, goalText } from '../systems/shop.js';
+import { perks, gift, nextGoal, goalText, itemById } from '../systems/shop.js';
 import { SHOP_FROM_DAY, GIFTS } from '../data/shop.js';
 import { STALL_PROPS, PROP_DEPTH } from '../data/stallProps.js';
 import { MACHINE_LESSONS, BOOK } from '../data/recipes.js';
@@ -96,7 +96,10 @@ const SUMMARY_GRACE_MS = 600; // the day-end card's buttons wake up after this
 const CALM_MS = 1200; // pop-ups (cards, demos, stories) wait for hands free (no touch) this long (whenCalm)
 const TIER_RANK = { oops: 0, close: 1, perfect: 2 }; // which customer a dropped cup suits best (serveTarget)
 const TRAY_WAIT_MS = 6000; // ...and for the cups being made to be served, unless they're left sitting this long
-const COMBO_CARDS_PER_DAY = 2; // NEW ORDER cards; the rest wait for another day
+const COMBO_CARDS_PER_DAY = 2;
+// The stall tools a night-shop tool upgrade changes (revealBought pulses them); machines bring their own tool.
+const BOUGHT_TOOLS = { longSpout: ['kopi', 'teh'], sugarScoop: ['sugar'], milkPump: ['condensed', 'evap'], brassSpoon: ['stir'], cupRack: ['rack'], iceMachine: ['ice'], markedGlass: ['rack'] };
+const IDLE_PAUSE_MS = 20_000; // no touch this long with customers waiting: the stall pauses itself // NEW ORDER cards; the rest wait for another day
 
 // Aunty Lim's word on her own score (Episode 1's ending line).
 const ratingNote = (r) => (r >= 9 ? 'Hm. Not bad ah… 不错.' : r >= 6 ? '有进步空间 lah.' : 'Never mind. 明天再努力.');
@@ -172,7 +175,7 @@ export default class StallScene extends Phaser.Scene {
     this.drawStallProps();
     if (this.perks.menuBoard) this.drawMenuBoard();
     if (this.perks.famePerDay) this.time.delayedCall(800, () => this.setFeedback(`Your decor & comforts: 名气 +${this.perks.famePerDay} today`));
-    this.feedback = addText(this, GAME_W / 2, COUNTER_Y + 10, '', { size: 12, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: 340 }).setDepth(40);
+    this.feedback = addText(this, GAME_W / 2, COUNTER_Y + 10, '', { size: 13, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: 340 }).setDepth(40);
     this.feedback.setStroke('#3a2414', 3);
 
     playMusic('day');
@@ -188,8 +191,14 @@ export default class StallScene extends Phaser.Scene {
     this.calmMs = 0;
     this.time.paused = false; // a scene restarted with a card open would otherwise keep its clock stopped
     // any touch (a tap on Cups, letting go of a pot) starts the calm wait over: no card lands right after it
-    this.input.on('pointerdown', () => (this.calmMs = 0));
-    this.input.on('pointerup', () => (this.calmMs = 0));
+    this.input.on('pointerdown', () => ((this.calmMs = 0), (this.idleMs = 0)));
+    this.idleMs = 0; // no touch for this long while customers wait: the stall pauses itself (idleCheck)
+    this.input.on('pointerup', (p, over) => {
+      this.calmMs = 0;
+      // a tap (not a drag) on a waiting customer, not on a word or a button: their cup (pickCupFor)
+      const c = !over.length && !this.paused && !this.ended && p.getDistance() < 8 && p.worldY < SERVE_AREA_Y && this.customerAt(p.worldX, p.worldY, (x) => this.cupsOwed(x) > 0);
+      if (c) this.pickCupFor(c);
+    });
     this.midQueued = false;
     this.tutorialStarting = false;
     this.queueShown = 0;
@@ -197,14 +206,22 @@ export default class StallScene extends Phaser.Scene {
     if (this.pendingTutorial) this.lockStall(true);
     this.resumeMidDay(midDayOf(this.run));
     // closing the page (or switching away) keeps today so far
-    const keep = () => document.visibilityState === 'hidden' && this.checkpoint();
+    const keep = () => document.visibilityState === 'hidden' && (this.checkpoint(), this.pauseGame(true)); // back to a paused stall
     const bye = () => this.checkpoint();
     document.addEventListener('visibilitychange', keep);
     window.addEventListener('pagehide', bye);
     this.events.once('shutdown', () => (document.removeEventListener('visibilitychange', keep), window.removeEventListener('pagehide', bye)));
     // Day 1 (first time): Aunty Lim walks straight in and you make her teh; Episode 1 follows that cup
     if (this.pendingTutorial) this.time.delayedCall(data?.morning ? 1900 : 500, () => this.startPendingTutorial());
-    else this.time.delayedCall(data?.morning ? 1900 : 500, () => this.whenCalm(() => this.playStory('start')));
+    else {
+      // last night's shopping first ("New at your stall!"), then today's story
+      // (once the shutter is up)
+      const reveal = !midDayOf(this.run) && (this.run.bought ?? []).length;
+      this.time.delayedCall(data?.morning ? (reveal ? 2700 : 1900) : 500, () => {
+        if (reveal) this.whenCalm(() => this.revealBought());
+        this.whenCalm(() => this.playStory('start'));
+      });
+    }
 
     if (import.meta.env.DEV) window.__stall = this;
   }
@@ -293,9 +310,13 @@ export default class StallScene extends Phaser.Scene {
     // under the HUD, top right: recipe book + sound
     // the recipe book tab, top right: pauses the stall and opens Uncle Tan's book
     const tab = this.add.rectangle(GAME_W - 4, HUD_H, 92, 26, 0xfff3d6).setOrigin(1, 0).setStrokeStyle(2, COLORS.inkHex).setDepth(46);
-    const icon = addSprite(this, 'iconBook', GAME_W - 80, HUD_H + 24, 20).setDepth(47);
-    const label = addText(this, GAME_W - 52, HUD_H + 13, 'Recipes', { size: 12, bold: true, origin: 0.5 }).setDepth(47);
+    const icon = addSprite(this, 'iconBook', GAME_W - 84, HUD_H + 24, 20).setDepth(47);
+    const label = addText(this, GAME_W - 46, HUD_H + 13, 'Recipes', { size: 12, bold: true, origin: 0.5 }).setDepth(47);
     for (const o of [tab, icon, label]) o.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.openRecipeBook());
+    // the pause tab, top left (mirrors the Recipes tab)
+    const ptab = this.add.rectangle(4, HUD_H, 70, 26, 0xfff3d6).setOrigin(0).setStrokeStyle(2, COLORS.inkHex).setDepth(46);
+    const plabel = addText(this, 39, HUD_H + 13, '⏸ Pause', { size: 12, bold: true, origin: 0.5 }).setDepth(47);
+    for (const o of [ptab, plabel]) o.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.pauseGame());
     this.pourBar = new PourBar(this, POUR_BAR_Y);
     this.refreshHud();
   }
@@ -309,6 +330,7 @@ export default class StallScene extends Phaser.Scene {
       const container = this.add.container(x, CUP_BOTTOM).setDepth(14);
       // the cup, its drink, stream, steam and ice: drawn on a canvas at the glass art's resolution
       const art = new DrinkArt(this, `cupArt${i}`);
+      art.marked = this.perks.marked; // Marked Glasses: labelled ¾ and FULL lines on every glass
       const img = this.add.image(0, 0, `cupArt${i}`).setOrigin(ART_ORIGIN.x, ART_ORIGIN.y).setScale(CUP_H / 186);
       container.add(img);
       // Hit box covers the whole cup + saucer: world y from CUP_BOTTOM - CUP_H - 8 to CUP_BOTTOM + 16.
@@ -375,8 +397,8 @@ export default class StallScene extends Phaser.Scene {
         parts.push(g);
       }
       // name tag so similar-looking cans are easy to tell apart
-      const label = addText(this, 0, t.h / 2 - 13, t.label, { size: 10, bold: true, align: 'center', origin: [0.5, 0], color: upgraded ? '#2b2420' : '#fff6dc' });
-      const tag = this.add.rectangle(0, t.h / 2 - 13, label.width + 8, 14, upgraded ? 0xf2c14e : 0x2b2420, 0.9).setOrigin(0.5, 0);
+      const label = addText(this, 0, t.h / 2 - 13, t.label, { size: t.label.length > 8 ? 10 : 11, bold: true, align: 'center', origin: [0.5, 0], color: upgraded ? '#2b2420' : '#fff6dc' });
+      const tag = this.add.rectangle(0, t.h / 2 - 13, label.width + 8, 15, upgraded ? 0xf2c14e : 0x2b2420, 0.9).setOrigin(0.5, 0);
       parts.push(tag, label);
       c.add(parts);
       c.setSize(t.w, t.h);
@@ -510,7 +532,7 @@ export default class StallScene extends Phaser.Scene {
     const g = this.add.graphics().setDepth(18);
     g.fillStyle(0xffffff, 0.95).fillRoundedRect(x, COACH_Y, w, 32, 12).lineStyle(2, 0x3a2e2a, 0.8).strokeRoundedRect(x, COACH_Y, w, 32, 12);
     g.fillStyle(0xffffff, 0.95).fillCircle(x - 3, COACH_Y + 24, 4).lineStyle(1.5, 0x3a2e2a, 0.8).strokeCircle(x - 3, COACH_Y + 24, 4);
-    this.coachText = addText(this, x + 9, COACH_Y + 16, '', { size: 10, bold: true, color: '#3a2e2a', origin: [0, 0.5], wrap: w - 16, lineSpacing: 0 }).setDepth(19);
+    this.coachText = addText(this, x + 9, COACH_Y + 16, '', { size: 11, bold: true, color: '#2b2018', origin: [0, 0.5], wrap: w - 16, lineSpacing: 0 }).setDepth(19);
     this.coachParts = [this.coachFace, g, this.coachText];
     this.coachShown = '';
     this.coachIn = 0;
@@ -538,7 +560,7 @@ export default class StallScene extends Phaser.Scene {
     this.coachShown = text;
     this.coachParts.forEach((o) => o.setVisible(!!text));
     if (!text) return;
-    this.coachText.setText(text).setColor(warn ? '#c8402c' : '#3a2e2a');
+    this.coachText.setText(text).setColor(warn ? '#c8402c' : '#2b2018');
     // two lines fit; anything longer shrinks a little
     this.coachText.setScale(1);
     if (this.coachText.height > 30) this.coachText.setScale(30 / this.coachText.height);
@@ -566,7 +588,7 @@ export default class StallScene extends Phaser.Scene {
     if (f?.cup?.base && !f.ticket) {
       // someone does want this drink: their cup is already on the tray, or they're still walking up
       const fan = [...this.allCustomers(), ...this.queue].find((c) => !done(c) && fitScore(f.cup, c.spec) >= 0);
-      const who = fan && (fan.def.short ?? fan.def.name);
+      const who = fan && (this.whoOf(fan));
       if (fan) return this.setCoach(`Cup ${f.i + 1}: ${who} ${fan.state === 'waiting' ? 'already has a cup on the tray. Serve that one first' : "is on the way. Keep it ready"}`);
       return this.setCoach(`Cup ${f.i + 1}: nobody here wants a ${formatCup(f.cup)}. Bin it, or keep it for later`, true);
     }
@@ -575,7 +597,7 @@ export default class StallScene extends Phaser.Scene {
     const oldest = unmade.sort((a, b) => (a.arrivedAt ?? 0) - (b.arrivedAt ?? 0))[0];
     if (oldest) {
       const grab = this.slots.some((sl) => sl.cup && !sl.cup.base) ? '' : this.freeSlot() ? 'Tap Cups, then: ' : 'Tray full! ';
-      return this.setCoach(`${grab}${oldest.def.short ?? oldest.def.name} wants ${oldest.orderText}: ${recipeHint(oldest.spec)}`);
+      return this.setCoach(`${grab}${this.whoOf(oldest)} wants ${oldest.orderText}: ${recipeHint(oldest.spec)}`);
     }
     if (this.closing) return this.setCoach("Closing time. Last customers, then we 收档!");
     if (this.waitingCustomers().length) return this.setCoach('Serve the cups on the tray: drag each one up to its customer');
@@ -617,6 +639,35 @@ export default class StallScene extends Phaser.Scene {
     return c.n - c.served - heading;
   }
 
+  // A customer's short name; two at once with the same one (two "Uncle" walk-ins) get "Uncle (2)".
+  whoOf(c) {
+    const name = c.def.short ?? c.def.name;
+    const same = [...this.allCustomers(), ...this.queue].filter((x) => (x.def.short ?? x.def.name) === name).sort((a, b) => (a.bornAt ?? 0) - (b.bornAt ?? 0));
+    const i = same.indexOf(c);
+    return i > 0 ? `${name} (${i + 1})` : name;
+  }
+
+  // Tapped a waiting customer: the cup you're working on is for them now (if it can still be their
+  // drink), or a fresh cup goes down for them. Players asked to choose instead of first-in-line.
+  pickCupFor(c) {
+    if (this.cupsOwed(c) <= 0 || c.tutorial || this.demo) return;
+    const fits = (sl) => sl.cup && !sl.cup.demo && sl.ticket?.c !== c && fitScore(sl.cup, c.spec) >= 0;
+    const slot = (fits(this.focusSlot ?? {}) && this.focusSlot) || this.slots.find((sl) => fits(sl) && !sl.cup.base) || this.slots.find(fits);
+    const target = slot ?? this.freeSlot();
+    if (!target) return;
+    if (!target.cup) {
+      this.placeCup(target);
+      if (target.ticket?.c === c) return this.setFeedback(UI.pickedCup.replace('{cup}', target.i + 1).replace('{who}', this.whoOf(c)));
+    }
+    target.ticket = { c, spec: c.spec, who: this.whoOf(c) };
+    c.locked = true;
+    this.focusSlot = target;
+    this.coachIn = 0;
+    this.redrawSlot(target);
+    play('tap');
+    this.setFeedback(UI.pickedCup.replace('{cup}', target.i + 1).replace('{who}', this.whoOf(c)));
+  }
+
   // Match a cup to the waiting customer it fits best (oldest first on a tie).
   assignCup(slot) {
     // oldest first, but the customer standing right over this plate wins a tie (cups line up with people)
@@ -626,7 +677,7 @@ export default class StallScene extends Phaser.Scene {
       .sort((a, b) => over(a) - over(b) || (a.arrivedAt ?? 0) - (b.arrivedAt ?? 0))
       .map((c) => ({ c, spec: c.spec }));
     const pick = slot.cup ? pickFor(slot.cup, cands) : null;
-    slot.ticket = pick ? { c: pick.c, spec: pick.spec, who: pick.c.def.short ?? pick.c.def.name } : null;
+    slot.ticket = pick ? { c: pick.c, spec: pick.spec, who: this.whoOf(pick.c) } : null;
     if (pick) pick.c.locked = true; // a cup is being made for this order: it never changes now
     this.redrawSlot(slot);
   }
@@ -641,7 +692,7 @@ export default class StallScene extends Phaser.Scene {
   // Where this cup should be poured to: ¾ for peng (the ice tops it up), else full.
   targetFill(slot) {
     const spec = slot.ticket?.spec;
-    if (!spec) return this.perks.marked && slot.cup ? [0.68, 0.94] : null; // Marked Glasses
+    if (!spec) return null; // (Marked Glasses draw their own lines: DrinkArt.marked)
     return spec.iced ? 0.68 : 0.94;
   }
 
@@ -682,6 +733,10 @@ export default class StallScene extends Phaser.Scene {
       return;
     }
     const c = this.serveTarget(slot, p.worldX, p.worldY);
+    if (c && isEmpty(slot.cup)) {
+      this.setFeedback(UI.emptyCup); // an empty glass is never served (it used to count as an oops)
+      return back();
+    }
     if (c) {
       this.serveCup(slot, c);
       slot.container.setPosition(slot.x, CUP_BOTTOM).setDepth(14);
@@ -723,6 +778,7 @@ export default class StallScene extends Phaser.Scene {
     tool.setDepth(46);
     this.tweens.add({ targets: tool, scale: 1.08, duration: 80 }); // full size in the hand
     tool.lastStirDir = 0;
+    tool.pouredSlot = null; // the cup this pot poured into on this lift (onToolDragEnd's "a bit more…")
     tool.lastX = null;
     tool.lastPullDir = 0;
     tool.lastY = null;
@@ -859,6 +915,14 @@ export default class StallScene extends Phaser.Scene {
     else if (t.kind === 'stir' && slot?.cup) this.think('Pour the kopi or teh first, then stir', 2500);
     if (t.kind === 'tarik' && slot?.cup?.base) this.autoTarik(slot); // drop the mugs on a cup: it's pulled
     if (t.kind === 'rack' && slot && !slot.cup) this.placeCup(slot);
+    // let go of the pot short of the line: a little nudge right there on the cup
+    const poured = (this.pouring?.tool === tool && this.pouring.slot) || tool.pouredSlot;
+    if (poured?.cup?.base && poured.ticket && !this.demo && ['kopi', 'teh', ...MALT].includes(t.ingredient)) {
+      const spec = poured.ticket.spec;
+      const fill = poured.cup.fill - (poured.cup.ice ? TUNING.iceVolume : 0);
+      const lo = spec.iced ? ZONES.fill.peng[0] : spec.strength === 'poh' ? ZONES.pohPot[0] : ZONES.fill.good[0];
+      if (fill < lo) this.cupPop(poured, 'a bit more…', '#ffe7a8', '#3a2414');
+    }
     this.pouring = null;
     this.aiming = null;
     tool.aim = null;
@@ -876,7 +940,10 @@ export default class StallScene extends Phaser.Scene {
     if (!slot?.cup) return;
     this.focusSlot = slot;
     const fast = ['kopi', 'teh', ...MALT].includes(ingredient) ? this.perks.pourMult : 1; // Long-Spout Pot
+    const before = slot.cup.fill;
     pour(slot.cup, ingredient, dtMs * fast);
+    // over the top: say so the moment it happens, not after the next ingredient
+    if (before <= ZONES.fill.spill && slot.cup.fill > ZONES.fill.spill && !this.demo) this.cupPop(slot, 'SPILL!', '#ff8a7a', '#5a1a14', 'oops');
     this.recheckCup(slot);
     this.pourBar.show(ingredient, slot.cup, slot.i + 1, slot.ticket);
   }
@@ -1088,7 +1155,7 @@ export default class StallScene extends Phaser.Scene {
         if (s.do === 'cup') {
           slot = target;
           slot.cup.demo = true; // the ghost hand made it: it doesn't count in Aunty Lim's rating of your day
-          slot.ticket = { c, spec: c.spec, who: c.def.short ?? c.def.name }; // "for Makcik", not whoever came first
+          slot.ticket = { c, spec: c.spec, who: this.whoOf(c) }; // "for Makcik", not whoever came first
           this.redrawSlot(slot);
         }
         await wait(s.do === 'stir' ? (this.perks.stirMs ?? TUNING.autoStirMs) + 250 : s.do === 'tarik' ? TUNING.autoTarikMs + 250 : 450);
@@ -1217,6 +1284,7 @@ export default class StallScene extends Phaser.Scene {
     const n = def.groupSize;
     const c = {
       def,
+      bornAt: this.time.now,
       spot: null,
       orderText,
       spec: parseOrder(orderText),
@@ -1410,7 +1478,10 @@ export default class StallScene extends Phaser.Scene {
     const table = c.spot === 'table';
     // (Ah Gong's bubble leans left, clear of the sound button; with two tables both bubbles narrow so they never meet)
     const tb = table && (c.table ? TABLES[c.table].bubble : this.tableGuests.length > 1 ? TABLE_PAIR_BUBBLE : TABLE.bubble);
-    const w = table ? tb.w : c.spot === 'all' || kind === 'say' ? 200 : 114; // what someone says (teaching) gets a wide, short bubble
+    // what someone says (teaching) gets a wide, short bubble, unless others stand at the counter too (a rush
+    // of wide bubbles piled up over each other)
+    const alone = this.spots.every((x) => !x || x === c);
+    const w = table ? tb.w : c.spot === 'all' || (kind === 'say' && alone) ? 200 : 114;
     const x = Phaser.Math.Clamp(this.centerX(c) - w * (table ? tb.lean ?? 0.8 : 0.5), 4, GAME_W - w - 4);
     let words = layoutLine(this, text, x + pad, 0, w - pad * 2, (key) => this.openGlossary(key), { size: 12 });
     if (words.height > 50) { // a long line: one size smaller, so a rush doesn't stack bubbles up into each other
@@ -1509,12 +1580,11 @@ export default class StallScene extends Phaser.Scene {
   }
 
   // Which waiting customer is at this point (their sprites or their bubble)?
-  customerAt(x, y) {
-    for (const c of this.waitingCustomers()) {
-      const rects = [...c.sprites.map((s) => s.getBounds()), c.bubble?.frame.getBounds()].filter(Boolean);
-      if (rects.some((r) => Phaser.Geom.Rectangle.Contains(Phaser.Geom.Rectangle.Inflate(Phaser.Geom.Rectangle.Clone(r), 6, 6), x, y))) return c;
-    }
-    return null;
+  // want = who counts (a tap picking a cup skips people already sorted); a body beats a bubble over it.
+  customerAt(x, y, want = () => true) {
+    const hit = (r) => Phaser.Geom.Rectangle.Contains(Phaser.Geom.Rectangle.Inflate(Phaser.Geom.Rectangle.Clone(r), 6, 6), x, y);
+    const list = this.waitingCustomers().filter(want);
+    return list.find((c) => c.sprites.some((s) => hit(s.getBounds()))) ?? list.find((c) => c.bubble && hit(c.bubble.frame.getBounds())) ?? null;
   }
 
   highlightCustomer(c) {
@@ -1533,7 +1603,10 @@ export default class StallScene extends Phaser.Scene {
       this.time.delayedCall(900, () => this.setFeedback("Uncle Tan's towel wiped the spill!"));
     }
     // perfect cups in a row: a growing tip; a story guest may pay less (their choice in the episode)
-    this.streak = tier === 'perfect' ? this.streak + 1 : 0;
+    // the ghost hand's cup doesn't start a streak (it's not your cup); a run of perfects that ends says so
+    const was = this.streak;
+    if (!cup.demo) this.streak = tier === 'perfect' ? this.streak + 1 : 0;
+    if (was >= 2 && !this.streak) this.time.delayedCall(700, () => this.streakBroken(was));
     this.econ.bestStreak = Math.max(this.econ.bestStreak ?? 0, this.streak);
     if (cup.demo) {
       // the ghost hand's cup: left out of Aunty Lim's rating of your day
@@ -1548,7 +1621,10 @@ export default class StallScene extends Phaser.Scene {
     // night-shop tip bonuses: tip jar, cup warmer (hot), ice machine (peng)
     if (tier !== 'oops') {
       const hot = !c.spec.iced && !MALT.includes(c.spec.base);
-      const extra = Math.round(res.tip * (this.perks.tipMult - 1)) + (hot ? this.perks.hotTip : 0) + (c.spec.iced ? this.perks.icedTip : 0);
+      const parts = [['Tip Jar', Math.round(res.tip * (this.perks.tipMult - 1))], ['Cup Warmer', hot ? this.perks.hotTip : 0], ['Ice Machine', c.spec.iced ? this.perks.icedTip : 0]].filter(([, v]) => v > 0);
+      const extra = parts.reduce((sum, [, v]) => sum + v, 0);
+      // your upgrades at work, by name, a moment after the main coins
+      if (parts.length) this.time.delayedCall(500, () => this.perkFloat(c, parts.map(([n, v]) => `${n} +${v}¢`).join(' · ')));
       if (extra) {
         res.tip += extra;
         this.econ.money += extra;
@@ -1633,10 +1709,34 @@ export default class StallScene extends Phaser.Scene {
 
   // ---------- juice / feedback ----------
 
+  // A word that pops up over a cup and floats off ("SPILL!", "a bit more…").
+  cupPop(slot, str, color, stroke, sound = null) {
+    const t = addText(this, slot.x, CUP_BOTTOM - CUP_H - 36, str, { size: str.length > 8 ? 14 : 18, bold: true, color, origin: 0.5 }).setDepth(60);
+    t.setStroke(stroke, 5).setScale(0.5);
+    if (sound) play(sound);
+    this.tweens.add({ targets: t, scale: 1, duration: 180, ease: 'Back.out' });
+    this.tweens.add({ targets: t, y: t.y - 26, alpha: 0, delay: 900, duration: 600, onComplete: () => t.destroy() });
+  }
+
   floatText(str, x, y) {
     const t = addText(this, x, y, str, { size: 20, bold: true, color: '#7ee07a', origin: 0.5 }).setDepth(60);
     t.setStroke('#1d3b1a', 5);
     this.tweens.add({ targets: t, y: y - 32, alpha: 0, duration: 1100, onComplete: () => t.destroy() });
+  }
+
+  perkFloat(c, str) {
+    if (c.state === 'gone' || !c.sprites[0]?.active) return;
+    const y = this.headTop(c) + 88;
+    const t = addText(this, Phaser.Math.Clamp(this.centerX(c), 70, GAME_W - 70), y, str, { size: 11, bold: true, color: '#ffe7a8', origin: 0.5 }).setDepth(60);
+    t.setStroke('#3a2414', 4);
+    this.tweens.add({ targets: t, y: y - 24, alpha: 0, delay: 500, duration: 900, onComplete: () => t.destroy() });
+  }
+
+  // A run of perfect cups just ended: a small grey note under the feedback line.
+  streakBroken(n) {
+    const t = addText(this, GAME_W / 2, COUNTER_Y + 30, `Streak ×${n} broken`, { size: 12, bold: true, color: '#d8cbb5', origin: 0.5 }).setDepth(40);
+    t.setStroke('#3a2414', 3);
+    this.tweens.add({ targets: t, y: t.y + 8, alpha: 0, delay: 1600, duration: 500, onComplete: () => t.destroy() });
   }
 
   // "COMBO ×5!  +$1.00" across the middle of the stall, with a cheer.
@@ -1729,6 +1829,7 @@ export default class StallScene extends Phaser.Scene {
     // pouring while a tool is held over a cup
     if (this.pouring) {
       const { tool, slot } = this.pouring;
+      tool.pouredSlot = slot;
       const ing = tool.tool.ingredient;
       // the demo's hand stops on the exact frame its target is reached
       const stop = this.demo?.stop;
@@ -1748,7 +1849,9 @@ export default class StallScene extends Phaser.Scene {
     const teaching = this.tutorial?.active || this.pendingTutorial;
     // an empty stall doesn't make you wait: the clock hurries on to the next customer (or to 7pm)
     const empty = !this.allCustomers().length && !this.queue.length && !this.popups.length && !this.closing;
-    if (!teaching) this.clockMs = Math.min(TUNING.dayMs, this.clockMs + delta * (empty ? TUNING.emptyClockSpeed : 1));
+    // ...and while the ghost hand shows a recipe (round 3: a demo burned 2-3 hours of the day)
+    if (!teaching && !this.demo) this.clockMs = Math.min(TUNING.dayMs, this.clockMs + delta * (empty ? TUNING.emptyClockSpeed : 1));
+    this.idleCheck(delta);
     this.refreshHud();
     if (this.clockMs >= TUNING.dayMs) {
       // 7pm: no one new comes in, but the customers already here still get their drinks
@@ -1998,6 +2101,59 @@ export default class StallScene extends Phaser.Scene {
     if (this.calmMs < CALM_MS) return false;
     const busy = this.slots.some(({ cup }) => cup && (cup.base || cup.condensed || cup.evap || cup.sugar || cup.gula || cup.ice || cup.powder));
     return !busy || this.calmMs >= TRAY_WAIT_MS;
+  }
+
+  // The Pause tab (and auto-pause: the tab hidden, or no touch for a while): the stall stops under a
+  // dim sheet until a tap. Never over a card, a story or the Day-1 lessons, which pause the day already.
+  pauseGame(idle = false) {
+    if (this.paused || this.ended || this.demo || this.dial || this.scene.isActive('Drama') || !this.scene.isActive()) return;
+    this.dragging = 0;
+    this.pauseFor((resume) => {
+      const shade = this.add.rectangle(0, 0, GAME_W, GAME_H, 0x1a1410, 0.55).setOrigin(0).setDepth(90).setInteractive();
+      const title = addText(this, GAME_W / 2, 270, idle ? UI.pausedIdle : UI.paused, { size: idle ? 20 : 26, bold: true, color: '#fff6dc', origin: 0.5 }).setDepth(91);
+      const hint = addText(this, GAME_W / 2, 306, UI.pausedHint, { size: 13, color: '#d8cbb5', origin: 0.5 }).setDepth(91);
+      title.setStroke('#2b2420', 4);
+      // a moment before a tap counts, so the tap that paused (or a stray one) doesn't unpause
+      const born = performance.now(); // (the scene clock is stopped while paused)
+      shade.on('pointerdown', () => {
+        if (performance.now() - born < 350) return;
+        [shade, title, hint].forEach((o) => o.destroy());
+        this.idleMs = 0;
+        resume();
+      });
+    });
+  }
+
+  // No touch for IDLE_PAUSE_MS while people wait at the counter: the phone's probably down. Pause.
+  idleCheck(delta) {
+    const busy = this.tutorial?.active || this.pendingTutorial || this.demo || this.dragging || this.closedOut;
+    this.idleMs = busy || !this.waitingCustomers().length ? 0 : (this.idleMs ?? 0) + delta;
+    if (this.idleMs > IDLE_PAUSE_MS) {
+      this.idleMs = 0;
+      this.pauseGame(true);
+    }
+  }
+
+  // The morning after the night shop: last night's buys, shown off, then the tools they change pulse.
+  revealBought() {
+    const items = (this.run.bought ?? []).map(itemById).filter(Boolean);
+    if (!items.length || this.ended) return;
+    const rows = items.map((i) => ({ icon: i.icon, name: i.name, text: i.text }));
+    this.pauseFor((resume) => showBoughtCard(this, { title: UI.newAtStall, rows, button: UI.newAtStallGo, onClose: () => {
+      resume();
+      this.glowTools(items.flatMap((i) => BOUGHT_TOOLS[i.id] ?? (MACHINE_TOOLS[i.id] ? [MACHINE_TOOLS[i.id].id] : [])));
+    } }));
+  }
+
+  // A few seconds of gold boxes round these tools (what you just bought changed them).
+  glowTools(ids) {
+    for (const id of new Set(ids)) {
+      const target = this.tools?.[id];
+      if (!target) continue;
+      const b = target.area();
+      const glow = this.add.rectangle(b.x - 3, b.y - 3, b.width + 6, b.height + 6).setOrigin(0).setStrokeStyle(3, 0xf2c14e).setDepth(target.depth + 1);
+      this.tweens.add({ targets: glow, alpha: { from: 1, to: 0.2 }, duration: 500, yoyo: true, repeat: 4, onComplete: () => glow.destroy() });
+    }
   }
 
   // Pause the day for a modal card; resume when it closes.
