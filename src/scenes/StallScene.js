@@ -584,6 +584,17 @@ export default class StallScene extends Phaser.Scene {
     // a cup still "for" someone who has had all their cups (or left) finds a new customer
     const done = (c) => c.state === 'gone' || c.served >= c.n;
     for (const sl of this.slots) if (sl.cup && sl.ticket && done(sl.ticket.c)) this.assignCup(sl);
+    // a cup that's wrong for its customer but right for someone else waiting is theirs (round 5: a Kopi O
+    // labelled for the Kopi customer)
+    for (const sl of this.slots) {
+      if (!sl.cup?.base || !sl.ticket || sl.cup.demo || gradeCup(sl.cup, sl.ticket.spec).tier !== 'oops') continue;
+      const fan = this.waitingCustomers().find((c) => c !== sl.ticket.c && this.cupsOwed(c, sl) > 0 && gradeCup(sl.cup, c.spec).tier !== 'oops');
+      if (fan) {
+        sl.ticket = { c: fan, spec: fan.spec, who: this.whoOf(fan) };
+        fan.locked = true;
+        this.redrawSlot(sl);
+      }
+    }
     const live = (sl) => sl?.cup && sl.ticket;
     const slot = live(this.focusSlot) ? this.focusSlot : this.slots.find(live);
     if (slot) {
@@ -1086,10 +1097,11 @@ export default class StallScene extends Phaser.Scene {
   // Plays systems/demo.js steps for customer c. onDone(made) runs after (made = the cup is ready).
   // sample = a recipe lesson: the teacher tastes the ghost hand's cup, and you make the one they keep
   // (round 4: "the first teh tarik was Makcik's").
-  async runDemo(c, onDone = () => {}, { sample = false } = {}) {
+  // asked = the player tapped "Watch how?" (plays even with demos switched off).
+  async runDemo(c, onDone = () => {}, { sample = false, asked = false } = {}) {
     // the demo makes its own cup on its own empty plate: the player's cups are never touched
     const plate = this.freeSlot();
-    if (this.demo || this.ended || load('demosOff', false) || !plate) return onDone(false);
+    if (this.demo || this.ended || (load('demosOff', false) && !asked) || !plate) return onDone(false);
     const demo = (this.demo = { c, say: '', cancelled: false, tool: null });
     c.locked = true;
     const wasTutorial = c.tutorial;
@@ -1298,8 +1310,9 @@ export default class StallScene extends Phaser.Scene {
 
   // ---------- customers ----------
 
+  // (a teacher whose recipe card hasn't shown yet isn't ordering: holdForLesson)
   waitingCustomers() {
-    return [...new Set([...this.spots, ...this.tableGuests])].filter((c) => c?.state === 'waiting');
+    return [...new Set([...this.spots, ...this.tableGuests])].filter((c) => c?.state === 'waiting' && !c.lessonPending);
   }
 
   allCustomers() {
@@ -1497,9 +1510,10 @@ export default class StallScene extends Phaser.Scene {
     if (c.state === 'gone') return;
     c.state = 'waiting';
     c.arrivedAt = this.clockMs;
-    this.showBubble(c, c.orderLine, 'order');
+    // a teacher holds their order until the recipe card has been seen (round 5: it came after the drink)
+    if (c.lesson && this.lessonState !== 'done') this.holdForLesson(c);
+    else this.showBubble(c, c.orderLine, 'order');
     for (const sl of this.slots) if (sl.cup && !sl.ticket) this.assignCup(sl);
-    if (c.lesson) this.whenCalm(() => this.showLesson(c.lessonLine));
     if (c.onArrive) this.time.delayedCall(700, () => c.onArrive()); // e.g. the tutorial's next step
     if (!c.tutorial && !c.lesson && !c.onArrive && !c.episode && !this.pendingTutorial) this.newOrderCheck(c);
     if (c.episode) this.cueEpisode(c);
@@ -1947,6 +1961,7 @@ export default class StallScene extends Phaser.Scene {
 
     this.updateQueueChip();
     this.runPopups(delta);
+    this.showPendingLesson();
     this.showNextCombo();
     if (!teaching) {
       this.runArrivals();
@@ -2149,14 +2164,11 @@ export default class StallScene extends Phaser.Scene {
       c.spec = parseOrder(l.order);
       this.comboQueue = this.comboQueue.filter((q) => q !== c); // no card for the order they dropped
       c.orderLine = pickLine(c.def.lines, 'order', this.lineVars({ order: l.order, n: c.n, hot: !c.spec.iced }));
-      if (c.state === 'waiting') {
-        this.showBubble(c, c.orderLine, 'order');
-        this.whenCalm(() => this.showLesson(who === l.teacher));
-      }
     }
     this.lessonState = 'coming';
     c.lesson = true;
     c.lessonLine = who === l.teacher; // a stand-in teacher doesn't say the real teacher's line
+    if (here && c.state === 'waiting') this.holdForLesson(c);
     c.patienceMs = c.patienceMax = c.patienceMax * 1.5; // learning takes a moment
   }
 
@@ -2257,7 +2269,10 @@ export default class StallScene extends Phaser.Scene {
     });
   }
 
-  showLesson(showLine = true) {
+  // teacher = the customer holding their order for this card (holdForLesson): they order once it closes.
+  // "Watch how?" on the card has the ghost hand make a sample first; it never starts by itself (round 5:
+  // a demo started in a five-customer rush and took a plate).
+  showLesson(showLine = true, teacher = null) {
     if (this.lessonState === 'done') return;
     this.lessonState = 'done';
     this.lessonsDone += 1;
@@ -2266,16 +2281,29 @@ export default class StallScene extends Phaser.Scene {
     const spec = parseOrder(this.lesson.order);
     this.markTaught(this.lesson.order, [...this.lesson.features, ...featuresOf(spec)]);
     const combo = { items: this.comboItems(spec), cupTint: liquidColor(demoCup(spec)) };
-    this.pauseFor((resume) => showRecipeCard(this, this.lesson, { showLine, combo, onClose: () => (resume(), this.nextLesson(), this.demoLessonOrder()) }));
+    const order = () => {
+      if (!teacher) return;
+      teacher.lessonPending = false;
+      if (teacher.state === 'waiting') this.showBubble(teacher, teacher.orderLine, 'order');
+    };
+    const ok = () => (order(), this.nextLesson());
+    const watch = teacher && this.freeSlot() ? () => (ok(), teacher.state === 'waiting' && this.runDemo(teacher, undefined, { sample: true, asked: true })) : null;
+    this.pauseFor((resume) => showRecipeCard(this, this.lesson, { showLine, combo, onClose: () => (resume(), ok()), onWatch: watch && (() => (resume(), watch())) }));
   }
 
-  // After a new-recipe card: the teacher's order is made once by the ghost hand (once per recipe ever).
-  demoLessonOrder() {
-    const c = this.allCustomers().find((x) => x.lesson && x.state === 'waiting' && !x.served);
-    const seen = load('demosSeen', []);
-    if (!c || seen.includes(c.orderText)) return;
-    save('demosSeen', [...seen, c.orderText]);
-    this.whenCalm(() => c.state === 'waiting' && !c.served && this.runDemo(c, undefined, { sample: true }), true);
+  // The teacher is at the counter: "one moment", no order (and no waiting) until their card shows.
+  holdForLesson(c) {
+    c.lessonPending = true;
+    this.showBubble(c, UI.lessonHold, 'say');
+  }
+
+  // Called every frame: the held teacher's card opens on the first calm moment (calm hands only, like a
+  // NEW ORDER card: the tray may be busy, nothing is being made for them yet).
+  showPendingLesson() {
+    const c = this.allCustomers().find((x) => x.lessonPending && x.state === 'waiting');
+    if (!c || this.paused || !this.calm() || this.calmMs < CALM_MS) return;
+    this.calmMs = 0;
+    this.showLesson(c.lessonLine, c);
   }
 
   // Everything bought in the night shop shows up at the stall (src/data/stallProps.js).

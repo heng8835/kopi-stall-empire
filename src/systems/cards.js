@@ -41,7 +41,8 @@ function modal(scene) {
 
 // The "new recipe" card. lesson: from src/data/recipes.js; showLine: false when a stand-in teacher brought it.
 // combo = { items, cupTint }: the teacher's order as pictures (StallScene.comboItems).
-export function showRecipeCard(scene, lesson, { showLine = true, combo = null, onClose } = {}) {
+// onWatch: a "Watch how?" button beside "Got it" (the ghost hand makes a sample, only if asked: round 5).
+export function showRecipeCard(scene, lesson, { showLine = true, combo = null, onClose, onWatch = null } = {}) {
   const m = modal(scene);
   const c = lesson.card;
   const x = (GAME_W - CARD_W) / 2;
@@ -68,14 +69,18 @@ export function showRecipeCard(scene, lesson, { showLine = true, combo = null, o
     y += t.height + gap;
   }
   if (strip) comboStrip(scene, m, combo.items, { cx: GAME_W / 2, cy: strip.y + 20, size: 34, cupTint: combo.cupTint });
-  const btn = makeButton(scene, GAME_W / 2 - 70, top + h - pad - 40, 140, 40, 'Got it ▸', () => {
+  const btns = [];
+  const close = (then) => {
     m.close();
-    btn.bg.destroy();
-    btn.txt.destroy();
-    onClose?.();
-  }, { size: 15, bold: true, fill: 0xbfe3c0 });
-  btn.bg.setDepth(DEPTH + 2);
-  btn.txt.setDepth(DEPTH + 3);
+    btns.forEach((b) => (b.bg.destroy(), b.txt.destroy()));
+    then?.();
+  };
+  const by = top + h - pad - 40;
+  if (onWatch) {
+    btns.push(makeButton(scene, GAME_W / 2 - 136, by, 128, 40, 'Watch how? ▶', () => close(onWatch), { size: 14, bold: true }));
+    btns.push(makeButton(scene, GAME_W / 2 + 8, by, 128, 40, 'Got it ▸', () => close(onClose), { size: 15, bold: true, fill: 0xbfe3c0 }));
+  } else btns.push(makeButton(scene, GAME_W / 2 - 70, by, 140, 40, 'Got it ▸', () => close(onClose), { size: 15, bold: true, fill: 0xbfe3c0 }));
+  btns.forEach((b) => (b.bg.setDepth(DEPTH + 2), b.txt.setDepth(DEPTH + 3)));
   play('perfect');
 }
 

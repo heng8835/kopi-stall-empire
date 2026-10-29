@@ -1,7 +1,7 @@
 // The recipe hint under each order bubble, in the same words as the pour bar zones.
 // "Teh C siew dai peng" -> "Teh ¾ · evap C · sugar SIEW DAI · stir · ice". Pure, no Phaser.
 import { ZONES } from '../data/stallTuning.js';
-import { sweetness, sugarBucket, needsStir, waterShare } from './cup.js';
+import { sweetness, sugarBucket, needsStir, waterShare, gradeCup } from './cup.js';
 
 const SWEET = { none: 'KOSONG', less: 'SIEW DAI', normal: 'NORMAL', more: 'GA DAI' };
 
@@ -56,6 +56,9 @@ export function nextStep(cup, spec, who) {
   const finish = () => {
     if (spec.scoop && !cup.scoop) return { text: 'Godzilla: a scoop of ice cream on top!' };
     if (spec.tapau && !cup.tapau) return { text: 'Tapau: drop a bag on the cup' };
+    // only a cup that would really please them is "done" (round 5: a gu you made with sugar still said Done)
+    const { tier, reasons } = gradeCup(cup, spec);
+    if (tier === 'oops') return { text: `Not right yet: ${reasons[0] ?? 'not their drink'}. Bin it and try again`, bin: true };
     return { text: `Done! Drag it to ${who}` };
   };
 
@@ -108,7 +111,8 @@ export function nextStep(cup, spec, who) {
     if (spec.milk === 'none' && cup.condensed + cup.evap > ZONES.trace) return { text: '"O" means no milk! Bin it and try again', bin: true };
     if (spec.milk === 'evap' && cup.condensed > ZONES.trace) return { text: '"C" is the evap can, not condensed! Bin it', bin: true };
     if (spec.milk === 'condensed' && cup.evap > ZONES.trace) return { text: 'Plain kopi / teh uses condensed, not evap! Bin it', bin: true };
-    if (spec.milk === 'condensed' && sweet < want) return { text: `Condensed milk till ${target} (it's the sweetness)` };
+    if (spec.milk === 'condensed' && cup.condensed <= ZONES.trace && sweet >= want && want > 0) return { text: 'Plain kopi / teh is sweetened with condensed milk, not sugar! Bin it', bin: true };
+    if (spec.milk === 'condensed' && sweet < want)return { text: `Condensed milk till ${target} (it's the sweetness)` };
     if (spec.milk === 'evap' && cup.evap < ZONES.milk.normal[0]) return { text: 'Evap milk till C · NORMAL' };
     if (spec.milk !== 'condensed' && sweet < want) return { text: `Sugar till ${target}` };
     if (sweet > want) return { text: `Too sweet for ${target.toLowerCase()}! Bin it and try again`, bin: true };

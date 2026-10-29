@@ -86,3 +86,14 @@ describe('sugar first (the uncles\' way)', () => {
     expect(gradeCup(cup, parseOrder('Kopi O')).tier).toBe('perfect');
   });
 });
+
+describe('Done only for a cup that grades well (round 5)', () => {
+  it('a Kopi gu you sweetened with sugar instead of condensed is never "Done"', async () => {
+    const { addExtra } = await import('../src/systems/cup.js');
+    const cup = pour(newCup(), 'kopi', hold('kopi', 0.95));
+    pour(cup, 'sugar', hold('sugar', 0.85));
+    addExtra(cup, 'butter');
+    for (let i = 0; i < 6; i++) stirStep(cup);
+    expect(step(cup, 'Kopi gu you')).not.toMatch(/^Done/);
+  });
+});
