@@ -53,7 +53,7 @@ const CLOSE_MIN = 19 * 60; // 7:00pm
 
 // Layout (logical px, 360x640), matched to the stall background art (901x1600 = 2.5x).
 const HUD_H = 40; // clock + day bar + fame + money
-const POUR_BAR_Y = 176; // the pour bar docks just under the customers' bubbles, above the pot: never under the pouring hand
+const POUR_BAR_Y = HUD_H + 30; // the pour bar docks under the HUD tabs, over the bubbles' tops: never on faces (round 5) or under the pouring hand
 const COUNTER_Y = 282; // top of the wooden counter in the background
 const SERVE_AREA_Y = COUNTER_Y + 10; // a cup let go above this is "up at the customers"
 const FEET_Y = 318; // counter customers stand behind the counter (legs hidden)
@@ -78,7 +78,7 @@ const BG_SCALE = 901 / GAME_W; // background art pixels per logical px
 // Customers walk in from the street opening on the left (small = far away) and, when the
 // counter is full, wait in a line behind it, front first.
 const ENTRY = { x: -40, feetY: 236 };
-const QUEUE_POS = [{ x: 126, feetY: 270 }, { x: 88, feetY: 262 }, { x: 50, feetY: 254 }];
+const QUEUE_POS = [{ x: 132, feetY: 270 }, { x: 86, feetY: 260 }, { x: 40, feetY: 250 }]; // far enough apart that nobody stands in anybody (round 5)
 const MID_STORY_AT = 0.4; // a 'mid' episode plays this far into the day
 const COACH_Y = 410; // the owner's thought bubble, between the tray and the tools
 const LESSON_AT_MS = 5000; // a recipe teacher walks in this far into a lesson day
@@ -179,7 +179,7 @@ export default class StallScene extends Phaser.Scene {
     if (this.perks.menuBoard) this.drawMenuBoard();
     if (this.perks.famePerDay) this.time.delayedCall(800, () => this.setFeedback(`Your decor & comforts: 名气 +${this.perks.famePerDay} today`));
     this.feedback = addText(this, GAME_W / 2, COUNTER_Y + 10, '', { size: 13, bold: true, align: 'center', origin: [0.5, 0], color: '#fff6dc', wrap: 340 }).setDepth(40);
-    this.feedback.setStroke('#3a2414', 3);
+    this.feedback.setStroke('#3a2414', 3).setVisible(false); // kept for the playtest harness: the words show in the coach bubble (setFeedback)
 
     playMusic('day');
     this.tutorial = new Tutorial(this, TUTORIAL_STEPS);
@@ -346,7 +346,7 @@ export default class StallScene extends Phaser.Scene {
       container.setInteractive(new Phaser.Geom.Rectangle(0, hitH / 2 - CUP_H - 8, CUP_W + 24, hitH), Phaser.Geom.Rectangle.Contains);
       this.input.setDraggable(container);
       // who the cup is for, just above it (moves with the cup when dragged)
-      const forText = addText(this, 0, -CUP_H - 6, '', { size: 11, bold: true, color: '#fff6dc', origin: [0.5, 1] });
+      const forText = addText(this, 0, -CUP_H + 2, '', { size: 11, bold: true, color: '#fff6dc', origin: [0.5, 0] }); // inside the glass's top: clear of the counter machines' labels (round 5)
       forText.setStroke('#3a2414', 4); // readable over the cat bed and the ledge props
       container.add(forText);
       const slot = { i, x, cup: null, container, art, label, forText, ticket: null }; // ticket = who it's for (assignCup)
@@ -535,20 +535,29 @@ export default class StallScene extends Phaser.Scene {
     const x = 34;
     const w = GAME_W - x - 8;
     this.coachFace = addSprite(this, this.owner.sprite, 17, COACH_Y + 34, 34).setDepth(18);
-    const g = this.add.graphics().setDepth(18);
-    g.fillStyle(0xffffff, 0.95).fillRoundedRect(x, COACH_Y, w, 32, 12).lineStyle(2, 0x3a2e2a, 0.8).strokeRoundedRect(x, COACH_Y, w, 32, 12);
-    g.fillStyle(0xffffff, 0.95).fillCircle(x - 3, COACH_Y + 24, 4).lineStyle(1.5, 0x3a2e2a, 0.8).strokeCircle(x - 3, COACH_Y + 24, 4);
+    this.coachG = this.add.graphics().setDepth(18);
     this.coachText = addText(this, x + 9, COACH_Y + 16, '', { size: 11, bold: true, color: '#2b2018', origin: [0, 0.5], wrap: w - 16, lineSpacing: 0 }).setDepth(19);
-    this.coachParts = [this.coachFace, g, this.coachText];
+    this.coachParts = [this.coachFace, this.coachG, this.coachText];
+    this.coachWidth(w);
     this.coachShown = '';
     this.coachIn = 0;
     this.setCoach('');
   }
 
+  // The thought bubble's width: narrower while a demo's Skip buttons sit at the end of its row.
+  coachWidth(w) {
+    const x = 34;
+    const g = this.coachG.clear();
+    g.fillStyle(0xffffff, 0.95).fillRoundedRect(x, COACH_Y, w, 32, 12).lineStyle(2, 0x3a2e2a, 0.8).strokeRoundedRect(x, COACH_Y, w, 32, 12);
+    g.fillStyle(0xffffff, 0.95).fillCircle(x - 3, COACH_Y + 24, 4).lineStyle(1.5, 0x3a2e2a, 0.8).strokeCircle(x - 3, COACH_Y + 24, 4);
+    this.coachText.setWordWrapWidth(w - 16, true);
+    this.coachShown = null; // re-fit the text
+  }
+
   // A short line in your own thought bubble for `ms` (tutorial tips), then the usual hints again.
-  think(text, ms = 4000) {
-    this.coachNote = { text, until: this.time.now + ms };
-    this.setCoach(text);
+  think(text, ms = 4000, color = null) {
+    this.coachNote = { text, until: this.time.now + ms, color };
+    this.setCoach(text, false, color);
   }
 
   // Day 1, before a customer hands you the turn: tools and cups can't be touched (an invisible
@@ -561,12 +570,12 @@ export default class StallScene extends Phaser.Scene {
     }
   }
 
-  setCoach(text, warn = false) {
+  setCoach(text, warn = false, color = null) {
     if (text === this.coachShown) return;
     this.coachShown = text;
     this.coachParts.forEach((o) => o.setVisible(!!text));
     if (!text) return;
-    this.coachText.setText(text).setColor(warn ? '#c8402c' : '#2b2018');
+    this.coachText.setText(text).setColor(color ?? (warn ? '#c8402c' : '#2b2018'));
     // two lines fit; anything longer shrinks a little
     this.coachText.setScale(1);
     if (this.coachText.height > 30) this.coachText.setScale(30 / this.coachText.height);
@@ -577,7 +586,7 @@ export default class StallScene extends Phaser.Scene {
   // customer wants and how to make it.
   updateCoach(delta) {
     if (this.demo) return this.setCoach(this.demo.say);
-    if (this.coachNote && this.time.now < this.coachNote.until) return this.setCoach(this.coachNote.text);
+    if (this.coachNote && this.time.now < this.coachNote.until) return this.setCoach(this.coachNote.text, false, this.coachNote.color);
     this.coachIn -= delta;
     if (this.coachIn > 0) return;
     this.coachIn = 200;
@@ -1062,7 +1071,7 @@ export default class StallScene extends Phaser.Scene {
     this.tweens.add({
       targets: p, k: 1, duration: ms,
       onUpdate: () => {
-        const h = 40 + 60 * Math.abs(Math.sin(p.k * Math.PI * TUNING.tarikPullsNeeded)); // up high, down low
+        const h = 26 + 44 * Math.abs(Math.sin(p.k * Math.PI * TUNING.tarikPullsNeeded)); // up high, down low (the mug stays under the faces)
         const top = rim - h;
         g.clear();
         g.lineStyle(5, 0xc8905a, 0.9).lineBetween(cx, top + 14, cx, rim); // the stream of teh
@@ -1114,8 +1123,10 @@ export default class StallScene extends Phaser.Scene {
       demo.cancelled = true;
       letGo();
     };
-    const skip = makeButton(this, GAME_W - 172, GAME_H - 40, 80, 32, 'Skip ▸', cancel, { size: 13, bold: true, fill: 0xbfe3c0 });
-    const skipAll = makeButton(this, GAME_W - 86, GAME_H - 40, 80, 32, 'Skip all', () => (save('demosOff', true), cancel()), { size: 13 });
+    // at the end of the thought-bubble row (round 5: down on the rail they covered Spoon, Cups and Bin)
+    const skip = makeButton(this, GAME_W - 170, COACH_Y, 78, 32, 'Skip ▸', cancel, { size: 13, bold: true, fill: 0xbfe3c0 });
+    const skipAll = makeButton(this, GAME_W - 86, COACH_Y, 78, 32, 'Skip all', () => (save('demosOff', true), cancel()), { size: 13 });
+    this.coachWidth(GAME_W - 170 - 6 - 34);
     // the ghost hand: the fingertip sits on the point it's "touching"
     const hand = addText(this, GAME_W / 2, GAME_H, '👆', { size: 34, origin: [0.32, 0.05] }).setDepth(depth + 1).setAlpha(0);
     const objs = [block, skip.bg, skip.txt, skipAll.bg, skipAll.txt, hand];
@@ -1137,6 +1148,7 @@ export default class StallScene extends Phaser.Scene {
         return;
       }
       released = true;
+      this.coachWidth(GAME_W - 34 - 8);
       block.disableInteractive();
       [skip.bg, skipAll.bg].forEach((o) => o.disableInteractive());
       this.tweens.add({ targets: [block, skip.bg, skip.txt, skipAll.bg, skipAll.txt], alpha: 0, duration: 150 });
@@ -1444,7 +1456,7 @@ export default class StallScene extends Phaser.Scene {
     const p = QUEUE_POS[Math.min(idx, QUEUE_POS.length - 1)];
     c.sprites.forEach((s, i) => {
       s.depthBias = -idx * 0.0002; // past the third spot the line shares a spot: the one in front still wins
-      this.walk(s, p.x - i * 14, p.feetY - (i % 2) * 3, i * 120);
+      this.walk(s, p.x - i * 20, p.feetY - (i % 2) * 3, i * 120);
     });
   }
 
@@ -1557,12 +1569,17 @@ export default class StallScene extends Phaser.Scene {
     // what someone says (teaching) gets a wide, short bubble, unless others stand at the counter too (a rush
     // of wide bubbles piled up over each other)
     const alone = this.spots.every((x) => !x || x === c);
-    const w = table ? tb.w : c.spot === 'all' || (kind === 'say' && alone) ? 200 : 114;
+    // a full counter: slimmer bubbles, so gaps show Ah Gong at his table behind (round 5)
+    const full = this.spots.filter(Boolean).length >= 3 && c.spot !== 'all';
+    const w = table ? tb.w : c.spot === 'all' || (kind === 'say' && alone) ? 200 : full ? 104 : 114;
     const x = Phaser.Math.Clamp(this.centerX(c) - w * (table ? tb.lean ?? 0.8 : 0.5), 4, GAME_W - w - 4);
     let words = layoutLine(this, text, x + pad, 0, w - pad * 2, (key) => this.openGlossary(key), { size: 12 });
-    if (words.height > 50) { // a long line: one size smaller, so a rush doesn't stack bubbles up into each other
+    // a long line: one size smaller (two if it still reaches the Pause / Recipes tabs), so a rush doesn't stack
+    // bubbles up into each other or over the tabs (round 5)
+    for (const [size, max] of [[11, 50], [10, table ? 999 : 66]]) {
+      if (words.height <= max) break;
       words.objects.forEach((o) => o.destroy());
-      words = layoutLine(this, text, x + pad, 0, w - pad * 2, (key) => this.openGlossary(key), { size: 11 });
+      words = layoutLine(this, text, x + pad, 0, w - pad * 2, (key) => this.openGlossary(key), { size });
     }
     if (words.terms) this.tapHintOnce();
     const extras = [];
@@ -1572,7 +1589,7 @@ export default class StallScene extends Phaser.Scene {
     }
     if (kind === 'order') h += 8; // patience bar
     h += extras.reduce((sum, o) => sum + o.height + 1, 0);
-    const y = table ? tb.y : BUBBLE_BOTTOM - h;
+    const y = table ? tb.y : Math.max(HUD_H + 28, BUBBLE_BOTTOM - h); // never over the tabs
     words.objects.forEach((o) => o.setY(o.y + y + pad));
     let ey = y + pad + words.height;
     for (const o of extras) {
@@ -1861,7 +1878,10 @@ export default class StallScene extends Phaser.Scene {
     c.sprites.forEach((s, i) => this.tweens.add({ targets: s, y: s.y - 10, duration: 110, yoyo: true, repeat: 1, delay: 300 + i * 50, ease: 'Quad.out' }));
   }
 
+  // How a cup went (and other short news) shows in your own thought bubble for a moment, not on the counter
+  // (round 5: "Perfect ×3!" sat on the machine labels).
   setFeedback(str) {
+    this.think(str, 2600, '#7a3a0a');
     this.feedback.setText(str).setAlpha(1);
     this.tweens.killTweensOf(this.feedback);
     this.tweens.add({ targets: this.feedback, alpha: 0, delay: 3000, duration: 600 });
