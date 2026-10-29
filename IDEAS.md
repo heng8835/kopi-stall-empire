@@ -27,3 +27,8 @@
   Gong hidden, bubbles stack); Chinese-only lines have no translation in the bubble; Uncle Tan's day-end line repeats;
   story characters not drawn in their own episodes; switching owner on Continue; group orders block a free counter;
   the feedback line covers counter-machine labels; Aunty Lim's art holds an iced cup.
+- Alpha 5 (2026-10-29) leftovers, parked: friendship levels that give more than tips (a regular's gift or story line);
+  a second machine with a skill (the kettle's poh pour, the Milk Pump dial already is one); the real second stall
+  (Month 2); Ah Gong's order changing while he waits; a mid-day reload rerolling who's waiting; combo payouts dropping
+  as the combo rises; the night "Next:" nudge switching items; emoji shop icons; small labels ("Condensed", "Evap (C)",
+  "Fame 25+"); the Horlicks tin clipped at the left edge.

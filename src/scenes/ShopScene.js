@@ -8,7 +8,8 @@ import { fitCamera } from '../systems/view.js';
 import { makeButton, layoutLine, showGlossary } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
 import { formatMoney } from '../systems/economy.js';
-import { shopState, buy, nextGoal, goalText } from '../systems/shop.js';
+import { shopState, buy, nextGoal, goalText, openingAisle } from '../systems/shop.js';
+import { showBoughtCard } from '../systems/cards.js';
 import { saveRun } from '../systems/run.js';
 import { playMusic } from '../systems/music.js';
 
@@ -35,7 +36,7 @@ export default class ShopScene extends Phaser.Scene {
   create(data) {
     fitCamera(this);
     this.run = data.run;
-    this.aisle = data.aisle ?? 'machine';
+    this.aisle = data.aisle ?? openingAisle(data.run); // something you can afford tonight first (round 5)
     this.scroll = 0;
     this.leaving = false; // Phaser reuses this scene object every night
     this.pending = null; // { id, at }: Buy tapped once, waiting for the confirming tap
@@ -85,6 +86,18 @@ export default class ShopScene extends Phaser.Scene {
     this.add.rectangle(0, LIST.bottom, GAME_W, GAME_H - LIST.bottom, 0x000000, 0.001).setOrigin(0).setDepth(DEPTH - 1).setInteractive();
 
     this.showAisle(this.aisle);
+    if (this.run.newStock?.length) this.time.delayedCall(800, () => this.showNewStock());
+  }
+
+  // Fame crossed a milestone today: Uncle Tan's new shelf, shown once.
+  showNewStock() {
+    const tiers = this.run.newStock;
+    this.run = { ...this.run, newStock: [] };
+    saveRun(this.run);
+    const rows = SHOP.filter((i) => tiers.includes(i.tier) && !i.gift && !this.run.owned?.includes(i.id)).map((i) => ({ icon: i.icon, name: i.name, text: i.fromDay && this.run.day < i.fromDay ? `Arrives Day ${i.fromDay}. ${i.text}` : i.text }));
+    if (!rows.length) return;
+    const shade = this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000, 0.5).setOrigin(0).setDepth(DEPTH + 20).setInteractive();
+    showBoughtCard(this, { title: `名气 ${Math.max(...tiers)}! New stock 新货到`, rows: rows.slice(0, 6), button: 'Let me see ▸', onClose: () => shade.destroy() });
   }
 
   quietNight() {
@@ -138,6 +151,7 @@ export default class ShopScene extends Phaser.Scene {
     this.list.add(addText(this, 12, 0, `${blurb.name} ${blurb.zh} · ${blurb.blurb}`, { size: 11, color: '#d8cbb5' }));
     let y = 18;
     for (const item of items) y += this.card(item, y) + 6;
+    y += this.teaserCard(y) + 6;
     this.listH = y;
     this.setScroll(0);
   }
@@ -168,7 +182,7 @@ export default class ShopScene extends Phaser.Scene {
       money: `${formatMoney(item.price)}`,
       owned: 'Owned ✓',
       fame: `🔒 Fame ${item.tier}`,
-      soon: 'Coming soon',
+      soon: item.fromDay ? `Arrives Day ${item.fromDay}` : 'Coming soon',
       gift: 'Gift · Day 21',
     }[state];
     const bw = 88;
@@ -179,6 +193,20 @@ export default class ShopScene extends Phaser.Scene {
     this.buttons[item.id] = { btn, label: label };
     this.list.add([btn.bg, btn.txt]);
     if (state === 'money') this.list.add(addText(this, x + w - bw / 2 - 8, y + h / 2 + 20, 'not enough yet', { size: 9, color: '#c8402c', origin: [0.5, 0] }));
+    return h;
+  }
+
+  // The empire, promised (round 5: nothing ever hinted at it): the empty stall next door, locked till Month 2.
+  teaserCard(y) {
+    const x = 8;
+    const w = GAME_W - 16;
+    const h = 84;
+    const bg = this.add.rectangle(x, y, w, h, 0x2b2420, 0.88).setOrigin(0).setStrokeStyle(2, 0xf2c14e, 0.9);
+    const icon = addText(this, x + 26, y + h / 2, '🏪', { size: 26, origin: 0.5 });
+    const name = addText(this, x + 52, y + 8, 'Stall 2 · 第二间档口', { size: 14, bold: true, color: '#f2c14e' });
+    const text = addText(this, x + 52, y + 28, 'FOR RENT next door. Finish Month 1 with 名气 70+ for the Empire ending… and a second stall.', { size: 11, color: '#fff6dc', wrap: w - 52 - 96 });
+    const lock = addText(this, x + w - 52, y + h / 2, '🔒\nMonth 2', { size: 11, bold: true, color: '#d8cbb5', origin: 0.5, align: 'center' });
+    this.list.add([bg, icon, name, text, lock]);
     return h;
   }
 

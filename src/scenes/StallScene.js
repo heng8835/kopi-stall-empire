@@ -42,6 +42,10 @@ import { liquidColor } from '../systems/cup.js';
 import { hearts, befriend, friendTip, friendPatience, waitLine, WAIT_LINE_AT, MAX_HEARTS } from '../systems/friends.js';
 import { playMusic, storyMusic, endStoryMusic } from '../systems/music.js';
 import { EPISODE_MUSIC } from '../data/music.js';
+import { dayDifficulty, pickTwist, twistWeight, dailyGoal, goalProgress, milestonesCrossed, MILESTONES } from '../systems/difficulty.js';
+import { GOAL_REWARD } from '../data/twists.js';
+import { pullHeight, gradePull, pullCup } from '../systems/tarik.js';
+import { SHOP } from '../data/shop.js';
 
 // The kopi stall, seen from behind the counter: customers across the counter at the top,
 // a tray of 3 cup spots in the middle, and the tools along the bottom. Drinks are made by
@@ -119,6 +123,7 @@ export default class StallScene extends Phaser.Scene {
     this.flags = [...this.run.flags];
     this.owner = OWNERS[this.registry.get('owner') ?? load('owner', 'mei')] ?? OWNERS.mei;
     this.econ = createDayState({ money: this.run.money, fame: this.run.fame });
+    this.fameSeen = this.econ.fame; // fame milestones (milestoneCheck)
     // everything bought in the night shop (src/data/shop.js), added up
     this.perks = perks(this.run.owned);
     this.queueMax = TUNING.queueMax + this.perks.queueBonus;
@@ -136,7 +141,12 @@ export default class StallScene extends Phaser.Scene {
     this.freshFeatures = machineLessons.flatMap((l) => l.features);
     // Today's arrivals: every regular with something to drink comes once at their usual time, and
     // random walk-ins fill up the rest. More fame, more customers (a group counts as one arrival).
-    const regulars = CUSTOMERS.filter((c) => c.regular && c.enabled && c.sprite && (c.fromDay ?? 1) <= this.day && ordersFor(c.orders, this.day, this.perks.features, this.freshFeatures).length); // (a drink taught later today: they come once it is)
+    // today's challenge, twist and goal (systems/difficulty.js; round 5: "too easy, nothing to chase")
+    this.diff = dayDifficulty(this.day);
+    this.twist = pickTwist(this.day);
+    this.goal = dailyGoal(this.day, this.twist);
+    const visits = (c) => !c.everyDays || this.day <= 2 || this.day % c.everyDays === 0;
+    const regulars = CUSTOMERS.filter((c) => c.regular && c.enabled && c.sprite && visits(c) && (c.fromDay ?? 1) <= this.day && ordersFor(c.orders, this.day, this.perks.features, this.freshFeatures).length); // (a drink taught later today: they come once it is)
     this.arrivals = daySchedule({
       total: customersForFame(this.econ.fame) + this.perks.extraCustomers,
       regulars,
@@ -144,8 +154,15 @@ export default class StallScene extends Phaser.Scene {
       start: TUNING.firstSpawnMs,
       end: TUNING.dayMs - TUNING.lastSpawnBeforeEndMs,
       jitter: TUNING.spawnJitter,
-      rushGap: TUNING.rushGapMs,
+      rushGap: this.diff.rushGap,
+      rushMax: this.diff.rushMax,
     });
+    const rush = this.twist?.rush;
+    if (rush) {
+      const at = (m) => Math.round((m / 720) * TUNING.dayMs);
+      for (let i = 0; i < rush.n; i++) this.arrivals.push({ at: at(rush.from + ((rush.to - rush.from) * i) / rush.n), id: null });
+      this.arrivals.sort((a, b) => a.at - b.at);
+    }
     this.cameToday = new Set(); // regulars (and guests) who have already been in today
     this.leftAt = new Map(); // walk-in kind -> when one last left (spawnCustomer)
     this.friends = { ...(this.run.friends ?? {}) }; // friendship with every kind of customer (systems/friends.js)
@@ -225,6 +242,7 @@ export default class StallScene extends Phaser.Scene {
       const reveal = !midDayOf(this.run) && (this.run.bought ?? []).length;
       this.time.delayedCall(data?.morning ? (reveal ? 2700 : 1900) : 500, () => {
         if (reveal) this.whenCalm(() => this.revealBought());
+        if (!midDayOf(this.run) && (this.twist || this.goal)) this.whenCalm(() => this.showToday());
         this.whenCalm(() => this.playStory('start'), false, 'story');
       });
     }
@@ -272,6 +290,7 @@ export default class StallScene extends Phaser.Scene {
       .sort((a, b) => a.at - b.at);
     const ep = m.guestOwed && EVENTS.find((e) => e.id === m.guestOwed.id);
     if (ep) this.time.delayedCall(1500, () => this.bringGuest({ ...ep, noTitle: m.guestOwed.noTitle }));
+    this.drawGoalChip();
     const back = UI.welcomeBack.replace('{time}', dayClock(this.clockMs));
     this.time.delayedCall(900, () => this.setFeedback(back));
   }
@@ -545,14 +564,20 @@ export default class StallScene extends Phaser.Scene {
 
   // ---------- the coach: the owner thinks out loud about the next step ----------
 
+  // The thought bubble's usual width: it leaves room for today's goal chip at the end of the row.
+  coachFullW() {
+    return GAME_W - 34 - 8 - (this.goal ? 68 : 0);
+  }
+
   drawCoach() {
     const x = 34;
-    const w = GAME_W - x - 8;
+    const w = this.coachFullW();
     this.coachFace = addSprite(this, this.owner.sprite, 17, COACH_Y + 34, 34).setDepth(18);
     this.coachG = this.add.graphics().setDepth(18);
     this.coachText = addText(this, x + 9, COACH_Y + 16, '', { size: 11, bold: true, color: '#2b2018', origin: [0, 0.5], wrap: w - 16, lineSpacing: 0 }).setDepth(19);
     this.coachParts = [this.coachFace, this.coachG, this.coachText];
     this.coachWidth(w);
+    this.drawGoalChip();
     this.coachShown = '';
     this.coachIn = 0;
     this.setCoach('');
@@ -956,7 +981,7 @@ export default class StallScene extends Phaser.Scene {
     if (t.kind === 'pour' && this.dosed(t) && slot?.cup) this.openDial(slot, t.ingredient);
     if (t.kind === 'stir' && slot?.cup?.base) this.autoStir(slot); // drop the spoon on a cup: it stirs itself
     else if (t.kind === 'stir' && slot?.cup) this.think('Pour the kopi or teh first, then stir', 2500);
-    if (t.kind === 'tarik' && slot?.cup?.base) this.autoTarik(slot); // drop the mugs on a cup: it's pulled
+    if (t.kind === 'tarik' && slot?.cup?.base) this.demo ? this.autoTarik(slot) : this.openTarik(slot); // drop the mugs on a cup: pull it yourself
     if (t.kind === 'rack' && slot && !slot.cup) this.placeCup(slot);
     // let go of the pot short of the line: a little nudge right there on the cup
     const poured = (this.pouring?.tool === tool && this.pouring.slot) || tool.pouredSlot;
@@ -1112,6 +1137,70 @@ export default class StallScene extends Phaser.Scene {
     this.time.delayedCall(ms, () => (slot.pulling = false));
   }
 
+  // ---------- teh tarik: the pull (systems/tarik.js) ----------
+
+  // The mugs were dropped on a cup: hold anywhere to lift the mug high, let go in the green. A few pulls froth it.
+  openTarik(slot) {
+    if (this.tarik || this.dial || !slot?.cup) return;
+    this.focusSlot = slot;
+    const catcher = this.add.rectangle(0, 0, GAME_W, GAME_H, 0x000000, 0.001).setOrigin(0).setDepth(54).setInteractive();
+    const g = this.add.graphics().setDepth(56);
+    const t = (this.tarik = { slot, cup: slot.cup, ms: 0, holding: false, idle: 0, parts: [catcher, g], g });
+    catcher.on('pointerdown', () => ((t.holding = true), (t.ms = 0), (t.idle = 0)));
+    catcher.on('pointerup', () => t.holding && this.releasePull());
+    this.think(UI.tarikHow, 5000);
+    play('pickup');
+  }
+
+  releasePull() {
+    const t = this.tarik;
+    if (!t) return;
+    t.holding = false;
+    const grade = gradePull(pullHeight(t.ms));
+    pullCup(t.cup, grade);
+    play(grade === 'splash' ? 'oops' : 'pour');
+    const [word, color] = { good: ['Shiok pull!', '#a8f0a0'], short: ['Higher!', '#ffe7a8'], splash: ['Splash! Too high', '#ff8a7a'] }[grade];
+    this.cupPop(t.slot, word, color, '#3a2414');
+    t.ms = 0;
+    this.recheckCup(t.slot);
+    if (t.cup.froth >= 1) {
+      if (t.cup.tarikMaster) this.time.delayedCall(450, () => this.cupPop(t.slot, 'Tarik master!', '#ffd23a', '#5a2e0e', 'perfect'));
+      this.closeTarik();
+    }
+  }
+
+  updateTarik(delta) {
+    const t = this.tarik;
+    if (t.slot.cup !== t.cup) return this.closeTarik(); // served or binned meanwhile
+    if (t.holding) {
+      t.ms += delta;
+      if (pullHeight(t.ms) > 1.15) this.releasePull(); // held far too long: it splashes by itself
+    } else if ((t.idle += delta) > 6000) return this.closeTarik(); // walked away: drop the mugs on it again later
+    if (!this.tarik) return;
+    const h = Math.min(1.15, pullHeight(t.ms));
+    const { x } = t.slot;
+    const rim = CUP_BOTTOM - CUP_H + 4;
+    const top = rim - 22 - 60 * h; // the mug never rises over the faces (round 5)
+    const g = t.g.clear();
+    if (t.holding) g.lineStyle(5, 0xc8905a, 0.9).lineBetween(x + 6, top + 14, x + 6, rim);
+    g.fillStyle(0x3a2e2a, 1).fillRoundedRect(x - 8, top - 18, 28, 30, 6);
+    g.fillStyle(0xc9ced4, 1).fillRoundedRect(x - 6, top - 16, 24, 26, 5);
+    g.fillStyle(0xeef1f4, 1).fillRect(x - 3, top - 13, 4, 18);
+    // the meter beside the cup: the green band is a good pull, red is too high
+    const mx = x + (x > GAME_W - 70 ? -44 : 40);
+    const [lo, hi] = TUNING.tarik.band;
+    const y = (k) => rim - 4 - 70 * k;
+    g.fillStyle(0x2b2420, 0.85).fillRoundedRect(mx - 7, y(1.15) - 3, 14, y(0) - y(1.15) + 6, 4);
+    g.fillStyle(0x66bb6a, 1).fillRect(mx - 5, y(hi), 10, y(lo) - y(hi));
+    g.fillStyle(0xe57368, 1).fillRect(mx - 5, y(1.15), 10, y(1) - y(1.15));
+    g.fillStyle(0xffffff, 1).fillRect(mx - 9, y(h) - 2, 18, 4);
+  }
+
+  closeTarik() {
+    this.tarik?.parts.forEach((o) => o.destroy());
+    this.tarik = null;
+  }
+
   tarikCup(slot) {
     tarikStep(slot.cup);
     play('pour');
@@ -1151,6 +1240,7 @@ export default class StallScene extends Phaser.Scene {
     const skip = makeButton(this, GAME_W - 170, COACH_Y, 78, 32, 'Skip ▸', cancel, { size: 13, bold: true, fill: 0xbfe3c0 });
     const skipAll = makeButton(this, GAME_W - 86, COACH_Y, 78, 32, 'Skip all', () => (save('demosOff', true), cancel()), { size: 13 });
     this.coachWidth(GAME_W - 170 - 6 - 34);
+    this.goalChip?.forEach((o) => o.setVisible(false));
     // the ghost hand: the fingertip sits on the point it's "touching"
     const hand = addText(this, GAME_W / 2, GAME_H, '👆', { size: 34, origin: [0.32, 0.05] }).setDepth(depth + 1).setAlpha(0);
     const objs = [block, skip.bg, skip.txt, skipAll.bg, skipAll.txt, hand];
@@ -1172,7 +1262,8 @@ export default class StallScene extends Phaser.Scene {
         return;
       }
       released = true;
-      this.coachWidth(GAME_W - 34 - 8);
+      this.coachWidth(this.coachFullW());
+      this.goalChip?.forEach((o) => o.setVisible(true));
       block.disableInteractive();
       [skip.bg, skipAll.bg].forEach((o) => o.disableInteractive());
       this.tweens.add({ targets: [block, skip.bg, skip.txt, skipAll.bg, skipAll.txt], alpha: 0, duration: 150 });
@@ -1390,10 +1481,12 @@ export default class StallScene extends Phaser.Scene {
     let place = this.placeFor(def);
     const seat = def.slot === 'table' ? 0 : 1;
     if (def.sits && this.tableGuests[1] === null && Math.random() < SIT_CHANCE) place = 'table'; // Second Table, sometimes by choice
-    const orderText = forcedOrder ?? (def.regular ? regularOrder(def.usual, this.menuOf(def), TUNING.regularVariety) : weightedPick(this.menuOf(def)).text);
+    // a twist tilts what walk-ins order (rain: hot drinks, heatwave: peng)
+    const menu = this.menuOf(def).map((o) => ({ ...o, weight: (o.weight ?? 1) * twistWeight(this.twist, parseOrder(o.text)) }));
+    const orderText = forcedOrder ?? (def.regular ? regularOrder(def.usual, this.menuOf(def), TUNING.regularVariety) : weightedPick(menu).text);
     if (!orderText) return null;
     this.cameToday.add(def.id);
-    const n = def.groupSize;
+    const n = def.groupSizes && !forcedOrder ? Phaser.Utils.Array.GetRandom(def.groupSizes) : def.groupSize;
     const c = {
       def,
       bornAt: this.time.now,
@@ -1409,7 +1502,7 @@ export default class StallScene extends Phaser.Scene {
       bubble: null,
       whole: n > 1 && !def.bulk, // needs the whole counter (a group); a bulk rider is one person with n cups
     };
-    c.patienceMax = c.patienceMs = def.patience * 1000 * TUNING.patienceScale * this.perks.patienceMult * friendPatience(c.hearts);
+    c.patienceMax = c.patienceMs = def.patience * 1000 * this.diff.patienceScale * (this.twist?.patience ?? 1) * this.perks.patienceMult * friendPatience(c.hearts);
     c.orderLine = pickLine(def.lines, 'order', this.lineVars({ order: orderText, n, plain: plainOrder(c.spec), hot: !c.spec.iced }));
 
     if (place === 'table') {
@@ -1741,7 +1834,10 @@ export default class StallScene extends Phaser.Scene {
     let perkNote = null;
     if (tier !== 'oops') {
       const hot = !c.spec.iced && !MALT.includes(c.spec.base);
-      const parts = [['Tip Jar', Math.round((res.tip * (this.perks.tipMult - 1)) / 5) * 5], ['Cup Warmer', hot ? this.perks.hotTip : 0], ['Ice Machine', c.spec.iced ? this.perks.icedTip : 0]].filter(([, v]) => v > 0);
+      const parts = [
+        ['Tip Jar', Math.round((res.tip * (this.perks.tipMult - 1)) / 5) * 5], ['Cup Warmer', hot ? this.perks.hotTip : 0], ['Ice Machine', c.spec.iced ? this.perks.icedTip : 0],
+        [this.twist?.name, c.spec.iced ? this.twist?.icedTip ?? 0 : 0], ['Tarik master', tier === 'perfect' && cup.tarikMaster ? TUNING.tarikMasterTip : 0],
+      ].filter(([, v]) => v > 0);
       const extra = parts.reduce((sum, [, v]) => sum + v, 0);
       // your upgrades at work, by name, a moment after the main coins
       if (parts.length) perkNote = parts.map(([n, v]) => `${n} +${v}¢`).join(' · '); // floats after the coins
@@ -1754,6 +1850,12 @@ export default class StallScene extends Phaser.Scene {
       }
     }
     const fTip = Math.round(friendTip(c.hearts, tier, res.tip) / 5) * 5; // whole 5¢ (round 5: $3.53)
+    if (tier === 'perfect' && !cup.demo) {
+      // today's goal counts these (goalCheck); the inspector likes a perfect cup
+      if (c.spec.iced) this.econ.icedPerfect = (this.econ.icedPerfect ?? 0) + 1;
+      else this.econ.hotPerfect = (this.econ.hotPerfect ?? 0) + 1;
+      if (this.twist?.perfectFame) this.econ.fame = clampFame(this.econ.fame + this.twist.perfectFame);
+    }
     if (fTip) {
       res.tip += fTip;
       this.econ.money += fTip;
@@ -1787,6 +1889,7 @@ export default class StallScene extends Phaser.Scene {
     const why = reasons.length ? ` — ${reasons.slice(0, 2).join(', ')}` : '';
     const pay = tier === 'oops' ? '  (not their drink: no charge)' : `  +${formatMoney(res.paid + res.tip)}`;
     this.setFeedback(`${label}${why}${pay}`);
+    this.goalCheck();
     this.refreshHud();
 
     if (c.served < c.n) {
@@ -1815,6 +1918,7 @@ export default class StallScene extends Phaser.Scene {
     play('walkout');
     this.showBubble(c, pickLine(c.def.lines, 'timeout', this.lineVars()), 'reaction');
     this.setFeedback('They wandered off... 名气 -1');
+    this.goalCheck();
     this.refreshHud();
     this.time.delayedCall(1600, () => this.leave(c));
   }
@@ -1961,6 +2065,11 @@ export default class StallScene extends Phaser.Scene {
     const mx = this.dayBar.x + (this.clockMs / TUNING.dayMs) * this.dayBar.w;
     this.dayMarker.clear().fillStyle(0xc8402c, 1).fillRect(mx - 1.5, this.dayBar.y - 3, 3, this.dayBar.h + 6);
     this.hudFame.setText(`名气 ${Math.floor(this.econ.fame)}`);
+    if (this.econ.fame > this.fameSeen) {
+      const hit = milestonesCrossed(this.fameSeen, this.econ.fame, this.run.milestones ?? []);
+      this.fameSeen = this.econ.fame;
+      hit.forEach((m) => this.milestone(m));
+    }
     this.hudMoney.setText(formatMoney(this.econ.money));
     this.hudCoin.setX(GAME_W - 8 - this.hudMoney.width - this.hudCoin.displayWidth / 2 - 4); // a gap between coin and amount
   }
@@ -1968,6 +2077,7 @@ export default class StallScene extends Phaser.Scene {
   update(time, delta) {
     if (this.paused) return;
     if (this.dial) this.updateDial(delta);
+    if (this.tarik) this.updateTarik(delta);
     for (const s of this.slots) {
       s.art.update(s.cup, delta, this.pouring?.slot === s ? { ingredient: this.pouring.tool.tool.ingredient } : null, this.targetFill(s));
       s.art.draw();
@@ -2008,7 +2118,8 @@ export default class StallScene extends Phaser.Scene {
     const empty = !this.allCustomers().length && !this.queue.length && !this.popups.length && !this.closing;
     // ...and while the ghost hand shows a recipe (round 3: a demo burned 2-3 hours of the day)
     // nobody left to come today either: straight on to closing time
-    const speed = !empty ? 1 : this.arrivals.length ? TUNING.emptyClockSpeed : TUNING.emptyCloseSpeed;
+    this.emptyMs = empty ? (this.emptyMs ?? 0) + delta : 0; // a moment's breather first: the clock only hurries once it's really quiet
+    const speed = !empty || this.emptyMs < TUNING.emptyWaitMs ? 1 : this.arrivals.length ? TUNING.emptyClockSpeed : TUNING.emptyCloseSpeed;
     if (!teaching && !this.demo) this.clockMs = Math.min(TUNING.dayMs, this.clockMs + delta * speed);
     this.idleCheck(delta);
     this.refreshHud();
@@ -2236,7 +2347,7 @@ export default class StallScene extends Phaser.Scene {
 
   // Hands free: nothing held, poured, dosed, demoed or already open on top.
   calm() {
-    return !this.paused && !this.demo && !this.dragging && !this.pouring && !this.dial && !this.ended && !this.input.activePointer.isDown && !this.scene.isActive('Drama');
+    return !this.paused && !this.demo && !this.dragging && !this.pouring && !this.dial && !this.tarik && !this.ended && !this.input.activePointer.isDown && !this.scene.isActive('Drama');
   }
 
   // A card / demo / story that must not land mid-action: it opens once the stall has been calm a moment.
@@ -2266,7 +2377,7 @@ export default class StallScene extends Phaser.Scene {
   // The Pause tab (and auto-pause: the tab hidden, or no touch for a while): the stall stops under a
   // dim sheet until a tap. Never over a card, a story or the Day-1 lessons, which pause the day already.
   pauseGame(idle = false) {
-    if (this.paused || this.ended || this.demo || this.dial || this.scene.isActive('Drama') || !this.scene.isActive()) return;
+    if (this.paused || this.ended || this.demo || this.dial || this.tarik || this.scene.isActive('Drama') || !this.scene.isActive()) return;
     this.dragging = 0;
     this.pauseFor((resume) => {
       const shade = this.add.rectangle(0, 0, GAME_W, GAME_H, 0x1a1410, 0.55).setOrigin(0).setDepth(90).setInteractive();
@@ -2292,6 +2403,73 @@ export default class StallScene extends Phaser.Scene {
       this.idleMs = 0;
       this.pauseGame(true);
     }
+  }
+
+  // ---------- today: twist, goal, milestones ----------
+
+  // The morning card: today's twist (if any) and today's goal.
+  showToday() {
+    const rows = [];
+    if (this.twist) rows.push({ icon: this.twist.icon, name: `${this.twist.name} · ${this.twist.zh}`, text: this.twist.text });
+    if (this.goal) rows.push({ icon: '🎯', name: `Today's goal: ${this.goal.text}`, text: UI.goalReward.replace('{reward}', formatMoney(GOAL_REWARD.cents)).replace('{fame}', GOAL_REWARD.fame) });
+    if (!rows.length || this.ended) return;
+    this.pauseFor((resume) => showBoughtCard(this, { title: `Day ${this.day} · 今天`, rows, button: UI.todayGo, onClose: resume }));
+  }
+
+  goalStats() {
+    const e = this.econ;
+    return { perfect: this.madeCups()[0], bestStreak: e.bestStreak ?? 0, hot: e.hotPerfect ?? 0, iced: e.icedPerfect ?? 0, walkedOut: e.walkedOut ?? 0, closed: this.ended };
+  }
+
+  // After every serve, walk-out and at closing: is today's goal done? It pays once.
+  goalCheck() {
+    if (!this.goal) return;
+    const p = goalProgress(this.goal, this.goalStats());
+    if (p.done && !this.econ.goalDone) {
+      const e = this.econ;
+      e.goalDone = true;
+      e.money += GOAL_REWARD.cents;
+      e.earnedToday += GOAL_REWARD.cents;
+      e.tipsToday += GOAL_REWARD.cents;
+      e.fame = clampFame(e.fame + GOAL_REWARD.fame);
+      if (!this.ended) this.bigPop(UI.goalDone.replace('{reward}', formatMoney(GOAL_REWARD.cents)), '#9ff0a0');
+    }
+    this.drawGoalChip(p);
+  }
+
+  // Today's goal at the end of the thought-bubble row: 🎯 3/6 (tap it for the goal in words).
+  drawGoalChip(p = null) {
+    if (!this.goal) return;
+    p ??= goalProgress(this.goal, this.goalStats());
+    if (!this.goalChip) {
+      const x = GAME_W - 8 - 62;
+      const bg = this.add.rectangle(x, COACH_Y, 62, 32, 0xfff3d6).setOrigin(0).setStrokeStyle(2, COLORS.inkHex).setDepth(18);
+      const t = addText(this, x + 31, COACH_Y + 16, '', { size: 12, bold: true, origin: 0.5 }).setDepth(19);
+      bg.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.think(`Today's goal: ${this.goal.text}`, 3500));
+      this.goalChip = [bg, t];
+    }
+    const [bg, t] = this.goalChip;
+    const done = this.econ.goalDone;
+    t.setText(done ? '🎯 ✓' : p.failed ? '🎯 ✗' : this.goal.kind === 'noWalkout' ? '🎯 0 left' : `🎯 ${p.n}/${this.goal.target}`);
+    bg.setFillStyle(done ? 0xbfe3c0 : p.failed ? 0xe0d6c4 : 0xfff3d6);
+  }
+
+  // Fame crossed a milestone: a big moment now, and new stock in tonight's shop (ShopScene shows it).
+  milestone(m) {
+    this.run.milestones = [...(this.run.milestones ?? []), m];
+    this.run.newStock = [...(this.run.newStock ?? []), m];
+    const n = SHOP.filter((i) => i.tier === m).length;
+    this.bigPop(UI.milestone.replace('{fame}', m).replace('{n}', n), '#ffd23a', true);
+  }
+
+  // A big line across the middle of the stall, with a cheer (a goal done, a fame milestone).
+  bigPop(str, color, shake = false) {
+    play('cheer');
+    if (shake) this.cameras.main.shake(180, 0.004);
+    const t = addText(this, GAME_W / 2, 236, str, { size: 18, bold: true, color, origin: 0.5, align: 'center', wrap: 320 }).setDepth(75);
+    t.setStroke('#3a2414', 6).setScale(0.3);
+    this.tweens.add({ targets: t, scale: 1, duration: 280, ease: 'Back.out' });
+    this.tweens.add({ targets: t, y: 206, alpha: 0, delay: 2200, duration: 500, onComplete: () => t.destroy() });
   }
 
   // The morning after the night shop: last night's buys, shown off, then the tools they change pulse.
@@ -2510,6 +2688,7 @@ export default class StallScene extends Phaser.Scene {
     this.queue = [];
     this.tableGuests = this.tableGuests.map(() => null);
     this.setFeedback(UI.closing);
+    this.goalCheck(); // "nobody walks out" is judged now
     this.rating = this.todayRating();
     // tonight's story first (with the stall still open behind it), then the shutter, then the summary
     const owed = this.guestEpisode;
@@ -2557,6 +2736,7 @@ export default class StallScene extends Phaser.Scene {
     line(`Aunty Lim rates your day: ${this.rating}/10 (${madePerfect} of ${made} cups you made perfect${byDemo})`, { size: 12, color: '#7a4a12' }, 4);
     if ((e.bestStreak ?? 0) >= 3) line(`Best combo ×${e.bestStreak}`, { size: 12, color: '#c27a12', bold: true }, 8);
     if (e.perkEarned) line(`Your upgrades earned +${formatMoney(e.perkEarned)} today`, { size: 12, color: '#2f7a3a', bold: true }, 6);
+    if (this.goal) line(`🎯 ${this.goal.text}: ${e.goalDone ? `done! +${formatMoney(GOAL_REWARD.cents)} · 名气 +${GOAL_REWARD.fame}` : 'not this time'}`, { size: 12, color: e.goalDone ? '#2f7a3a' : '#6b5a50', bold: true }, 6);
     const ROWS = 4;
     const bits = (r) => [r.perfect && `${r.perfect} perfect`, r.close && `${r.close} close`, r.oops && `${r.oops} oops`, r.walkedOut && `${r.walkedOut} left`].filter(Boolean).join(', ');
     sum.perCustomer.slice(0, ROWS).forEach((r, i) => line(`${r.name}: ${bits(r)}`, { size: 12, align: 'left' }, 2, left, i >= 2 ? 4 : 0));
@@ -2576,8 +2756,12 @@ export default class StallScene extends Phaser.Scene {
       const goal = goalText(nextGoal(tomorrow));
       if (goal) line(goal, { size: 12, color: '#2f5f8a', bold: true }, 4);
       // the month so far, and what it's all for
+      const ms = MILESTONES.find((m) => e.fame < m);
+      if (ms) line(`Next milestone: 名气 ${ms}: ${SHOP.filter((i) => i.tier === ms).length} new things in the shop`, { size: 12, color: '#8a5a1e' }, 4, null, 5);
       const filled = Math.max(1, Math.round((this.day / MONTH_DAYS) * 15)); // 15 blocks: it moves every other day
-      line(`${'▰'.repeat(filled)}${'▱'.repeat(15 - filled)}  Day ${this.day}/${MONTH_DAYS} · Uncle Tan's tin: Day 30`, { size: 12, color: '#7a4a12' }, 8);
+      line(`${'▰'.repeat(filled)}${'▱'.repeat(15 - filled)}  Day ${this.day}/${MONTH_DAYS}`, { size: 12, color: '#7a4a12' }, 2);
+      // what the month is for (round 5: nothing pointed at the empire)
+      line(`Day 30: Uncle Tan's tin · 名气 70: a second stall`, { size: 11, color: '#7a4a12' }, 8, null, 6);
     }
     const dev = import.meta.env.DEV;
     const chrome = 16 + 8 + 54 + 6 + 30 + 6 + (dev ? 28 + 6 : 0) + 8; // padding and buttons

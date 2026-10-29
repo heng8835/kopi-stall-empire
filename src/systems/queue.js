@@ -46,7 +46,7 @@ export function bunch(times, gap, end, rand = Math.random) {
 // The first walk-in always comes right at `start`. The rest come in little rushes (rushGap ms apart,
 // 1-3 at a time), each one dropped into the longest quiet stretch left between the arrivals so far
 // (playtest round 3: the regulars bunch up late, and an even spread left the afternoon empty).
-export function daySchedule({ total, regulars, dayMs, start, end, jitter, rushGap = 0, rand = Math.random }) {
+export function daySchedule({ total, regulars, dayMs, start, end, jitter, rushGap = 0, rushMax = 3, rand = Math.random }) {
   const msPerMin = dayMs / 720;
   const regs = regulars.map(({ id, window: [from, to] }) => {
     const at = (from + rand() * (to - from)) * msPerMin;
@@ -60,7 +60,7 @@ export function daySchedule({ total, regulars, dayMs, start, end, jitter, rushGa
   }
   while (left > 0) {
     const r = rand();
-    const size = Math.min(left, !rushGap ? 1 : r < 0.35 ? 1 : r < 0.75 ? 2 : 3);
+    const size = Math.min(left, !rushGap ? 1 : r < 0.35 ? 1 : r < 0.75 ? 2 : r < 0.92 || rushMax < 4 ? 3 : 4);
     // the longest gap between everyone placed so far (and the end of the day)
     const times = [...regs.map((a) => a.at), ...walkIns, end].sort((a, b) => a - b);
     let gapAt = start;

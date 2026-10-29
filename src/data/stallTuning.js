@@ -12,7 +12,9 @@ export const TUNING = {
   spawnJitter: 0.35, // each arrival lands within +-35% of its even share of the day
   queueRetryMs: 3000, // queue full: try that arrival again this much later
   rushGapMs: 2500, // walk-ins come in little rushes of 1-3, this far apart (queue.js bunch)
-  emptyClockSpeed: 6, // nobody at the stall: the clock runs this much faster (no dead air)
+  rushGapHardMs: 1800, // ...from Day 4, closer together, and up to 4 at once (systems/difficulty.js)
+  emptyClockSpeed: 4, // nobody at the stall: the clock runs this much faster (no dead air)...
+  emptyWaitMs: 3000, // ...once it has been empty this long (round 5: one cup jumped 2:45 to 4pm)
   emptyCloseSpeed: 15, // ...and nobody left to come today: this fast, on to 7pm
   comeBackMs: 20_000, // a walk-in who just left isn't the next one in again for this long
   regularVariety: 0.25, // chance a regular orders something other than their usual
@@ -36,6 +38,7 @@ export const TUNING = {
   walkSpeed: 70, // logical px per second
   walkFarScale: 0.62, // size at the door (far away) vs 1 at the counter
   patienceScale: 1.9, // customer.patience (seconds) x this: chill, but a long wait shows (round 3: 2.2 had no tension)
+  patienceScaleHard: 1.45, // ...easing down to this by Day 10 (round 5: after Day 1 nobody's patience dropped below 76%)
   groupCupBonusMs: 8000, // patience given back after each cup of a group order
 
   // Pour speeds, in "units per second" while holding a tool over a cup.
@@ -48,6 +51,8 @@ export const TUNING = {
   autoStirMs: 1000, // dropping the spoon on a cup stirs it in this long
   dialSweepMs: 1400, // Sugar Scoop / Milk Pump / gula: the timing dial's needle crosses the bar in this long
   minDose: 0.3, // a sugar / milk drag let go over a cup before it poured still adds this much (SIEW DAI)
+  tarik: { riseMs: 900, band: [0.6, 1], good: 0.34, half: 0.17 }, // the pull: hold to lift, let go in the band (systems/tarik.js)
+  tarikMasterTip: 10, // cents for a teh tarik pulled three times in the green
   iceVolume: 0.25, // ice raises the level: peng = pour to the ¾ line, then ice
 };
 

@@ -5,7 +5,8 @@
 //   usual       their usual order, oldest first: they drink the newest one the menu can make today
 //   weight      walk-ins: how often this kind shows up (relative)
 //   patience    seconds they wait at the counter before wandering off (gently)
-//   groupSize   cups in one order (the sec school kids order 4 at once)
+//   groupSize   cups in one order (the sec school kids order 4 at once); groupSizes = a pick of sizes for
+//               their own visits · everyDays: a regular who comes only every n days (after Day 2)
 //   lines       key into src/i18n/lines.js
 //   sprite      HD sprite key (src/data/spriteSizes.json); groups may list one per member in sprites
 //   slot        'counter' (default, queues at the counter) or 'table' (sits at the side table)
@@ -79,6 +80,8 @@ export const CUSTOMERS = [
     usual: ['Milo Dinosaur'],
     patience: 50,
     groupSize: 4,
+    everyDays: 2, // not every evening (round 5: 4 Milo Dinosaurs blocked the counter Day 2-6)
+    groupSizes: [2, 3, 4], // on their own visits, 2-4 of them come (the story always brings all 4)
     orders: [
       { text: 'Milo Dinosaur', weight: 3 },
       { text: 'Milo', weight: 1 },

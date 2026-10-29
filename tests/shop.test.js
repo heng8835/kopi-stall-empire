@@ -18,7 +18,8 @@ describe('night shop', () => {
   it('knows what you can buy', () => {
     expect(shopState(itemById('fan'), run())).toBe('buy');
     expect(shopState(itemById('fan'), run({ money: 100 }))).toBe('money');
-    expect(shopState(itemById('neon'), run())).toBe('fame');
+    expect(shopState(itemById('neon'), run({ day: 20 }))).toBe('fame');
+    expect(shopState(itemById('neon'), run({ day: 5, fame: 80 }))).toBe('soon'); // not in stock till Day 18
     expect(shopState({ ...itemById('haliaPot'), soon: true }, run({ fame: 30 }))).toBe('soon');
     expect(SHOP.filter((i) => i.soon)).toEqual([]); // phase D: everything is buyable
     expect(shopState(itemById('towel'), run())).toBe('gift');
@@ -46,12 +47,19 @@ describe('night shop', () => {
 
 describe('nextGoal', () => {
   it('points at the cheapest machine in reach, with what is still to go', () => {
-    const g = nextGoal(run({ fame: 10, money: 1500 }));
+    const g = nextGoal(run({ fame: 10, money: 500 }));
     expect(g.item.aisle).toBe('machine');
     expect(g.item.tier).toBe(0);
     const cheapest = Math.min(...SHOP.filter((i) => i.aisle === 'machine' && i.tier === 0).map((i) => i.price));
     expect(g.item.price).toBe(cheapest);
-    expect(g.short).toBe(cheapest - 1500);
+    expect(g.short).toBe(cheapest - 500);
+  });
+  it('something affordable tonight beats a machine you cannot afford yet (round 5)', async () => {
+    const { openingAisle } = await import('../src/systems/shop.js');
+    const g = nextGoal(run({ day: 2, fame: 10, money: 1170 }));
+    expect(g.short).toBe(0);
+    expect(g.item.price).toBeLessThanOrEqual(1170);
+    expect(openingAisle(run({ day: 2, fame: 10, money: 1170 }))).toBe(g.item.aisle);
   });
   it('says 0 to go when it can be bought tonight', () => {
     expect(nextGoal(run({ fame: 10, money: 99999 })).short).toBe(0);

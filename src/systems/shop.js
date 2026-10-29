@@ -5,9 +5,10 @@ import { formatMoney } from './economy.js';
 export const itemById = (id) => SHOP.find((i) => i.id === id) ?? null;
 
 // 'owned' | 'soon' | 'gift' | 'fame' (not famous enough yet) | 'money' (can't afford) | 'buy'
+// (soon = not in stock yet: item.soon, or its fromDay hasn't come; run.day = the day it would be used)
 export function shopState(item, run) {
   if (run.owned?.includes(item.id)) return 'owned';
-  if (item.soon) return 'soon';
+  if (item.soon || (item.fromDay && (run.day ?? 1) < item.fromDay)) return 'soon';
   if (item.gift) return 'gift';
   if (run.fame < item.tier) return 'fame';
   if (run.money < item.price) return 'money';
@@ -60,18 +61,27 @@ export function perks(owned = []) {
 // (a new drink) the player is famous enough for, else the cheapest anything. { item, short } with
 // short = cents still to go (0 = can buy tonight), or { tier, unlocks } when everything in reach is owned.
 export function nextGoal(run) {
-  const open = SHOP.filter((i) => !i.gift && !i.soon && !run.owned?.includes(i.id));
+  const open = SHOP.filter((i) => !i.gift && !i.soon && !(i.fromDay && (run.day ?? 1) < i.fromDay) && !run.owned?.includes(i.id));
   const reach = open.filter((i) => run.fame >= i.tier);
   const cheapest = (list) => list.reduce((a, b) => (b.price < a.price ? b : a));
   const machines = reach.filter((i) => i.aisle === 'machine');
   if (reach.length) {
     const item = cheapest(machines.length ? machines : reach);
+    // something you can buy tonight beats a machine you can't afford yet (round 5: night 1 looked empty)
+    const now = reach.filter((i) => i.price <= run.money);
+    if (item.price > run.money && now.length) return { item: cheapest(now), short: 0 };
     return { item, short: Math.max(0, item.price - run.money) };
   }
   const later = open.filter((i) => i.tier > run.fame);
   if (!later.length) return null;
   const tier = Math.min(...later.map((i) => i.tier));
   return { tier, unlocks: later.filter((i) => i.tier === tier).length };
+}
+
+// The aisle the night shop opens on: the one with the cheapest thing you can buy tonight (else machines).
+export function openingAisle(run) {
+  const now = SHOP.filter((i) => shopState(i, run) === 'buy').sort((a, b) => a.price - b.price);
+  return now[0]?.aisle ?? 'machine';
 }
 
 // nextGoal as one line for the day-end card and the night shop.

@@ -118,7 +118,7 @@ export function nextStep(cup, spec, who) {
     if (sweet > want) return { text: `Too sweet for ${target.toLowerCase()}! Bin it and try again`, bin: true };
     const extra = extrasNext();
     if (extra) return extra;
-    if (spec.tarik && cup.froth < 1) return { text: 'Tarik! Drop the mugs on the cup (or pull them up and down over it)' };
+    if (spec.tarik && cup.froth < 1) return { text: 'Tarik! Drop the mugs on the cup, hold to lift, let go in the green' };
     if (needsStir(cup)) return { text: 'Drop the spoon on the cup to stir' };
   }
   if (peng && !cup.ice) return { text: 'Drop the ice in (it tops up to FULL)' };
