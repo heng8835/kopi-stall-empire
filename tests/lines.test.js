@@ -38,3 +38,17 @@ describe('lines', () => {
     expect(first.highlight.length).toBeGreaterThan(0);
   });
 });
+
+describe('lines fit the moment (rounds 4-5)', () => {
+  it('no "cold" line for a hot drink, no "lunch hour" line at breakfast', async () => {
+    const { pickLine, LINES } = await import('../src/i18n/lines.js');
+    const ids = Object.keys(LINES);
+    for (const id of ids) {
+      for (let r = 0; r < 1; r += 0.05) {
+        const hot = pickLine(id, 'order', { hot: true, hour: 8 }, () => r);
+        expect(hot).not.toMatch(/\bcold\b/i);
+        expect(hot).not.toMatch(/lunch/i);
+      }
+    }
+  });
+});

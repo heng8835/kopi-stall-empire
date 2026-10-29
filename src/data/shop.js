@@ -18,7 +18,7 @@ export const SHOP = [
   // machines
   { id: 'twinSock', aisle: 'machine', name: 'Twin Sock Stand', zh: '双咖啡袋架', price: 5500, tier: 25, icon: '☕', text: 'Brew kopi and teh side by side. Pour both into one cup: Cham!', effect: {}, unlocks: ['cham'] },
   { id: 'horlicksShelf', aisle: 'machine', name: 'Horlicks Shelf', zh: '好立克架', price: 3500, tier: 0, icon: '🥛', text: 'A tin of Horlicks on the rail. Horlicks, Horlicks peng, Horlicks Dinosaur.', effect: {}, unlocks: ['horlicks', 'horlicksDino'] },
-  { id: 'iceMachine', aisle: 'machine', name: 'Ice Machine', zh: '制冰机', price: 3500, tier: 25, icon: '🧊', text: 'Crystal-clear ice. Iced drinks earn +40¢.', effect: { icedTip: 40 } },
+  { id: 'iceMachine', aisle: 'machine', name: 'Ice Machine', zh: '制冰机', price: 3500, tier: 25, icon: '🧊', text: 'Your bucket is ice chipped by hand. The machine makes crystal-clear cubes all day: iced drinks earn +40¢.', effect: { icedTip: 40 } },
   { id: 'kettle', aisle: 'machine', name: 'Big Brass Kettle', zh: '大铜壶', price: 4500, tier: 0, icon: '🫖', text: 'Hot water on the rail. Kopi / teh poh (weak) and gao (strong): new orders the regulars love.', effect: {}, unlocks: ['gao', 'poh'] },
   { id: 'tarikMugs', aisle: 'machine', name: 'Tarik Mugs', zh: '拉茶杯', price: 4000, tier: 25, icon: '🍵', text: 'Pull teh between two mugs from up high until frothy: Teh tarik. The pakciks will love you.', effect: {}, unlocks: ['tarik'] },
   { id: 'haliaPot', aisle: 'machine', name: 'Halia Pot', zh: '姜茶壶', price: 3500, tier: 25, icon: '🫚', text: 'A pot of ginger brew on the counter. Teh halia, and Teh halia tarik for the pakciks.', effect: {}, unlocks: ['halia'] },
@@ -33,7 +33,7 @@ export const SHOP = [
   { id: 'sugarScoop', aisle: 'tool', name: 'Sugar Scoop', zh: '糖匙', price: 1500, tier: 0, icon: '🥄', text: 'Drop the scoop on a cup, then tap to stop the dial: siew dai, normal or ga dai in one go.', effect: { sugarScoop: true } },
   { id: 'milkPump', aisle: 'tool', name: 'Milk Pump', zh: '炼奶泵', price: 2000, tier: 25, icon: '🥫', text: 'Drop condensed or evap milk on a cup, then tap to stop the dial on the zone you want.', effect: { milkPump: true } },
   { id: 'brassSpoon', aisle: 'tool', name: 'Brass Spoon', zh: '铜汤匙', price: 1200, tier: 0, icon: '🥄', text: 'Stirs in 0.6 seconds instead of 1.', effect: { stirMs: 600 } },
-  { id: 'markedGlass', aisle: 'tool', name: 'Marked Glasses', zh: '刻度杯', price: 1000, tier: 0, icon: '🥃', text: 'Every glass shows its ¾ PENG and FULL lines, labelled, even with an order on it.', effect: { marked: true } },
+  { id: 'markedGlass', aisle: 'tool', name: 'Marked Glasses', zh: '刻度杯', price: 1000, tier: 0, icon: '🥃', text: 'Every glass shows its ¾ +ICE and FULL lines, labelled, even with an order on it.', effect: { marked: true } },
   { id: 'cupRack', aisle: 'tool', name: 'Cup Rack Pro', zh: '自动杯架', price: 1800, tier: 25, icon: '🗄️', text: 'After you serve, a fresh cup drops onto that plate.', effect: { autoCup: true } },
   { id: 'towel', aisle: 'tool', name: "Uncle Tan's Towel", zh: '陈伯毛巾', price: 0, tier: 0, icon: '🧣', text: 'A gift on Day 21. The first spill each day is forgiven.', effect: { towel: true }, gift: true },
   // comfort

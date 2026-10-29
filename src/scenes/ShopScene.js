@@ -191,7 +191,7 @@ export default class ShopScene extends Phaser.Scene {
     }
     const b = id && this.buttons[id];
     if (b) {
-      b.btn.txt.setText('Tap to confirm');
+      b.btn.txt.setText('Confirm? ✓'); // (round 5: "Tap to confirm" spilled out of the button)
       b.btn.bg.setFillStyle(0xf2c14e);
     }
   }

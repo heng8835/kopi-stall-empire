@@ -35,8 +35,8 @@ describe('demo: the ghost hand makes every order perfectly', () => {
   it('says each step in plain words and ends by handing over', () => {
     const steps = demoSteps(parseOrder('Teh'));
     expect(steps.map((s) => s.do)).toEqual(['cup', 'pour', 'pour', 'stir', 'serve']);
-    expect(steps[1].say).toMatch(/Teh pot to FULL/);
-    expect(steps[2].say).toMatch(/Condensed milk to NORMAL/);
+    expect(steps[1].say).toMatch(/Condensed milk first, to NORMAL/); // milk first, like the uncles
+    expect(steps[2].say).toMatch(/Teh pot on top to FULL/);
   });
 });
 
@@ -44,7 +44,7 @@ describe('new-order card combinations', () => {
   it('lists the tools in order with their zones', async () => {
     const { comboFor } = await import('../src/systems/demo.js');
     expect(comboFor(parseOrder('Teh C siew dai peng'))).toEqual([
-      { tool: 'teh', zone: '¾ PENG' }, { tool: 'evap', zone: 'C' }, { tool: 'sugar', zone: 'SIEW DAI' }, { tool: 'stir', zone: 'stir' }, { tool: 'ice', zone: 'ice' },
+      { tool: 'evap', zone: 'C' }, { tool: 'sugar', zone: 'SIEW DAI' }, { tool: 'teh', zone: '¾ +ICE' }, { tool: 'stir', zone: 'stir' }, { tool: 'ice', zone: 'ice' },
     ]);
     expect(comboFor(parseOrder('Kopi O kosong'))).toEqual([{ tool: 'kopi', zone: 'FULL' }]);
   });

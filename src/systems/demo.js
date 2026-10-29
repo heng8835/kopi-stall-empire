@@ -25,7 +25,7 @@ export const MEASURE = {
 // Each has `say` (short, for the thought bubble) and `teach` (the customer's own words).
 export function demoSteps(spec) {
   const full = spec.iced ? mid(ZONES.fill.peng) : mid(ZONES.fill.good);
-  const zone = spec.iced ? '¾ PENG' : 'FULL';
+  const zone = spec.iced ? '¾ +ICE' : 'FULL';
   const upTo = spec.iced ? 'only until ¾ ah, the ice will top it up' : 'until FULL';
   const steps = [{ do: 'cup', say: 'A clean cup from the rack', teach: 'First, take a cup from the rack ah.' }];
   const drop = (k, zone, say, teach) => ({ do: 'drop', tool: EXTRAS[k].tool, extra: k, zone, say, teach });
@@ -39,25 +39,31 @@ export function demoSteps(spec) {
     steps.push({ do: 'serve', say: 'Your turn: serve it', teach: 'Cantik! Now pass me the cup.' });
     return steps;
   }
-  if (spec.base === 'cham') {
-    steps.push({ do: 'pour', tool: 'kopi', measure: 'fill', until: full / 2, zone: 'HALF', say: 'Kopi pot to about half', teach: 'Cham is kopi and teh together. Kopi first, half cup.' });
-    steps.push({ do: 'pour', tool: 'teh', measure: 'fill', until: full, zone, say: `Teh pot on top to ${zone}`, teach: `Then teh on top, ${upTo}.` });
-  } else if (spec.strength === 'poh') {
-    steps.push({ do: 'pour', tool: spec.base, measure: 'fill', until: full * 0.53, zone: 'HALF', say: `${POT[spec.base]} to about HALF`, teach: `Poh means weak. ${POT[spec.base]} only half ah.` });
-    steps.push({ do: 'pour', tool: 'water', measure: 'fill', until: full, zone, say: `Hot water to ${zone}`, teach: `Then hot water from the kettle, ${upTo}.` });
-  } else {
-    const gao = spec.strength === 'gao' ? ' No water, gao means strong!' : '';
-    steps.push({ do: 'pour', tool: spec.base, measure: 'fill', until: full, zone, say: `${POT[spec.base]} to ${zone}`, teach: `${POT[spec.base]}, pour ${upTo}.${gao}` });
-  }
-  if (!MALT.includes(spec.base)) {
+  // milk and sugar go in first, the pot on top: how a real uncle does it (round 5, Auntie Mary)
+  const malt = MALT.includes(spec.base);
+  const first = !malt && (spec.milk !== 'none' || spec.sugar !== 'none');
+  if (!malt) {
     const sweet = { measure: 'sweet', until: mid(ZONES.sugar[spec.sugar] ?? [0, 0]) };
     const S = SWEET[spec.sugar];
-    if (spec.milk === 'condensed') steps.push({ do: 'pour', tool: 'condensed', ...sweet, zone: S, say: `Condensed milk to ${S}`, teach: `Condensed milk until ${S}. That one is the sweet, you know.` });
-    if (spec.milk === 'evap') steps.push({ do: 'pour', tool: 'evap', measure: 'evap', until: mid(ZONES.milk.normal), zone: 'C', say: 'Evap milk to C · NORMAL', teach: 'C means evap milk. Pour until C NORMAL.' });
+    if (spec.milk === 'condensed') steps.push({ do: 'pour', tool: 'condensed', ...sweet, zone: S, say: `Condensed milk first, to ${S}`, teach: `Condensed milk first, until ${S}. That one is the sweet, you know.` });
+    if (spec.milk === 'evap') steps.push({ do: 'pour', tool: 'evap', measure: 'evap', until: mid(ZONES.milk.normal), zone: 'C', say: 'Evap milk first, to C · NORMAL', teach: 'C means evap milk. Milk first ah, until C NORMAL.' });
     if (spec.milk !== 'condensed' && spec.sugar !== 'none') {
       const why = spec.milk === 'none' ? 'O means no milk, so the sugar is the sweet.' : 'Then sugar for the sweet.';
       steps.push({ do: 'pour', tool: 'sugar', ...sweet, zone: S, say: `Sugar to ${S}`, teach: `${why} Until ${S}.` });
     }
+  }
+  const onTop = first ? ' on top' : '';
+  if (spec.base === 'cham') {
+    steps.push({ do: 'pour', tool: 'kopi', measure: 'fill', until: full / 2, zone: 'HALF', say: `Kopi pot${onTop} to about half`, teach: 'Cham is kopi and teh together. Kopi first, half cup.' });
+    steps.push({ do: 'pour', tool: 'teh', measure: 'fill', until: full, zone, say: `Teh pot on top to ${zone}`, teach: `Then teh on top, ${upTo}.` });
+  } else if (spec.strength === 'poh') {
+    steps.push({ do: 'pour', tool: spec.base, measure: 'fill', until: full * 0.53, zone: 'HALF', say: `${POT[spec.base]}${onTop} to about HALF`, teach: `Poh means weak. ${POT[spec.base]} only half ah.` });
+    steps.push({ do: 'pour', tool: 'water', measure: 'fill', until: full, zone, say: `Hot water to ${zone}`, teach: `Then hot water from the kettle, ${upTo}.` });
+  } else {
+    const gao = spec.strength === 'gao' ? ' No water, gao means strong!' : '';
+    steps.push({ do: 'pour', tool: spec.base, measure: 'fill', until: full, zone, say: `${POT[spec.base]}${onTop} to ${zone}`, teach: `${POT[spec.base]}${first ? ' on top' : ''}, pour ${upTo}.${gao}` });
+  }
+  if (!malt) {
     if (spec.halia) steps.push(drop('halia', 'in', 'Halia: ginger in', 'Now the halia. Ginger in, good for the throat.'));
     if (spec.limau) steps.push(drop('limau', 'squeeze', 'Limau: squeeze it in', 'Squeeze one limau in. Sour sour, very shiok.'));
     if (spec.butter) steps.push(drop('butter', 'one cube', 'Butter: one cube in', 'Gu you means butter. One cube, let it melt.'));

@@ -211,6 +211,9 @@ export const UI = {
   pausedIdle: 'Paused while you were away',
   pausedHint: 'tap anywhere to carry on',
   pickedCup: 'Cup {cup} is for {who} now',
+  holdOverCup: 'Drag it over a cup and hold to pour 👆',
+  dropOnCup: 'Drag it onto a cup 👆',
+  trayFull: 'Tray full! Serve a cup, or drag one to the bin',
   lessonHold: 'Wait ah, I teach you something new first… 👀',
   demoSample:'Mm… like that lah. Now you make one for me!',
   demoYourTurn: 'Your turn! Make one for {who}, same same',
@@ -232,7 +235,9 @@ export function greetAt(ms, dayMs = TUNING.dayMs) {
 export function pickLine(charId, kind, vars = {}, rng = Math.random) {
   const all = LINES[charId]?.[kind] ?? ['...'];
   // a hot drink never gets an "extra cold ah" line (round 4: Makcik asked for a cold hot teh tarik)
-  const fits = vars.hot ? all.filter((l) => !/cold/i.test(l)) : all;
+  // ...and "lunch hour" only around lunch (round 5: said at 7:30am). vars.hour = the stall's clock
+  const lunch = vars.hour == null || (vars.hour >= 11 && vars.hour < 15);
+  const fits = all.filter((l) => !(vars.hot && /\bcold\b/i.test(l)) && (lunch || !/lunch/i.test(l)));
   const list = fits.length ? fits : all;
   const line = list[Math.floor(rng() * list.length)];
   return line.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');

@@ -31,7 +31,7 @@ export const LESSONS = [
       zh: '美禄恐龙',
       line: 'Darren: "Boss, four Milo Dinosaur! The mountain must be BIG!"',
       steps: ['Milo tin to the ¾ line', 'Drop in the ice: it tops up to FULL', 'Shake Milo powder on top', 'No stirring!'],
-      zone: '¾ PENG',
+      zone: '¾ +ICE',
     },
   },
   {
@@ -70,8 +70,8 @@ export const LESSONS = [
       title: 'Peng = iced',
       zh: '加冰',
       line: 'Makcik: "Panas lah today! Kopi peng, extra cold."',
-      steps: ['Pot only to the ¾ PENG line', 'Milk and sweetness as usual, stir', 'Drop in the ice: it rises to FULL', 'Full + ice = spill!'],
-      zone: '¾ PENG',
+      steps: ['Pot only to the ¾ +ICE line', 'Milk and sweetness as usual, stir', 'Drop in the ice: it rises to FULL', 'Full + ice = spill!'],
+      zone: '¾ +ICE',
     },
   },
   {
@@ -151,7 +151,7 @@ export const MACHINE_LESSONS = {
       zh: '好立克',
       line: 'Darren: "Boss! Horlicks Dinosaur! Same as Milo but white mountain!"',
       steps: ['Horlicks tin (on the rail) to the ¾ line', 'Drop in the ice', 'Powder on top, no stirring', 'Plain Horlicks: tin to FULL'],
-      zone: '¾ PENG',
+      zone: '¾ +ICE',
     },
   },
   haliaPot: {
@@ -175,7 +175,7 @@ export const MACHINE_LESSONS = {
       zh: '酸柑',
       line: 'Marcus: "Teh O limau peng, boss. Need vitamin C, got three meetings today."',
       steps: ['Teh pot (¾ for peng)', 'Sugar to NORMAL, no milk', 'Squeeze the limau (counter) in, stir', 'Ice in for peng'],
-      zone: '¾ PENG',
+      zone: '¾ +ICE',
     },
   },
   butter: {
@@ -199,7 +199,7 @@ export const MACHINE_LESSONS = {
       zh: '美禄哥斯拉',
       line: 'Darren: "Boss, Dinosaur is old already. Now got GODZILLA! Ice cream on top!"',
       steps: ['Milo tin to the ¾ line', 'Ice in', 'Powder mountain on top', 'Ice cream scoop (counter) on the mountain'],
-      zone: '¾ PENG',
+      zone: '¾ +ICE',
     },
   },
   gulaMelaka: {

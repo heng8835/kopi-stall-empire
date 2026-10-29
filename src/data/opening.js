@@ -50,3 +50,6 @@ export const OPENING = [
     lines: ['Next morning. 5:58am.', '{name} rolls up the shutter. One month. Thirty days.'],
   },
 ];
+
+// What Skip shows instead of the panels: the one thing you need to know before Day 1.
+export const OPENING_SUMMARY = 'Uncle Tan, who made your teh when you were small, has retired. He gave you his kopi stall for one month: 30 days, then you decide. And there is a stall cat called Oyen.';

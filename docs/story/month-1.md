@@ -43,6 +43,7 @@ Edit the data file for wording changes; keep this doc in sync for the secrets/th
 | 3 | 3 | Fast Fast 《快快》 | mid + end |
 | 5 | 4 | Oyen's Double Life 《橙猫的双面人生》 | mid |
 | 7 | 5 | The 1987 Tissue Packet 《1987年的纸巾》 | start |
+| 9 | 5 | The 1987 Tissue Packet, Part 2 | mid |
 | 10 | 6 | The Offer 《收购》 | mid |
 | 12 | 7 | Kopi Ninja 《咖啡忍者》 | mid |
 | 14 | 8 | The Red Notebook 《红色笔记本》 | mid |
@@ -125,6 +126,7 @@ stays at the counter, and the episode plays:
 *end*
 - **Narrator:** Across the road, a man in sunglasses takes a photo of your stall.
 - **???:** So this is the stall. Still the same.
+- **Narrator:** Next door, the empty corner stall has a faded sign: "FOR RENT 出租". You look at it a little too long. *(the empire, hinted from week one: round 5)*
 - **Caption:** 下集: someone wants your stall. Who is he?
 
 ## Ep 4 · Day 5 · Oyen's Double Life 《橙猫的双面人生》
@@ -151,7 +153,15 @@ stays at the counter, and the episode plays:
 - **Choice:**
   - "Ah Gong's seat lah, aunties." → flag `ahGongSeat`. The aunties sulk… then order teh and declare it "medicinal".
   - "Can share the table?" → flag `sharedTable`, fame +2. Ah Gong grumbles, gets dragged into qigong… and his back stops aching. **Ah Gong:** …明天再来.
-- **Caption:** 下集: $50,000. Cash. Today.
+- **Caption:** 下集: $50,000. Cash. Today. *(shown after Part 2)*
+
+### Part 2 · Day 9 · mid (fills the Day 8-9 gap: rounds 4-5)
+- **Narrator:** The qigong aunties are back. One of them slaps a brand-new tissue packet on the next table.
+- **Aunties:** Our own packet! Printed today: "QIGONG CLUB · 2026". Now we also got history.
+- **Ah Gong** *(if `ahGongSeat`)*: *(turns a page)* 历史要等三十九年. History takes thirty-nine years.
+- **Ah Gong** *(if `sharedTable`)*: *(mid arm-swing)* …Left table mine. Right table, qigong. Fair.
+- **Narrator:** Oyen lies down across both packets. Nobody argues with Oyen.
+- **Oyen:** Meow. *(he chope everything)*
 
 ## Ep 6 · Day 10 · The Offer 《收购》
 **Cast:** Kenneth (rival manager), Aunty Lim · **When:** mid

@@ -99,7 +99,7 @@ describe('gradeCup', () => {
       const cup = pour(newCup(), 'kopi', holdFor('kopi', fill));
       expect(gradeCup(cup, parseOrder('Kopi O kosong')), `fill ${fill}`).toEqual({ tier: 'perfect', reasons: [] });
     }
-    // anywhere in the ¾ PENG zone + ice is a perfect peng
+    // anywhere in the ¾ +ICE zone + ice is a perfect peng
     for (const fill of [0.56, 0.68, 0.79]) {
       const cup = addIce(pour(newCup(), 'kopi', holdFor('kopi', fill)));
       expect(gradeCup(cup, parseOrder('Kopi O kosong peng')).tier, `peng ${fill}`).toBe('perfect');

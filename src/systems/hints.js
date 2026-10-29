@@ -43,7 +43,7 @@ const MALTS = ['milo', 'horlicks'];
 export function nextStep(cup, spec, who) {
   const peng = spec.iced;
   const [lo, hi] = peng ? ZONES.fill.peng : ZONES.fill.good;
-  const zone = peng ? '¾ PENG' : 'FULL';
+  const zone = peng ? '¾ +ICE' : 'FULL';
   const fill = cup.ice ? cup.fill - 0.25 : cup.fill; // judge the pour before the ice went in
   const malt = MALTS.includes(spec.base);
   const extrasNext = () => {

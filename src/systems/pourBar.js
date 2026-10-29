@@ -24,7 +24,7 @@ const EVAP = [
 ];
 const FILL = [
   ['FILLING…', 0, Z.fill.peng[0], 'none'],
-  ['¾ PENG', ...Z.fill.peng, 'lo'],
+  ['¾ +ICE', ...Z.fill.peng, 'lo'],
   ['FULL', ...Z.fill.good, 'ok'],
   ['SPILL', Z.fill.good[1], 1.3, 'bad'],
 ];
@@ -55,7 +55,7 @@ const SWEET_ZONE = { none: 'KOSONG', less: 'SIEW DAI', normal: 'NORMAL', more: '
 export function targetZone(ingredient, spec) {
   if (!spec) return null;
   if (['kopi', 'teh'].includes(ingredient) && spec.strength === 'poh' && !spec.iced) return '½ POH';
-  if (['kopi', 'teh', 'milo', 'horlicks', 'water'].includes(ingredient)) return spec.iced ? '¾ PENG' : 'FULL';
+  if (['kopi', 'teh', 'milo', 'horlicks', 'water'].includes(ingredient)) return spec.iced ? '¾ +ICE' : 'FULL';
   if (ingredient === 'evap') return spec.milk === 'evap' ? 'C · NORMAL' : 'NONE (O)';
   if (ingredient === 'gula') return spec.layered ? 'NORMAL' : 'KOSONG';
   if (ingredient === 'condensed' || ingredient === 'sugar') return spec.sugar ? SWEET_ZONE[spec.sugar] : null;

@@ -34,7 +34,7 @@ const TITLE_HOLD_MS = 2300; // the title card moves on by itself after this (a t
 const SWAP_MS = 140; // old card out / new card in
 const TAP_GRACE_MS = 900; // taps still coming from the stall (a rush) can't skip the opening (round 4: 350 wasn't enough)
 const LINE_GRACE_MS = 250; // ...and a fresh line can't be skipped by the same burst of taps
-const CHOICE_GRACE_MS = 500; // ...or pick a choice the player hasn't seen yet
+const CHOICE_GRACE_MS = 900; // ...or pick a choice the player hasn't seen yet (round 5: an advancing tap picked one)
 
 // When the next episode comes, so a teaser never reads as "tomorrow" when it's days away.
 const whenNext = (ep, next) =>
@@ -63,6 +63,7 @@ export default class DramaScene extends Phaser.Scene {
     this.glossaryOpen = false;
     this.lastWho = null;
     this.bornAt = this.time.now;
+    this.cast = this.castOf(data.ep);
 
     // top-right corner: clear of the choice buttons and the name tag (playtest: it sat on the 2nd choice)
     const skip = addText(this, GAME_W - 16, 50, 'Skip ▸▸', { size: 14, bold: true, color: '#fff6dc', origin: [1, 0] }).setDepth(21);
@@ -88,6 +89,47 @@ export default class DramaScene extends Phaser.Scene {
     this.queue = visibleBeats(this.d.ep.beats, this.flags);
     this.stage = 'beats';
     this.time.delayedCall(FADE_IN_MS, () => this.advance());
+  }
+
+  // Everyone who speaks in this episode (not the narrator, a note or you), in order of first line, drawn
+  // standing at the counter through the scene (round 5: the kids vanished at EP2's choice, EP4 had no Oyen).
+  castOf(ep) {
+    const beats = [...(ep.beats ?? []), ...(ep.choice?.options ?? []).flatMap((o) => o.beats ?? []), ...(ep.after ?? []), ...(ep.endings ?? []).flatMap((e) => e.beats ?? []), ...(ep.epilogue ?? [])];
+    const seen = new Map();
+    for (const b of beats) {
+      if (['narrator', 'note', 'owner'].includes(b.who) || seen.has(b.who) || !CAST[b.who]) continue;
+      if (!this.textures.exists(CAST[b.who].sprite)) continue;
+      seen.set(b.who, { who: b.who, silhouette: !!b.silhouette, ...CAST[b.who] });
+    }
+    return [...seen.values()].slice(0, 4);
+  }
+
+  // The cast, small and behind (dim = someone else is speaking in front), or all of them across the
+  // counter (no one speaking: a narrator line or the choice). except = the speaker, drawn big separately.
+  castRow({ except = null, dim = false, hideOyen = false } = {}) {
+    const people = this.cast.filter((m) => m.who !== except && !(hideOyen && m.who === 'oyen'));
+    if (!people.length) return [];
+    const front = !except;
+    const n = people.length;
+    const slots = front ? people.map((m, i) => (GAME_W * (i + 0.5)) / n) : [62, 298, 22, 338];
+    return people.map((m, i) => {
+      const s = addSprite(this, m.sprite, slots[i], m.perch ? LEDGE.bottom : FEET_Y);
+      const h = m.perch ? PERCH_H * 0.8 : front ? 160 : 130;
+      s.setScale(s.scaleX * (h / s.displayHeight));
+      const room = front ? GAME_W / n + 24 : 150;
+      if (s.displayWidth > room) s.setScale(s.scaleX * (room / s.displayWidth));
+      if (m.silhouette) s.setTintFill(0x14110f);
+      else if (dim) s.setTint(0x8a8a96);
+      return s;
+    });
+  }
+
+  // The counter ledge in front of whoever stands behind it, shaded like the rest of the stall.
+  ledge() {
+    const top = Math.round(LEDGE.top * BG_SCALE);
+    const ledge = this.add.image(0, 0, 'stallBg').setOrigin(0).setDisplaySize(GAME_W, GAME_H).setCrop(0, top, 901, Math.round(LEDGE.bottom * BG_SCALE) - top);
+    const shade = this.add.rectangle(0, LEDGE.top, GAME_W, LEDGE.bottom - LEDGE.top, this.shade.tint, this.shade.alpha).setOrigin(0);
+    return [ledge, shade];
   }
 
   // ---------- cards ----------
@@ -177,7 +219,11 @@ export default class DramaScene extends Phaser.Scene {
     const start = this.layer.length;
     if (beat.show) this.layer.push(...this.prop(beat.show));
     const inProp = beat.show === 'tinOyen' && beat.who === 'oyen'; // he's already there, asleep on the tin
-    if (who?.sprite && this.textures.exists(who.sprite) && !inProp) {
+    const speaking = who?.sprite && this.textures.exists(who.sprite) && !inProp;
+    const row = this.castRow({ except: speaking ? beat.who : null, dim: !!speaking, hideOyen: beat.show === 'tinOyen' });
+    this.layer.push(...row);
+    if (row.length && !speaking) this.layer.push(...this.ledge());
+    if (speaking) {
       const s = addSprite(this, who.sprite, GAME_W / 2, who.perch ? LEDGE.bottom : FEET_Y);
       s.setScale(s.scaleX * (who.perch ? PERCH_H / s.displayHeight : Math.min(1.5, PORTRAIT_H / s.displayHeight)));
       if (s.displayWidth > GAME_W - 20) s.setScale(s.scaleX * ((GAME_W - 20) / s.displayWidth));
@@ -187,11 +233,7 @@ export default class DramaScene extends Phaser.Scene {
         s.setAlpha(0).y += 10;
         this.tweens.add({ targets: s, alpha: 1, y: s.y - 10, duration: 260, ease: 'Back.out' });
       }
-      // the counter ledge in front of them, shaded like the rest of the stall
-      const top = Math.round(LEDGE.top * BG_SCALE);
-      const ledge = this.add.image(0, 0, 'stallBg').setOrigin(0).setDisplaySize(GAME_W, GAME_H).setCrop(0, top, 901, Math.round(LEDGE.bottom * BG_SCALE) - top);
-      const shade = this.add.rectangle(0, LEDGE.top, GAME_W, LEDGE.bottom - LEDGE.top, this.shade.tint, this.shade.alpha).setOrigin(0);
-      this.layer.push(s, ledge, shade);
+      this.layer.push(s, ...this.ledge());
     }
 
     const note = beat.who === 'note';
@@ -282,8 +324,14 @@ export default class DramaScene extends Phaser.Scene {
     this.waitingChoice = true;
     this.skipText.setVisible(false); // a choice has to be made
     this.choiceAt = this.time.now;
-    this.layer.push(addText(this, GAME_W / 2, 250, 'What do you do?', { size: 18, bold: true, color: '#fff6dc', origin: 0.5 }));
-    this.layer.push(addText(this, GAME_W / 2, 276, '你会怎么做?', { size: 14, color: '#d8cbb5', origin: 0.5 }));
+    // everyone's still there while you decide; the question sits above their heads
+    const row = this.castRow();
+    this.layer.push(...row, ...(row.length ? this.ledge() : []));
+    const q = addText(this, GAME_W / 2, row.length ? 104 : 250, 'What do you do?', { size: 18, bold: true, color: '#fff6dc', origin: 0.5 });
+    const zh = addText(this, GAME_W / 2, row.length ? 130 : 276, '你会怎么做?', { size: 14, color: '#d8cbb5', origin: 0.5 });
+    q.setStroke('#2b2420', 4);
+    zh.setStroke('#2b2420', 3);
+    this.layer.push(q, zh);
     this.d.ep.choice.options.forEach((opt, i) => {
       const btn = makeButton(this, 24, 310 + i * 70, GAME_W - 48, 58, fill(opt.label, this.d.vars ?? {}), () => this.choose(opt), { size: 15, bold: true });
       this.layer.push(btn.bg, btn.txt);

@@ -92,7 +92,7 @@ const PERIOD_ICONS = ['iconMorning', 'iconLunch', 'iconTeatime', 'iconClosing'];
 const PERIODS = [['Morning', 0, 240, 0xffe9a8], ['Lunch', 240, 420, 0xffb870], ['Teatime', 420, 600, 0xbfe0c4], ['Closing', 600, 720, 0x9fb3d9]];
 const POUR_DWELL_MS = 140; // a pot only starts pouring once it has stopped over a cup this long...
 const POUR_STILL_PX = 12; // ...within this far (sweeping past a cup pours nothing)
-const SUMMARY_GRACE_MS = 600; // the day-end card's buttons wake up after this
+const SUMMARY_GRACE_MS = 1200; // the day-end card's buttons wake up after this
 const CALM_MS = 1800; // pop-ups (cards, demos, stories) wait for hands free (no touch) this long (whenCalm)
 const TIER_RANK = { oops: 0, close: 1, perfect: 2 }; // which customer a dropped cup suits best (serveTarget)
 const TRAY_WAIT_MS = 6000; // ...and for the cups being made to be served, unless they're left sitting this long
@@ -102,7 +102,7 @@ const COMBO_CARDS_PER_DAY = 2;
 const FLOAT = { gap: 800, rise: 56, ms: 1500 };
 // The stall tools a night-shop tool upgrade changes (revealBought pulses them); machines bring their own tool.
 const BOUGHT_TOOLS = { longSpout: ['kopi', 'teh'], sugarScoop: ['sugar'], milkPump: ['condensed', 'evap'], brassSpoon: ['stir'], cupRack: ['rack'], iceMachine: ['ice'], markedGlass: ['rack'] };
-const IDLE_PAUSE_MS = 8_000; // no touch this long with customers waiting: the stall pauses itself // NEW ORDER cards; the rest wait for another day
+const IDLE_PAUSE_MS = 12_000; // no touch this long with customers waiting: the stall pauses itself // NEW ORDER cards; the rest wait for another day
 
 // Aunty Lim's word on her own score (Episode 1's ending line).
 const ratingNote = (r) => (r >= 9 ? 'Hm. Not bad ah… 不错.' : r >= 6 ? '有进步空间 lah.' : 'Never mind. 明天再努力.');
@@ -147,6 +147,7 @@ export default class StallScene extends Phaser.Scene {
       rushGap: TUNING.rushGapMs,
     });
     this.cameToday = new Set(); // regulars (and guests) who have already been in today
+    this.leftAt = new Map(); // walk-in kind -> when one last left (spawnCustomer)
     this.friends = { ...(this.run.friends ?? {}) }; // friendship with every kind of customer (systems/friends.js)
     this.lessonsDone = 0;
     this.streak = 0; // perfect cups in a row (streakBonus)
@@ -419,8 +420,21 @@ export default class StallScene extends Phaser.Scene {
       c.on('drag', (p) => this.onToolDrag(c, p));
       c.on('dragend', (p) => this.onToolDragEnd(c, p));
       if (t.kind === 'rack') c.on('pointerup', (p) => p.getDistance() < 6 && this.placeCupInFreeSlot());
+      else c.on('pointerup', (p) => p.getDistance() < 6 && this.toolTapHint(c)); // a tap alone does nothing: say how
     }
     if (import.meta.env.DEV) TOOL_IDS.filter((id) => !this.tools[id]).forEach((id) => console.warn('[tutorial] no tool for id', id));
+  }
+
+  // Tapped a tool instead of dragging it (round 5: "a tapped pot does nothing"): once per tool a day, say how.
+  toolTapHint(tool) {
+    this.tapHinted ??= new Set();
+    if (this.tapHinted.has(tool.tool.id) || this.demo || this.ended) return;
+    this.tapHinted.add(tool.tool.id);
+    const how = tool.tool.kind === 'pour' && !this.dosed(tool.tool) ? UI.holdOverCup : UI.dropOnCup;
+    const t = addText(this, Phaser.Math.Clamp(tool.home.x, 80, GAME_W - 80), tool.home.y - tool.tool.h / 2 - 10, how, { size: 13, bold: true, color: '#fff6dc', origin: [0.5, 1], align: 'center', wrap: 180 }).setDepth(60);
+    t.setStroke('#3a2414', 4);
+    this.tweens.add({ targets: tool, y: tool.home.y - 8, duration: 120, yoyo: true, repeat: 1 });
+    this.tweens.add({ targets: t, y: t.y - 14, alpha: 0, delay: 1800, duration: 500, onComplete: () => t.destroy() });
   }
 
   // A tool a night-shop upgrade improves (its name tag turns gold, so the purchase shows at the stall).
@@ -628,7 +642,7 @@ export default class StallScene extends Phaser.Scene {
     if (this.closing) return this.setCoach("Closing time. Last customers, then we 收档!");
     if (this.waitingCustomers().length) return this.setCoach('Serve the cups on the tray: drag each one up to its customer');
     if (this.allCustomers().length || this.queue.length) return this.setCoach('Customers coming… get a cup ready');
-    this.setCoach('Waiting for customers… 等客人');
+    this.setCoach(this.slots.some((sl) => sl.cup) ? 'Cup ready. Waiting for customers… 等客人' : 'Waiting for customers… 等客人');
   }
 
   freeSlot() {
@@ -645,8 +659,11 @@ export default class StallScene extends Phaser.Scene {
     return true;
   }
 
+  // A tap on Cups always answers (round 5: before the first customer it seemed to do nothing).
   placeCupInFreeSlot() {
-    return this.placeCup(this.freeSlot());
+    const slot = this.freeSlot();
+    if (!slot) return this.setFeedback(UI.trayFull), false;
+    return this.placeCup(slot);
   }
 
   removeCup(slot) {
@@ -943,6 +960,13 @@ export default class StallScene extends Phaser.Scene {
     if (t.kind === 'rack' && slot && !slot.cup) this.placeCup(slot);
     // let go of the pot short of the line: a little nudge right there on the cup
     const poured = (this.pouring?.tool === tool && this.pouring.slot) || tool.pouredSlot;
+    // a quick sugar / milk drag that let go over a cup before it started pouring: one small dose anyway
+    // (round 5: "a short sugar drag adds nothing")
+    const aimed = tool.aim?.slot;
+    if (!poured && aimed?.cup && !this.demo && !this.dosed(t) && ['sugar', 'condensed', 'evap'].includes(t.ingredient)) {
+      this.pourInto(aimed, t.ingredient, (TUNING.minDose * 1000) / TUNING.pourPerSec[t.ingredient]);
+      play(t.ingredient === 'sugar' ? 'sugar' : 'milk');
+    }
     if (poured?.cup?.base && poured.ticket && !this.demo && ['kopi', 'teh', ...MALT].includes(t.ingredient)) {
       const spec = poured.ticket.spec;
       const fill = poured.cup.fill - (poured.cup.ice ? TUNING.iceVolume : 0);
@@ -969,7 +993,7 @@ export default class StallScene extends Phaser.Scene {
     const before = slot.cup.fill;
     pour(slot.cup, ingredient, dtMs * fast);
     // over the top: say so the moment it happens, not after the next ingredient
-    if (before <= ZONES.fill.spill && slot.cup.fill > ZONES.fill.spill && !this.demo) this.cupPop(slot, 'SPILL!', '#ff8a7a', '#5a1a14', 'oops');
+    if (before <= ZONES.fill.spill && slot.cup.fill > ZONES.fill.spill && !this.demo) this.spillSplash(slot);
     this.recheckCup(slot);
     this.pourBar.show(ingredient, slot.cup, slot.i + 1, slot.ticket);
   }
@@ -1357,7 +1381,8 @@ export default class StallScene extends Phaser.Scene {
     const forced = forcedId && CUSTOMERS.find((c) => c.id === forcedId);
     const here = new Set([...this.allCustomers(), ...this.queue].map((c) => c.def.id));
     const open = WALK_INS.filter((w) => this.menuOf(w).length && this.placeFor(w));
-    const fresh = open.filter((w) => !here.has(w.id));
+    // nobody walks straight back in for another cup (round 5: Marcus ×3 in a row)
+    const fresh = open.filter((w) => !here.has(w.id) && this.time.now - (this.leftAt.get(w.id) ?? -Infinity) > TUNING.comeBackMs);
     const pool = fresh.length ? fresh : open; // no twins at the counter unless every kind is already here
     const def = forcedId ? (forced && this.placeFor(forced) ? forced : null) : pool.length ? weightedPick(pool) : null;
     if (!def) return null;
@@ -1515,7 +1540,8 @@ export default class StallScene extends Phaser.Scene {
   }
 
   lineVars(extra = {}) {
-    return { owner: this.owner.address, greet: '{greet}', ...extra }; // filled when the bubble shows (showBubble)
+    const hour = 7 + ((this.clockMs ?? 0) / TUNING.dayMs) * 12;
+    return { owner: this.owner.address, greet: '{greet}', hour, ...extra }; // filled when the bubble shows (showBubble)
   }
 
   arrive(c) {
@@ -1611,6 +1637,9 @@ export default class StallScene extends Phaser.Scene {
       bar.fullW = w - pad * 2;
       objs.push(bar);
     }
+    // during a demo the bubble sits over the demo's sheet, so its orange words still open the glossary
+    // (round 5: tapping "teh" in Aunty Lim's Day-1 lesson did nothing)
+    if (this.demo) objs.forEach((o) => o.setDepth(o.depth + 30));
     c.bubble = { objs, frame, bar };
     this.updatePatienceBar(c);
   }
@@ -1724,7 +1753,7 @@ export default class StallScene extends Phaser.Scene {
         this.econ.perkEarned = (this.econ.perkEarned ?? 0) + extra; // "your upgrades earned" on the day-end card
       }
     }
-    const fTip = friendTip(c.hearts, tier, res.tip);
+    const fTip = Math.round(friendTip(c.hearts, tier, res.tip) / 5) * 5; // whole 5¢ (round 5: $3.53)
     if (fTip) {
       res.tip += fTip;
       this.econ.money += fTip;
@@ -1793,6 +1822,7 @@ export default class StallScene extends Phaser.Scene {
   leave(c) {
     if (c.state === 'gone') return;
     c.state = 'gone';
+    this.leftAt.set(c.def.id, this.time.now);
     this.clearBubble(c);
     this.tableGuests = this.tableGuests.map((g) => (g === c ? null : g));
     this.spots = this.spots.map((s) => (s === c ? null : s));
@@ -1804,12 +1834,24 @@ export default class StallScene extends Phaser.Scene {
   // ---------- juice / feedback ----------
 
   // A word that pops up over a cup and floats off ("SPILL!", "a bit more…").
-  cupPop(slot, str, color, stroke, sound = null) {
-    const t = addText(this, slot.x, CUP_BOTTOM - CUP_H - 36, str, { size: str.length > 8 ? 14 : 18, bold: true, color, origin: 0.5 }).setDepth(60);
+  cupPop(slot, str, color, stroke, sound = null, size = null) {
+    const t = addText(this, slot.x, CUP_BOTTOM - CUP_H - 36, str, { size: size ?? (str.length > 8 ? 14 : 18), bold: true, color, origin: 0.5 }).setDepth(60);
     t.setStroke(stroke, 5).setScale(0.5);
     if (sound) play(sound);
     this.tweens.add({ targets: t, scale: 1, duration: 180, ease: 'Back.out' });
     this.tweens.add({ targets: t, y: t.y - 26, alpha: 0, delay: 900, duration: 600, onComplete: () => t.destroy() });
+  }
+
+  // Over the top: a big SPILL!, a splash of drops and a little shake (round 5: the old pop was easy to miss).
+  spillSplash(slot) {
+    this.cupPop(slot, 'SPILL!', '#ff8a7a', '#5a1a14', 'oops', 26);
+    this.cameras.main.shake(80, 0.004);
+    const color = liquidColor(slot.cup);
+    for (let i = 0; i < 7; i++) {
+      const d = this.add.circle(slot.x, CUP_BOTTOM - CUP_H, 3 + (i % 3), color).setDepth(17);
+      const dx = (i - 3) * 9 + Phaser.Math.Between(-3, 3);
+      this.tweens.add({ targets: d, x: slot.x + dx, y: { from: CUP_BOTTOM - CUP_H, to: CUP_BOTTOM + 8 }, duration: 420 + i * 30, ease: 'Quad.in', onComplete: () => d.destroy() });
+    }
   }
 
   // Words floating up over the counter (coins, upgrades, friendship, a broken streak) take turns in one
@@ -2095,10 +2137,9 @@ export default class StallScene extends Phaser.Scene {
   playEpisode(ep, then = () => {}) {
     this.pouring = this.aiming = null;
     this.clearFloats();
-    // whoever speaks in the episode stands at the counter in it: hide their stall self meanwhile (no twins)
-    const speakers = new Set([...(ep.beats ?? []), ...(ep.after ?? []), ...(ep.choice?.options ?? []).flatMap((o) => o.beats ?? [])].map((b) => b.who));
-    const twins = this.allCustomers()
-      .filter((c) => speakers.has(c.def.id) || c === this.storyGuest)
+    // whoever speaks in the episode stands at the counter in it: hide the stall's own people meanwhile (no twins)
+    // (everyone at the stall steps out of view: the episode draws its own cast; round 5: EP3 showed the kids)
+    const twins = [...this.allCustomers(), ...this.queue]
       .flatMap((c) => [...c.sprites, ...(c.bubble?.objs ?? [])])
       .filter((o) => o.visible);
     twins.forEach((o) => o.setVisible(false));
@@ -2141,6 +2182,7 @@ export default class StallScene extends Phaser.Scene {
         if (g.state === 'waiting') this.showBubble(g, g.orderLine, 'order');
       }
     }
+    if (opt.note) this.time.delayedCall(900, () => this.setFeedback(opt.note)); // (runs once the stall is back)
     const s = applyChoice({ flags: this.flags, fame: this.econ.fame, money: this.econ.money }, opt);
     this.flags = s.flags;
     this.econ.fame = s.fame;
@@ -2150,7 +2192,7 @@ export default class StallScene extends Phaser.Scene {
 
   todayRating() {
     const [perfect, served] = this.madeCups();
-    return auntyRating(perfect, served);
+    return auntyRating(perfect, served, summarizeDay(this.log, this.econ).stars);
   }
 
   // Perfect cups and cups served today that you made yourself (not the demos' cups).
@@ -2233,11 +2275,11 @@ export default class StallScene extends Phaser.Scene {
       title.setStroke('#2b2420', 4);
       // a moment before a tap counts, so the tap that paused (or a stray one) doesn't unpause
       const born = performance.now(); // (the scene clock is stopped while paused)
-      shade.on('pointerdown', () => {
-        if (performance.now() - born < 350) return;
+      // on the tap's release, and a beat later, so the same tap can't also land on a customer or a tool below
+      shade.on('pointerup', () => {
+        if (performance.now() - born < 350 || !shade.active) return;
         [shade, title, hint].forEach((o) => o.destroy());
-        this.idleMs = 0;
-        resume();
+        window.setTimeout(() => ((this.idleMs = 0), resume()), 0);
       });
     });
   }
@@ -2283,6 +2325,7 @@ export default class StallScene extends Phaser.Scene {
     this.tweens.pauseAll();
     this.time.paused = true;
     open(() => {
+      this.idleMs = 0; // the auto-pause counts from here, not from before the card (round 5)
       this.paused = false;
       this.tweens.resumeAll();
       this.time.paused = false;
@@ -2533,8 +2576,8 @@ export default class StallScene extends Phaser.Scene {
       const goal = goalText(nextGoal(tomorrow));
       if (goal) line(goal, { size: 12, color: '#2f5f8a', bold: true }, 4);
       // the month so far, and what it's all for
-      const filled = Math.max(1, Math.ceil((this.day / MONTH_DAYS) * 10));
-      line(`${'▰'.repeat(filled)}${'▱'.repeat(10 - filled)}  Day ${this.day}/${MONTH_DAYS} · Uncle Tan's tin: Day 30`, { size: 12, color: '#7a4a12' }, 8);
+      const filled = Math.max(1, Math.round((this.day / MONTH_DAYS) * 15)); // 15 blocks: it moves every other day
+      line(`${'▰'.repeat(filled)}${'▱'.repeat(15 - filled)}  Day ${this.day}/${MONTH_DAYS} · Uncle Tan's tin: Day 30`, { size: 12, color: '#7a4a12' }, 8);
     }
     const dev = import.meta.env.DEV;
     const chrome = 16 + 8 + 54 + 6 + 30 + 6 + (dev ? 28 + 6 : 0) + 8; // padding and buttons

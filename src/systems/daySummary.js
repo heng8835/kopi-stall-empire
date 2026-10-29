@@ -1,6 +1,6 @@
 // What the day-end card shows: stars, counts, money split, fame change, per-customer rows,
 // the most common slips with Uncle Tan's tip, and a happy quote. Pure, no Phaser.
-import { TIPS, DEFAULT_TIP, WALKOUT_TIP } from '../data/tips.js';
+import { TIPS, DEFAULT_TIP, GOOD_DAY_TIPS, WALKOUT_TIP } from '../data/tips.js';
 
 export function tipFor(reason) {
   return TIPS.find((t) => reason?.includes(t.match)) ?? DEFAULT_TIP;
@@ -37,7 +37,7 @@ export function summarizeDay(entry, econ, names = {}) {
     fame: { from: Math.floor(econ.fameStart), to: Math.floor(econ.fame) },
     perCustomer: Object.values(per),
     topSlips,
-    tip: topSlips.length || !counts.walkedOut ? tipFor(topSlips[0]?.reason) : WALKOUT_TIP,
+    tip: topSlips.length ? tipFor(topSlips[0].reason) : counts.walkedOut ? WALKOUT_TIP : GOOD_DAY_TIPS[(entry.day ?? 0) % GOOD_DAY_TIPS.length],
     quote: quote ? { who: names[quote.who] ?? quote.who, line: quote.line } : null,
   };
 }

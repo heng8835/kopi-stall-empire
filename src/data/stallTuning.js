@@ -14,6 +14,7 @@ export const TUNING = {
   rushGapMs: 2500, // walk-ins come in little rushes of 1-3, this far apart (queue.js bunch)
   emptyClockSpeed: 6, // nobody at the stall: the clock runs this much faster (no dead air)
   emptyCloseSpeed: 15, // ...and nobody left to come today: this fast, on to 7pm
+  comeBackMs: 20_000, // a walk-in who just left isn't the next one in again for this long
   regularVariety: 0.25, // chance a regular orders something other than their usual
 
   // Fame (名气, 0-100) decides how many arrivals a day brings (a group counts as one).
@@ -46,6 +47,7 @@ export const TUNING = {
   autoTarikMs: 1600, // dropping the mugs on a cup pulls it by itself in this long
   autoStirMs: 1000, // dropping the spoon on a cup stirs it in this long
   dialSweepMs: 1400, // Sugar Scoop / Milk Pump / gula: the timing dial's needle crosses the bar in this long
+  minDose: 0.3, // a sugar / milk drag let go over a cup before it poured still adds this much (SIEW DAI)
   iceVolume: 0.25, // ice raises the level: peng = pour to the ¾ line, then ice
 };
 

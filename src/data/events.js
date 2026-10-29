@@ -13,7 +13,8 @@
 //   beats                [{ who, text, if?, name?, silhouette?, show? }] — who: a CAST key, 'narrator' or 'note';
 //                        show: a prop on the counter ('tin', or 'tinOyen' = Oyen asleep on the tin)
 //   choice {options}     [{ label, flags?, fame?, money? (cents), beats? }] — shown after `beats`
-//                        guestPays? (cents: all the episode's guest pays today), guestCups? (they buy fewer)
+//                        guestPays? (cents: all the episode's guest pays today), guestCups? (they buy fewer),
+//                        note? (said at the stall afterwards, so the choice visibly changes something)
 //   after                beats after the choice (both options)
 //   endings              finale only: [{ id, min (fame), title, beats }]
 //   epilogue             finale only: beats after the ending
@@ -90,9 +91,9 @@ export const EVENTS = [
     ],
     choice: {
       options: [
-        { label: '"Can, owe me lah."', flags: ['kidsOwe'], guestPays: 980, beats: [{ who: 'darren', text: 'BOSS POWER!' }] },
-        { label: '"Sorry ah, rules are rules."', flags: ['kidsNo'], guestCups: 3, beats: [N('The kids buy 3 and share the 4th with four straws.'), { who: 'hafiz', text: 'Integrity… is thirsty.' }] },
-        { label: '"Today on the house!"', flags: ['kidsFree'], fame: 3, guestPays: 0, beats: [{ who: 'weiLing', text: '(writes it down) We will repay. With interest.' }] },
+        { label: '"Can, owe me lah."', flags: ['kidsOwe'], guestPays: 980, note: 'The kids pay $9.80 and owe you 20¢. Wei Ling writes it down.', beats: [{ who: 'darren', text: 'BOSS POWER!' }] },
+        { label: '"Sorry ah, rules are rules."', flags: ['kidsNo'], guestCups: 3, note: 'Rules are rules: the kids buy 3 cups, not 4.', beats: [N('The kids buy 3 and share the 4th with four straws.'), { who: 'hafiz', text: 'Integrity… is thirsty.' }] },
+        { label: '"Today on the house!"', flags: ['kidsFree'], fame: 3, guestPays: 0, note: 'On the house: no charge for the 4 cups, 名气 +3.', beats: [{ who: 'weiLing', text: '(writes it down) We will repay. With interest.' }] },
       ],
     },
     after: [N('Jia Hui closes her sketchbook. She drew something. She won\'t say what.')],
@@ -119,6 +120,8 @@ export const EVENTS = [
     beats: [
       N('Across the road, a man in sunglasses takes a photo of your stall.'),
       { who: 'kenneth', name: '???', silhouette: true, text: 'So this is the stall. Still the same.' },
+      // the empire, hinted from the first week (round 5: nothing ever pointed at it)
+      N('Next door, the empty corner stall has a faded sign: "FOR RENT 出租". You look at it a little too long.'),
     ],
   },
   {
@@ -156,6 +159,19 @@ export const EVENTS = [
         { label: '"Can share the table?"', flags: ['sharedTable'], fame: 2, beats: [N('Ah Gong grumbles, gets dragged into qigong… and his back stops aching.'), { who: 'ahGong', text: '…明天再来.' }] },
       ],
     },
+  },
+  {
+    // Part 2: the Day 8-9 gap (round 4 + 5: a week with no story)
+    id: 'ep5-tissue-2', day: 9, when: 'mid', ep: 5,
+    title: { en: 'The 1987 Tissue Packet', zh: '1987年的纸巾' },
+    beats: [
+      N('The qigong aunties are back. One of them slaps a brand-new tissue packet on the next table.'),
+      { who: 'aunties', text: 'Our own packet! Printed today: "QIGONG CLUB · 2026". Now we also got history.' },
+      { who: 'ahGong', text: '(turns a page) 历史要等三十九年. History takes thirty-nine years.', if: 'ahGongSeat' },
+      { who: 'ahGong', text: '(mid arm-swing) …Left table mine. Right table, qigong. Fair.', if: 'sharedTable' },
+      N('Oyen lies down across both packets. Nobody argues with Oyen.'),
+      { who: 'oyen', text: 'Meow. (he chope everything)' },
+    ],
   },
   {
     id: 'ep6-offer', day: 10, when: 'mid', ep: 6,

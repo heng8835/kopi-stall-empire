@@ -457,7 +457,7 @@ export class DrinkArt {
       g.restore();
     }
 
-    // Marked Glasses (night shop): etched ¾ PENG and FULL marks on the glass, labelled, always there
+    // Marked Glasses (night shop): etched ¾ +ICE and FULL marks on the glass, labelled, always there
     if (this.marked) {
       // FULL's tag on the left of the glass, ¾'s on the right, so the two never sit on each other
       for (const [lv, name, side] of [[0.68, '¾', 1], [0.94, 'FULL', -1]]) {

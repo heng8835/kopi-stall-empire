@@ -17,5 +17,13 @@ export const TIPS = [
 ];
 
 export const DEFAULT_TIP = { en: 'Shiok! Steady hands today. Tomorrow more customers will come.', zh: '不错！明天会有更多客人。' };
+// A good day's word changes from day to day (round 5: the same line every night).
+export const GOOD_DAY_TIPS = [
+  DEFAULT_TIP,
+  { en: 'Your regulars are smiling. In this trade, that is the real tip.', zh: '熟客开心，就是最好的小费。' },
+  { en: 'Nice rhythm today. Cup, pot, milk, stir: like music already.', zh: '今天节奏很好，像音乐一样。' },
+  { en: 'Not one cup wasted. My old boss would be proud. Me also.', zh: '一杯都没浪费，我很骄傲。' },
+  { en: 'Rest your wrists tonight. Tomorrow the queue will be longer.', zh: '今晚手腕休息一下，明天人更多。' },
+];
 
 export const WALKOUT_TIP = { en: 'Some customers got tired of waiting. Start on the oldest bubble first: its green bar is the shortest.', zh: '有客人等太久走了。先做等最久的那位。' };

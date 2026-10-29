@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_W, GAME_H, COLORS } from '../config.js';
-import { OPENING } from '../data/opening.js';
+import { OPENING, OPENING_SUMMARY } from '../data/opening.js';
 import { OWNERS } from '../data/owners.js';
 import { addText } from '../systems/text.js';
 import { fitCamera } from '../systems/view.js';
@@ -59,7 +59,7 @@ export default class OpeningScene extends Phaser.Scene {
     skip.setStroke('#2b2420', 3);
     skip.setInteractive({ useHandCursor: true }).on('pointerdown', (p, x, y, e) => {
       e?.stopPropagation?.();
-      this.finish();
+      this.skipToSummary();
     });
     playMusic('finale'); // One Month to Try
     this.cameras.main.fadeIn(600, 0, 0, 0);
@@ -68,6 +68,7 @@ export default class OpeningScene extends Phaser.Scene {
 
   advance() {
     if (this.done || this.glossaryOpen) return;
+    if (this.summary) return this.finish();
     if (this.titleCard) return this.closeTitle();
     if (this.line < OPENING[this.panel].lines.length - 1) {
       this.line++;
@@ -189,6 +190,7 @@ export default class OpeningScene extends Phaser.Scene {
     const last = this.line === p.lines.length - 1;
     const end = last && this.panel === OPENING.length - 1;
     if (entry.chat) {
+      this.lineAt = this.time.now; // a tap on a word in a fresh message moves on (round 5: "OK! I try!" took 3-4 taps)
       this.box.forEach((o) => o.destroy());
       this.box = [addText(this, GAME_W / 2, PHONE.y + PHONE.h + 12, '▼ tap', { size: 12, bold: true, color: '#fff6dc', origin: [0.5, 0] }).setDepth(11)];
       this.box[0].setStroke('#2b2420', 3);
@@ -225,6 +227,25 @@ export default class OpeningScene extends Phaser.Scene {
     if (this.time.now - (this.lineAt ?? 0) < GLOSS_SETTLE_MS) return this.advance();
     this.glossaryOpen = true;
     showGlossary(this, key, () => this.time.delayedCall(0, () => (this.glossaryOpen = false)));
+  }
+
+  // Skip: the story so far in one card (round 5: skipping lost who gave you the stall and why), then Day 1.
+  skipToSummary() {
+    if (this.done || this.summary) return this.finish();
+    this.summary = true;
+    this.titleCard = null;
+    [...this.layer, ...this.box].forEach((o) => o.destroy());
+    this.layer = [];
+    this.box = [];
+    const card = this.add.rectangle(20, 200, GAME_W - 40, 230, 0x2b2420, 0.94).setOrigin(0).setStrokeStyle(3, COLORS.inkHex).setDepth(20);
+    const head = addText(this, GAME_W / 2, 226, '序章 · The story so far', { size: 15, bold: true, color: '#f2c14e', origin: [0.5, 0] }).setDepth(21);
+    const body = addText(this, GAME_W / 2, 262, fill(OPENING_SUMMARY, this.vars), { size: 15, color: '#fff6dc', origin: [0.5, 0], align: 'center', wrap: GAME_W - 76, lineSpacing: 5 }).setDepth(21);
+    const more = addText(this, GAME_W / 2, 400, 'tap to open the stall ▸', { size: 12, color: '#d8cbb5', origin: [0.5, 0] }).setDepth(21);
+    this.lineAt = this.time.now;
+    [card, head, body, more].forEach((o) => {
+      o.setAlpha(0);
+      this.tweens.add({ targets: o, alpha: 1, duration: 300 });
+    });
   }
 
   finish() {
