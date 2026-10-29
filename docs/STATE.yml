@@ -1,7 +1,7 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
 updated: 2026-10-29
 phase: development
-next: "Alpha round 4 P0s + most P1s fixed and live (2026-10-29). Next: alpha round 5 (same 5 players), or the long-term-pull plan (IDEAS.md alpha-4 leftovers)."
+next: "Alpha round 5 done (docs/playtest/2026-10-29-alpha5-report.md). Next: its P0s (lesson card after the drink -> calm-only + hold teacher order, coach Done on wrong drink, lesson demo mid-rush), then crowding pass, then a long-term-pull plan."
 tier_hint: 1
 blockers: []
 touched: [src/scenes/StallScene.js, src/scenes/DramaScene.js, src/scenes/OpeningScene.js, src/scenes/ShopScene.js, src/data/tools.js, src/data/stallTuning.js, src/i18n/lines.js, src/systems/drinkArt.js, src/systems/shop.js]
