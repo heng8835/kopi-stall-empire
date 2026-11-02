@@ -1,7 +1,7 @@
 # docs/STATE.yml — read FIRST (Tier 1). One line per field. Handoff, not history.
-updated: 2026-10-29
+updated: 2026-11-02
 phase: development
-next: "Round-5 fixes done and live (all 4 batches: P0s, crowding, polish, long-term pull). Next: alpha round 6 with the same 5 players."
+next: "Alpha round 6 done, 10 players (docs/playtest/2026-11-02-alpha6-report.md). Day-3 freeze fixed and live. Next: its P0s #2-#6 (Milo card after serving, input leaking into stories, held teacher blocks counter, first drag for non-gamers, lost purchase), then what round 5 broke, then an economy plan."
 tier_hint: 1
 blockers: []
 touched: [src/scenes/StallScene.js, src/scenes/DramaScene.js, src/scenes/OpeningScene.js, src/scenes/ShopScene.js, src/systems/difficulty.js, src/systems/tarik.js, src/data/twists.js, src/data/shop.js, src/data/events.js, src/systems/demo.js, src/systems/hints.js]
