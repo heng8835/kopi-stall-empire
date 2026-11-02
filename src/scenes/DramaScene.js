@@ -51,7 +51,15 @@ export default class DramaScene extends Phaser.Scene {
     this.flags = new Set(data.flags);
     const [tint, alpha] = MOODS[data.ep.mood] ?? [0x000000, 0.55];
     this.shade = { tint, alpha };
-    this.shadeRect = this.add.rectangle(0, 0, GAME_W, GAME_H, tint, alpha).setOrigin(0).setAlpha(0).setInteractive().on('pointerdown', () => this.tapReady() && this.advance());
+    this.shadeRect = this.add.rectangle(0, 0, GAME_W, GAME_H, tint, alpha).setOrigin(0).setAlpha(0).setInteractive();
+    // a line moves on when a press that began here lifts: a drag or tap burst from the stall can't skip it (round 6)
+    this.press = null;
+    this.shadeRect.on('pointerdown', (p) => (this.press = this.tapReady() ? { x: p.worldX, y: p.worldY } : null));
+    this.shadeRect.on('pointerup', (p) => {
+      const was = this.press;
+      this.press = null;
+      if (was && Math.hypot(p.worldX - was.x, p.worldY - was.y) < 12) this.advance();
+    });
     this.tweens.add({ targets: this.shadeRect, alpha: 1, duration: FADE_IN_MS, ease: 'Sine.out' });
     // Phaser reuses this scene object for every episode: reset all per-episode state.
     this.layer = []; // what the current card drew
@@ -65,9 +73,10 @@ export default class DramaScene extends Phaser.Scene {
     this.bornAt = this.time.now;
     this.cast = this.castOf(data.ep);
 
-    // top-right corner: clear of the choice buttons and the name tag (playtest: it sat on the 2nd choice)
-    const skip = addText(this, GAME_W - 16, 50, 'Skip ▸▸', { size: 14, bold: true, color: '#fff6dc', origin: [1, 0] }).setDepth(21);
-    const pill = this.add.rectangle(GAME_W - 8, 45, skip.width + 16, skip.height + 10, 0x2b2420, 0.9).setOrigin(1, 0).setStrokeStyle(2, 0xfff6dc, 0.6).setDepth(20);
+    // just above the dialogue box on the right: clear of the name tag and in reach of a thumb, not over the
+    // stall's Recipes tab (round 6: a tap on Recipes as a scene opened skipped it)
+    const skip = addText(this, GAME_W - 16, BOX_Y - 30, 'Skip ▸▸', { size: 14, bold: true, color: '#fff6dc', origin: [1, 0] }).setDepth(21);
+    const pill = this.add.rectangle(GAME_W - 8, BOX_Y - 35, skip.width + 16, skip.height + 10, 0x2b2420, 0.9).setOrigin(1, 0).setStrokeStyle(2, 0xfff6dc, 0.6).setDepth(20);
     this.skipText = { setVisible: (v) => (skip.setVisible(v), pill.setVisible(v)) };
     skip.setStroke('#2b2420', 3);
     skip.setInteractive({ useHandCursor: true }).on('pointerdown', (p, x, y, e) => {
@@ -333,7 +342,7 @@ export default class DramaScene extends Phaser.Scene {
     zh.setStroke('#2b2420', 3);
     this.layer.push(q, zh);
     this.d.ep.choice.options.forEach((opt, i) => {
-      const btn = makeButton(this, 24, 310 + i * 70, GAME_W - 48, 58, fill(opt.label, this.d.vars ?? {}), () => this.choose(opt), { size: 15, bold: true });
+      const btn = makeButton(this, 24, 310 + i * 70, GAME_W - 48, 58, fill(opt.label, this.d.vars ?? {}), () => this.choose(opt), { size: 15, bold: true, onRelease: true });
       this.layer.push(btn.bg, btn.txt);
     });
     this.lastWho = null;

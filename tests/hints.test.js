@@ -40,12 +40,12 @@ describe('the coach (next step)', () => {
     pour(cup, 'condensed', hold('condensed', 0.45));
     expect(step(cup, 'Teh siew dai')).toBe('Drop the spoon on the cup to stir');
     for (let i = 0; i < 6; i++) stirStep(cup);
-    expect(step(cup, 'Teh siew dai')).toBe('Done! Drag it to Aunty Lim');
+    expect(step(cup, 'Teh siew dai')).toBe('Done! Slide it up to Aunty Lim');
   });
 
   it('Kopi O kosong is just the pot', () => {
     const cup = pour(newCup(), 'kopi', hold('kopi', 0.95));
-    expect(step(cup, 'Kopi O kosong')).toBe('Done! Drag it to Aunty Lim');
+    expect(step(cup, 'Kopi O kosong')).toBe('Done! Slide it up to Aunty Lim');
   });
 
   it('peng: ¾ then ice; too full says bin it', () => {
@@ -54,7 +54,7 @@ describe('the coach (next step)', () => {
     for (let i = 0; i < 6; i++) stirStep(cup);
     expect(step(cup, 'Kopi peng')).toBe('Drop the ice in (it tops up to FULL)');
     addIce(cup);
-    expect(step(cup, 'Kopi peng')).toBe('Done! Drag it to Aunty Lim');
+    expect(step(cup, 'Kopi peng')).toBe('Done! Slide it up to Aunty Lim');
     expect(nextStep(pour(newCup(), 'kopi', hold('kopi', 0.95)), parseOrder('Kopi peng'), 'X').bin).toBe(true);
   });
 

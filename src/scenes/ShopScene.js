@@ -12,6 +12,7 @@ import { shopState, buy, nextGoal, goalText, openingAisle } from '../systems/sho
 import { showBoughtCard } from '../systems/cards.js';
 import { saveRun } from '../systems/run.js';
 import { playMusic } from '../systems/music.js';
+import { UI } from '../i18n/lines.js';
 
 // Catalogue pictures borrowed from stall art until their own (docs/art/PROMPTS_2026-10.md part 5); the rest show their emoji.
 const SHOP_ART = {
@@ -24,7 +25,6 @@ const SHOP_TINT = { brassSpoon: 0xf0c060 }; // the same brass as the spoon at th
 // Started with { run } = tomorrow's run; purchases are saved straight into it.
 
 const LIST = { top: 116, bottom: 546 };
-const CONFIRM_MS = 8000; // a first tap on Buy asks; a second tap within this long buys (slow readers too)
 const CARD_H = 84;
 const DEPTH = 10;
 
@@ -39,7 +39,8 @@ export default class ShopScene extends Phaser.Scene {
     this.aisle = data.aisle ?? openingAisle(data.run); // something you can afford tonight first (round 5)
     this.scroll = 0;
     this.leaving = false; // Phaser reuses this scene object every night
-    this.pending = null; // { id, at }: Buy tapped once, waiting for the confirming tap
+    this.undo = null; // the Undo button after a purchase
+    this.beforeBuy = null; // { run, item }: the run to go back to
     playMusic('night');
 
     // the stall at night, chairs up, one warm bulb; dimmed a little so the catalogue reads
@@ -187,7 +188,7 @@ export default class ShopScene extends Phaser.Scene {
     }[state];
     const bw = 88;
     const btn = makeButton(this, x + w - bw - 8, y + h / 2 - 18, bw, 36, label, () => this.tryBuy(item), {
-      size: 11, bold: true, fill: state === 'buy' ? 0xbfe3c0 : state === 'owned' ? 0xd7ecd3 : 0xe8e0d0,
+      onRelease: true, size: 11, bold: true, fill: state === 'buy' ? 0xbfe3c0 : state === 'owned' ? 0xd7ecd3 : 0xe8e0d0,
     });
     btn.setEnabled(state === 'buy');
     this.buttons[item.id] = { btn, label: label };
@@ -210,33 +211,11 @@ export default class ShopScene extends Phaser.Scene {
     return h;
   }
 
-  // id's Buy button shows "Tap to confirm" (gold); null puts the last one back.
-  markPending(id) {
-    const prev = this.pending && this.buttons[this.pending.id];
-    if (prev && !id) {
-      prev.btn.txt.setText(prev.label);
-      prev.btn.refresh();
-    }
-    const b = id && this.buttons[id];
-    if (b) {
-      b.btn.txt.setText('Confirm? ✓'); // (round 5: "Tap to confirm" spilled out of the button)
-      b.btn.bg.setFillStyle(0xf2c14e);
-    }
-  }
-
-  // First tap asks ("Tap to confirm"), the second buys: a scroll that starts on a button never buys.
-  // The list is NOT rebuilt on the first tap (that used to shift the cards under a slow second tap):
-  // just this button changes, in place.
+  // One tap buys, on release, so a scroll that starts on a button never does (round 6: "Confirm?" lost four
+  // players a purchase when they left after one tap). A slip is put right with Undo.
   tryBuy(item) {
     const keep = this.scroll;
-    if (this.pending?.id !== item.id || this.time.now - this.pending.at > CONFIRM_MS) {
-      this.markPending(null);
-      this.pending = { id: item.id, at: this.time.now };
-      this.markPending(item.id);
-      this.note.setText(`${item.name}: ${formatMoney(item.price)}. Tap again to buy.`);
-      return;
-    }
-    this.pending = null;
+    const before = this.run;
     const next = buy(this.run, item);
     if (!next) return;
     this.run = next;
@@ -246,6 +225,34 @@ export default class ShopScene extends Phaser.Scene {
     this.renderList();
     this.setScroll(keep);
     this.boughtPop(item);
+    this.showUndo(before, item);
+  }
+
+  showUndo(before, item) {
+    this.clearUndo();
+    this.beforeBuy = { run: before, item };
+    this.note.setX(GAME_W / 2 - 38).setWordWrapWidth(270, true);
+    this.undo = makeButton(this, GAME_W - 76, LIST.bottom + 4, 68, 28, 'Undo', () => this.undoBuy(), { size: 12, bold: true, onRelease: true });
+    this.undo.bg.setDepth(DEPTH);
+    this.undo.txt.setDepth(DEPTH + 1);
+  }
+
+  clearUndo() {
+    this.undo?.bg.destroy();
+    this.undo?.txt.destroy();
+    this.undo = null;
+    this.note.setX(GAME_W / 2).setWordWrapWidth(340, true);
+  }
+
+  undoBuy() {
+    const { run, item } = this.beforeBuy;
+    const keep = this.scroll;
+    this.run = run;
+    saveRun(this.run);
+    this.clearUndo();
+    this.note.setText(UI.undone.replace('{item}', item.name).replace('{price}', formatMoney(item.price)));
+    this.renderList();
+    this.setScroll(keep);
   }
 
   // A purchase is a moment, not one line of text (round 4): a big "Bought!" pops over the list.

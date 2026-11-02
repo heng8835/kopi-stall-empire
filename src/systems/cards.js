@@ -41,6 +41,9 @@ function modal(scene) {
 
 // The "new recipe" card. lesson: from src/data/recipes.js; showLine: false when a stand-in teacher brought it.
 // combo = { items, cupTint }: the teacher's order as pictures (StallScene.comboItems).
+// A card's buttons ignore their first moments: a tap meant for the stall underneath can't close the card unread.
+const cardButton = (scene, x, y, w, h, label, fn, o = {}) => makeButton(scene, x, y, w, h, label, fn, { graceMs: 400, ...o });
+
 // onWatch: a "Watch how?" button beside "Got it" (the ghost hand makes a sample, only if asked: round 5).
 export function showRecipeCard(scene, lesson, { showLine = true, combo = null, onClose, onWatch = null } = {}) {
   const m = modal(scene);
@@ -77,9 +80,9 @@ export function showRecipeCard(scene, lesson, { showLine = true, combo = null, o
   };
   const by = top + h - pad - 40;
   if (onWatch) {
-    btns.push(makeButton(scene, GAME_W / 2 - 136, by, 128, 40, 'Watch how? ▶', () => close(onWatch), { size: 14, bold: true }));
-    btns.push(makeButton(scene, GAME_W / 2 + 8, by, 128, 40, 'Got it ▸', () => close(onClose), { size: 15, bold: true, fill: 0xbfe3c0 }));
-  } else btns.push(makeButton(scene, GAME_W / 2 - 70, by, 140, 40, 'Got it ▸', () => close(onClose), { size: 15, bold: true, fill: 0xbfe3c0 }));
+    btns.push(cardButton(scene, GAME_W / 2 - 136, by, 128, 40, 'Watch how? ▶', () => close(onWatch), { size: 14, bold: true }));
+    btns.push(cardButton(scene, GAME_W / 2 + 8, by, 128, 40, 'Got it ▸', () => close(onClose), { size: 15, bold: true, fill: 0xbfe3c0 }));
+  } else btns.push(cardButton(scene, GAME_W / 2 - 70, by, 140, 40, 'Got it ▸', () => close(onClose), { size: 15, bold: true, fill: 0xbfe3c0 }));
   btns.forEach((b) => (b.bg.setDepth(DEPTH + 2), b.txt.setDepth(DEPTH + 3)));
   play('perfect');
 }
@@ -117,7 +120,7 @@ export function showStarterCard(scene, { title, rows, note, button, onClose }) {
     scene.tweens.add({ targets: m.objs.slice(-9), alpha: { from: 0, to: 1 }, duration: 250, delay: 150 + i * 180 });
   });
   m.add(addText(scene, x + 16, top + 56 + rows.length * rowH + 8, note, { size: 12, wrap: W - 32, color: '#3a2e2a' }));
-  const btn = makeButton(scene, GAME_W / 2 - 100, top + h - 52, 200, 40, button, () => {
+  const btn = cardButton(scene, GAME_W / 2 - 100, top + h - 52, 200, 40, button, () => {
     m.close();
     btn.bg.destroy();
     btn.txt.destroy();
@@ -175,7 +178,7 @@ export function showComboCard(scene, { name, items, cupTint, notes, onClose }) {
     m.add(t.setPosition(x + 16, ny));
     ny += t.height + 4;
   });
-  const btn = makeButton(scene, GAME_W / 2 - 70, top + h - 50, 140, 40, 'Got it ▸', () => {
+  const btn = cardButton(scene, GAME_W / 2 - 70, top + h - 50, 140, 40, 'Got it ▸', () => {
     m.close();
     btn.bg.destroy();
     btn.txt.destroy();
@@ -226,7 +229,7 @@ export function showRecipeBook(scene, { entries, onClose }) {
   m.objs[0].on('pointerup', () => (dragFrom = null));
   const wheel = (p, over, dx, dy) => scrollTo(list.y - dy * 0.5);
   scene.input.on('wheel', wheel);
-  const btn = makeButton(scene, GAME_W / 2 - 100, GAME_H - 56, 200, 40, 'Back to the stall ▸', () => {
+  const btn = cardButton(scene, GAME_W / 2 - 100, GAME_H - 56, 200, 40, 'Back to the stall ▸', () => {
     scene.input.off('wheel', wheel);
     maskShape.destroy();
     m.close();
@@ -266,7 +269,7 @@ export function showBoughtCard(scene, { title, rows, button, onClose }) {
     scene.tweens.add({ targets: b, alpha: { from: 0, to: 1 }, duration: 250, delay: 150 + i * 180 });
     y += rowH(b) + 12;
   });
-  const btn = makeButton(scene, GAME_W / 2 - 90, top + h - pad - 40, 180, 40, button, () => {
+  const btn = cardButton(scene, GAME_W / 2 - 90, top + h - pad - 40, 180, 40, button, () => {
     m.close();
     btn.bg.destroy();
     btn.txt.destroy();

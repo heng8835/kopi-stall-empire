@@ -97,6 +97,8 @@ const PERIODS = [['Morning', 0, 240, 0xffe9a8], ['Lunch', 240, 420, 0xffb870], [
 const POUR_DWELL_MS = 140; // a pot only starts pouring once it has stopped over a cup this long...
 const POUR_STILL_PX = 12; // ...within this far (sweeping past a cup pours nothing)
 const SUMMARY_GRACE_MS = 1200; // the day-end card's buttons wake up after this
+const LESSON_CALM_MS = 400; // a held teacher's card needs hands free only this long (round 6: 1.8 s of no touch kept them waiting through a rush)
+const GUEST_CALM_MS = 700; // ...and a held story guest's episode this long, whatever is on the tray
 const CALM_MS = 1800; // pop-ups (cards, demos, stories) wait for hands free (no touch) this long (whenCalm)
 const TIER_RANK = { oops: 0, close: 1, perfect: 2 }; // which customer a dropped cup suits best (serveTarget)
 const TRAY_WAIT_MS = 6000; // ...and for the cups being made to be served, unless they're left sitting this long
@@ -175,6 +177,9 @@ export default class StallScene extends Phaser.Scene {
     // Phaser reuses this scene object every day: reset everything the last day may have left set
     // (a leftover `closing` turned every Day 2 customer away)
     this.closing = false;
+    this.armedCup = null;
+    this.armGlow = null;
+    this.serveHinting = false;
     this.goalChip = null; // (yesterday's was destroyed with its scene: writing to it froze every morning after a goal day)
     this.tarik = null;
     this.tapHinted = null;
@@ -222,6 +227,12 @@ export default class StallScene extends Phaser.Scene {
     this.idleMs = 0; // no touch for this long while customers wait: the stall pauses itself (idleCheck)
     this.input.on('pointerup', (p, over) => {
       this.calmMs = 0;
+      // a picked cup, then a tap up at the customers: it goes to them (tapCup)
+      const picked = this.armedCup;
+      if (picked?.cup && !over.length && !this.paused && !this.ended && !this.demo && p.getDistance() < 8 && p.worldY < SERVE_AREA_Y) {
+        const to = this.serveTarget(picked, p.worldX, p.worldY);
+        if (to) return this.serveCup(picked, to);
+      }
       // a tap (not a drag) on a waiting customer, not on a word or a button: their cup (pickCupFor)
       const c = !over.length && !this.paused && !this.ended && p.getDistance() < 8 && p.worldY < SERVE_AREA_Y && this.customerAt(p.worldX, p.worldY, (x) => this.cupsOwed(x) > 0);
       if (c) this.pickCupFor(c);
@@ -377,6 +388,7 @@ export default class StallScene extends Phaser.Scene {
       container.on('dragstart', () => this.onCupDragStart(slot));
       container.on('drag', (p) => this.onCupDrag(slot, p));
       container.on('dragend', (p) => this.onCupDragEnd(slot, p));
+      this.onTap(container, () => this.tapCup(slot));
       this.redrawSlot(slot);
       return slot;
     });
@@ -437,15 +449,78 @@ export default class StallScene extends Phaser.Scene {
       c.home = { x: t.x, y: t.y };
       c.area = () => new Phaser.Geom.Rectangle(t.x - t.w / 2, t.y - t.h / 2, t.w, t.h);
       this.tools[t.id] = c;
-      if (t.kind === 'bin') continue;
+      if (t.kind === 'bin') {
+        this.onTap(c, () => this.tapBin());
+        continue;
+      }
       this.input.setDraggable(c);
       c.on('dragstart', () => this.onToolDragStart(c));
       c.on('drag', (p) => this.onToolDrag(c, p));
       c.on('dragend', (p) => this.onToolDragEnd(c, p));
-      if (t.kind === 'rack') c.on('pointerup', (p) => p.getDistance() < 6 && this.placeCupInFreeSlot());
-      else c.on('pointerup', (p) => p.getDistance() < 6 && this.toolTapHint(c)); // a tap alone does nothing: say how
+      if (t.kind === 'rack') this.onTap(c, () => this.placeCupInFreeSlot());
+      else this.onTap(c, () => this.toolTapHint(c)); // a tap alone does nothing: say how
     }
     if (import.meta.env.DEV) TOOL_IDS.filter((id) => !this.tools[id]).forEach((id) => console.warn('[tutorial] no tool for id', id));
+  }
+
+  // A real tap on this object: pressed and lifted here without moving (round 6: closing a card landed its
+  // release on the tool underneath).
+  onTap(obj, fn) {
+    obj.on('pointerdown', () => (obj.tapArmed = true));
+    obj.on('pointerout', () => (obj.tapArmed = false));
+    obj.on('pointerup', (p) => {
+      if (obj.tapArmed && p.getDistance() < 6) fn();
+      obj.tapArmed = false;
+    });
+  }
+
+  // Serving without dragging (round 6: Raj tapped the cup, tapped Aunty Lim, and was stuck): tap a cup with
+  // something in it, then tap who it's for, or the Bin. Tapping it again lets go.
+  tapCup(slot) {
+    if (this.paused || this.ended || this.demo || !slot.cup || isEmpty(slot.cup)) return;
+    this.armCup(this.armedCup === slot ? null : slot);
+    if (this.armedCup) this.think(UI.cupPicked, 3000);
+    play('tap');
+  }
+
+  armCup(slot) {
+    this.armGlow?.destroy();
+    this.armGlow = null;
+    this.armedCup = slot;
+    if (!slot) return;
+    this.armGlow = this.add.rectangle(slot.x, CUP_BOTTOM - CUP_H / 2, CUP_W + 22, CUP_H + 16).setStrokeStyle(3, 0xf2c14e).setDepth(15);
+    this.tweens.add({ targets: this.armGlow, alpha: { from: 1, to: 0.35 }, duration: 450, yoyo: true, repeat: -1 });
+  }
+
+  tapBin() {
+    const slot = this.armedCup;
+    if (this.paused || this.ended || this.demo) return;
+    if (!slot?.cup) return this.think(UI.binHint, 3000);
+    play('bin');
+    logEvent(this.log, 'bin', { made: formatCup(slot.cup) }, this.clockMs);
+    this.removeCup(slot);
+  }
+
+  // The hand shows the serve, cup and all, again and again until the player's first serve ever.
+  serveHint(slot, c) {
+    if (this.serveHinting || load('servedOnce', false)) return;
+    this.serveHinting = true;
+    const hand = addText(this, slot.x, CUP_BOTTOM - 30, '👆', { size: 34, origin: [0.32, 0.05] }).setDepth(44).setAlpha(0);
+    const ghost = this.add.image(slot.x, CUP_BOTTOM - 40, 'cupGlass').setDepth(43).setAlpha(0);
+    ghost.setScale(CUP_H / ghost.height);
+    const stop = () => {
+      this.serveHinting = false;
+      [hand, ghost].forEach((o) => o.active && (this.tweens.killTweensOf(o), o.destroy()));
+    };
+    const once = () => {
+      if (load('servedOnce', false) || !slot.cup || c.state !== 'waiting' || this.ended) return stop();
+      const to = { x: this.centerX(c), y: FEET_Y - 70 };
+      hand.setPosition(slot.x, CUP_BOTTOM - 30).setAlpha(0.95);
+      ghost.setPosition(slot.x, CUP_BOTTOM - 40).setAlpha(0.6);
+      this.tweens.add({ targets: [hand, ghost], x: to.x, y: to.y, duration: 1100, delay: 250, ease: 'Sine.inOut', onComplete: () => this.tweens.add({ targets: [hand, ghost], alpha: 0, duration: 250 }) });
+      this.time.delayedCall(4000, once);
+    };
+    once();
   }
 
   // Tapped a tool instead of dragging it (round 5: "a tapped pot does nothing"): once per tool a day, say how.
@@ -651,6 +726,7 @@ export default class StallScene extends Phaser.Scene {
     const slot = live(this.focusSlot) ? this.focusSlot : this.slots.find(live);
     if (slot) {
       const r = nextStep(slot.cup, slot.ticket.spec, slot.ticket.who);
+      if (r.text.startsWith('Done')) this.serveHint(slot, slot.ticket.c);
       return this.setCoach(`Cup ${slot.i + 1} for ${slot.ticket.who}: ${r.text}`, r.bin);
     }
     const f = this.focusSlot;
@@ -669,7 +745,7 @@ export default class StallScene extends Phaser.Scene {
       return this.setCoach(`${grab}${this.whoOf(oldest)} wants ${oldest.orderText}: ${recipeHint(oldest.spec)}`);
     }
     if (this.closing) return this.setCoach("Closing time. Last customers, then we 收档!");
-    if (this.waitingCustomers().length) return this.setCoach('Serve the cups on the tray: drag each one up to its customer');
+    if (this.waitingCustomers().length) return this.setCoach('Serve the cups on the tray: slide each one up to its customer');
     if (this.allCustomers().length || this.queue.length) return this.setCoach('Customers coming… get a cup ready');
     this.setCoach(this.slots.some((sl) => sl.cup) ? 'Cup ready. Waiting for customers… 等客人' : 'Waiting for customers… 等客人');
   }
@@ -696,6 +772,7 @@ export default class StallScene extends Phaser.Scene {
   }
 
   removeCup(slot) {
+    if (this.armedCup === slot) this.armCup(null);
     this.coachIn = 0; // the coach looks again straight away (no stale "Spilled!" on the next cup)
     slot.ticket = null;
     slot.cup = null;
@@ -774,6 +851,7 @@ export default class StallScene extends Phaser.Scene {
   }
 
   onCupDragStart(slot) {
+    this.armCup(null);
     this.dragging += 1;
     if (!slot.cup) return;
     play('pickup');
@@ -1309,7 +1387,7 @@ export default class StallScene extends Phaser.Scene {
         if (sample) break; // they taste it below
         this.showBubble(c, s.teach, 'say');
         // your turn starts now: the hand only points the way, it doesn't hold the stall any more
-        const sayYourTurn = `Your turn! Drag the cup to ${c.def.short ?? c.def.name}`;
+        const sayYourTurn = `Your turn! Slide the cup up to ${c.def.short ?? c.def.name}`;
         this.think(sayYourTurn, 3000);
         letGo();
         const at = { x: hand.x, y: hand.y };
@@ -1441,9 +1519,9 @@ export default class StallScene extends Phaser.Scene {
 
   // ---------- customers ----------
 
-  // (a teacher whose recipe card hasn't shown yet isn't ordering: holdForLesson)
+  // (someone holding their order for a story or a recipe card isn't ordering yet: c.held)
   waitingCustomers() {
-    return [...new Set([...this.spots, ...this.tableGuests])].filter((c) => c?.state === 'waiting' && !c.lessonPending);
+    return [...new Set([...this.spots, ...this.tableGuests])].filter((c) => c?.state === 'waiting' && !c.held);
   }
 
   allCustomers() {
@@ -1647,6 +1725,7 @@ export default class StallScene extends Phaser.Scene {
     c.arrivedAt = this.clockMs;
     // a teacher holds their order until the recipe card has been seen (round 5: it came after the drink)
     if (c.lesson && this.lessonState !== 'done') this.holdForLesson(c);
+    else if (c.episode) this.holdForStory(c); // ...and a story guest until their episode has played (round 6)
     else this.showBubble(c, c.orderLine, 'order');
     for (const sl of this.slots) if (sl.cup && !sl.ticket) this.assignCup(sl);
     if (c.onArrive) this.time.delayedCall(700, () => c.onArrive()); // e.g. the tutorial's next step
@@ -1656,13 +1735,21 @@ export default class StallScene extends Phaser.Scene {
 
   // A story guest at the counter: the "!" cue, then their episode (once it's calm).
   cueEpisode(c) {
+    // held for this story: it opens on the first calm moment, the tray needn't be clear
+    const kind = c.held ? 'guest' : 'story';
     this.whenCalm(() =>
       this.storyCue(c, () =>
         this.whenCalm(() => {
           this.guestEpisode = null;
           this.storyGuest = c; // a choice can change what they pay (applyStoryChoice)
           this.playEpisode(c.episode, () => ((this.storyGuest = null), this.startPendingTutorial()));
-        }, true, 'story')), false, 'story');
+        }, true, kind)), !!c.held, kind);
+  }
+
+  // A story guest at the counter: no order, and no waiting, until their episode has played.
+  holdForStory(c) {
+    c.held = 'story';
+    this.showBubble(c, UI.storyHold, 'say');
   }
 
   // A story is about to happen: a "!" pops up over the guest's head first.
@@ -1809,6 +1896,7 @@ export default class StallScene extends Phaser.Scene {
 
   serveCup(slot, c) {
     const cup = slot.cup;
+    save('servedOnce', true);
     if (slot.stirring === cup) cup.stir = 1; // served while the spoon was still going: it was stirred
     let { tier, reasons } = gradeCup(cup, c.spec);
     // Uncle Tan's towel forgives the first spill of the day
@@ -2240,7 +2328,11 @@ export default class StallScene extends Phaser.Scene {
     if (here) {
       if (here.state === 'reacting' || here.served) return this.time.delayedCall(1000, () => this.bringGuest(ep)); // after they've gone
       here.episode = ep;
-      if (here.state === 'waiting') this.cueEpisode(here); // at the counter now; queued / walking: arrive() cues it
+      if (here.state === 'waiting') {
+        // at the counter now (queued / walking: arrive() cues it); nothing being made for them yet: they hold too
+        if (!this.slots.some((sl) => sl.cup && sl.ticket?.c === here)) this.holdForStory(here);
+        this.cueEpisode(here);
+      }
       return;
     }
     const c = this.spawnCustomer(id, ep.guest.order);
@@ -2280,7 +2372,17 @@ export default class StallScene extends Phaser.Scene {
         logEvent(this.log, 'story', { id: ep.id, flags: this.flags.join(',') }, this.clockMs);
         this.refreshHud();
         this.checkpoint();
-        if (this.lesson?.afterStory === ep.id && this.lessonState === 'waiting') this.whenCalm(() => this.showLesson(true), true);
+        // a held guest now orders, or first teaches: a recipe this story brings stays ahead of the drink
+        const g = this.storyGuest;
+        const teaches = this.lesson?.afterStory === ep.id && this.lessonState === 'waiting';
+        if (teaches && g?.state === 'waiting') {
+          g.lessonLine = true;
+          this.holdForLesson(g);
+        } else if (teaches) this.whenCalm(() => this.showLesson(true), true);
+        else if (g?.held === 'story') {
+          g.held = null;
+          if (g.state === 'waiting') this.showBubble(g, g.orderLine, 'order');
+        }
         then();
       },
     });
@@ -2294,7 +2396,7 @@ export default class StallScene extends Phaser.Scene {
       if (opt.guestCups && opt.guestCups < g.n) {
         g.n = Math.max(g.served + 1, opt.guestCups);
         g.orderLine = pickLine(g.def.lines, 'order', this.lineVars({ order: g.orderText, n: g.n, hot: !g.spec.iced }));
-        if (g.state === 'waiting') this.showBubble(g, g.orderLine, 'order');
+        if (g.state === 'waiting' && !g.held) this.showBubble(g, g.orderLine, 'order');
       }
     }
     if (opt.note) this.time.delayedCall(900, () => this.setFeedback(opt.note)); // (runs once the stall is back)
@@ -2373,6 +2475,7 @@ export default class StallScene extends Phaser.Scene {
   // Calm long enough for a pop-up: hands free a moment, and no half-made (or made, unserved) cup on
   // the tray, so nothing lands in the middle of a drink. A cup left sitting stops blocking after a while.
   popupReady(kind = 'card') {
+    if (kind === 'guest') return this.calmMs >= GUEST_CALM_MS;
     if (this.calmMs < CALM_MS) return false;
     const busy = this.slots.some(({ cup }) => cup && (cup.base || cup.condensed || cup.evap || cup.sugar || cup.gula || cup.ice || cup.powder));
     return !busy || this.calmMs >= (kind === 'story' ? STORY_TRAY_WAIT_MS : TRAY_WAIT_MS);
@@ -2529,7 +2632,7 @@ export default class StallScene extends Phaser.Scene {
     const combo = { items: this.comboItems(spec), cupTint: liquidColor(demoCup(spec)) };
     const order = () => {
       if (!teacher) return;
-      teacher.lessonPending = false;
+      teacher.held = null;
       if (teacher.state === 'waiting') this.showBubble(teacher, teacher.orderLine, 'order');
     };
     const ok = () => (order(), this.nextLesson());
@@ -2539,15 +2642,15 @@ export default class StallScene extends Phaser.Scene {
 
   // The teacher is at the counter: "one moment", no order (and no waiting) until their card shows.
   holdForLesson(c) {
-    c.lessonPending = true;
+    c.held = 'lesson';
     this.showBubble(c, UI.lessonHold, 'say');
   }
 
   // Called every frame: the held teacher's card opens on the first calm moment (calm hands only, like a
   // NEW ORDER card: the tray may be busy, nothing is being made for them yet).
   showPendingLesson() {
-    const c = this.allCustomers().find((x) => x.lessonPending && x.state === 'waiting');
-    if (!c || this.paused || !this.calm() || this.calmMs < CALM_MS) return;
+    const c = this.allCustomers().find((x) => x.held === 'lesson' && x.state === 'waiting');
+    if (!c || this.paused || !this.calm() || this.calmMs < LESSON_CALM_MS) return;
     this.calmMs = 0;
     this.showLesson(c.lessonLine, c);
   }

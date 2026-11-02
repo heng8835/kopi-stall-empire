@@ -59,7 +59,7 @@ export function nextStep(cup, spec, who) {
     // only a cup that would really please them is "done" (round 5: a gu you made with sugar still said Done)
     const { tier, reasons } = gradeCup(cup, spec);
     if (tier === 'oops') return { text: `Not right yet: ${reasons[0] ?? 'not their drink'}. Bin it and try again`, bin: true };
-    return { text: `Done! Drag it to ${who}` };
+    return { text: `Done! Slide it up to ${who}` };
   };
 
   // Teh C Special: three layers from the bottom up, and no spoon

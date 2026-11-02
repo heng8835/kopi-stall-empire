@@ -34,12 +34,29 @@ export function makeButton(scene, x, y, w, h, label, onTap, opts = {}) {
       return this;
     },
   };
-  bg.on('pointerdown', () => {
-    if (!btn.enabled) return;
+  // opts.graceMs: taps this soon after it appears don't count (a tap meant for what was underneath).
+  // opts.onRelease: it answers when the finger lifts, if the press began here and didn't move (so a scroll,
+  // or a drag from the stall that ends here, never presses it).
+  const born = Date.now();
+  let press = null;
+  const fire = () => {
     play('tap');
     scene.tweens.add({ targets: [bg, txt], y: '+=2', duration: 50, yoyo: true });
     onTap();
+  };
+  bg.on('pointerdown', (p) => {
+    if (!btn.enabled || (opts.graceMs && Date.now() - born < opts.graceMs)) return;
+    if (opts.onRelease) press = { x: p.worldX, y: p.worldY };
+    else fire();
   });
+  if (opts.onRelease) {
+    bg.on('pointerup', (p) => {
+      const was = press;
+      press = null;
+      if (was && btn.enabled && Math.hypot(p.worldX - was.x, p.worldY - was.y) < 8) fire();
+    });
+    bg.on('pointerout', () => (press = null));
+  }
   btn.refresh();
   return btn;
 }
