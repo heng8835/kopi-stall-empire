@@ -175,6 +175,10 @@ export default class StallScene extends Phaser.Scene {
     // Phaser reuses this scene object every day: reset everything the last day may have left set
     // (a leftover `closing` turned every Day 2 customer away)
     this.closing = false;
+    this.goalChip = null; // (yesterday's was destroyed with its scene: writing to it froze every morning after a goal day)
+    this.tarik = null;
+    this.tapHinted = null;
+    this.emptyMs = 0;
     this.closedOut = false;
     this.overtimeMs = 0;
     this.focusSlot = null;
@@ -2385,12 +2389,13 @@ export default class StallScene extends Phaser.Scene {
       const hint = addText(this, GAME_W / 2, 306, UI.pausedHint, { size: 13, color: '#d8cbb5', origin: 0.5 }).setDepth(91);
       title.setStroke('#2b2420', 4);
       // a moment before a tap counts, so the tap that paused (or a stray one) doesn't unpause
-      const born = performance.now(); // (the scene clock is stopped while paused)
-      // on the tap's release, and a beat later, so the same tap can't also land on a customer or a tool below
+      const born = Date.now(); // (the scene clock is stopped while paused)
+      // on the tap's release: the sheet is still what the tap hit, so it can't also land on a customer or a tool below
       shade.on('pointerup', () => {
-        if (performance.now() - born < 350 || !shade.active) return;
+        if (Date.now() - born < 350 || !shade.active) return;
         [shade, title, hint].forEach((o) => o.destroy());
-        window.setTimeout(() => ((this.idleMs = 0), resume()), 0);
+        this.idleMs = 0;
+        resume();
       });
     });
   }
