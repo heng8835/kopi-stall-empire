@@ -75,7 +75,7 @@ describe('extras dropped from the counter', () => {
     expect(nextStep(cup, spec, 'Marcus').text).toMatch(/bag/);
     addExtra(cup, 'tapau');
     expect(nextStep(cup, spec, 'Marcus').text).toMatch(/Done/);
-    expect(recipeHint(spec)).toBe('Teh ¾ · no milk · sugar NORMAL · limau · stir · ice · bag it');
+    expect(recipeHint(spec)).toBe('sugar NORMAL · Teh ¾ · no milk · limau · stir · ice · bag it');
   });
 });
 

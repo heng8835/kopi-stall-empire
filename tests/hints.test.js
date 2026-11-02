@@ -7,12 +7,12 @@ const h = (o) => recipeHint(parseOrder(o));
 describe('recipe hints under orders', () => {
   it('spells out each order in pour-bar words', () => {
     expect(h('Kopi O kosong')).toBe('Kopi FULL · no milk · no sugar');
-    expect(h('Kopi')).toBe('Kopi FULL · condensed NORMAL · stir');
-    expect(h('Teh siew dai')).toBe('Teh FULL · condensed SIEW DAI · stir');
-    expect(h('Kopi O')).toBe('Kopi FULL · no milk · sugar NORMAL · stir');
-    expect(h('Teh C siew dai peng')).toBe('Teh ¾ · evap C · sugar SIEW DAI · stir · ice');
-    expect(h('Kopi C kosong')).toBe('Kopi FULL · evap C · no sugar · stir');
-    expect(h('Kopi ga dai')).toBe('Kopi FULL · condensed GA DAI · stir');
+    expect(h('Kopi')).toBe('condensed NORMAL · Kopi FULL · stir');
+    expect(h('Teh siew dai')).toBe('condensed SIEW DAI · Teh FULL · stir');
+    expect(h('Kopi O')).toBe('sugar NORMAL · Kopi FULL · no milk · stir');
+    expect(h('Teh C siew dai peng')).toBe('evap C · sugar SIEW DAI · Teh ¾ · stir · ice');
+    expect(h('Kopi C kosong')).toBe('evap C · Kopi FULL · no sugar · stir');
+    expect(h('Kopi ga dai')).toBe('condensed GA DAI · Kopi FULL · stir');
   });
 
   it('Milo drinks', () => {
@@ -20,7 +20,7 @@ describe('recipe hints under orders', () => {
     expect(h('Milo peng')).toBe('Milo ¾ · ice');
     expect(h('Milo Dinosaur')).toBe('Milo ¾ · ice · powder on top');
     expect(h('Horlicks peng')).toBe('Horlicks ¾ · ice');
-    expect(h('Cham O')).toBe('Kopi + teh FULL · no milk · sugar NORMAL · stir');
+    expect(h('Cham O')).toBe('sugar NORMAL · Kopi + teh FULL · no milk · stir');
   });
 });
 
@@ -34,10 +34,10 @@ const step = (cup, order) => nextStep(cup, parseOrder(order), 'Aunty Lim').text;
 describe('the coach (next step)', () => {
   it('walks through a Teh siew dai', () => {
     const cup = newCup();
-    expect(step(cup, 'Teh siew dai')).toBe('Hold the teh pot over the cup till FULL');
-    pour(cup, 'teh', hold('teh', 0.95));
-    expect(step(cup, 'Teh siew dai')).toBe("Condensed milk till SIEW DAI (it's the sweetness)");
+    expect(step(cup, 'Teh siew dai')).toBe("Condensed milk first, till SIEW DAI (it's the sweetness)");
     pour(cup, 'condensed', hold('condensed', 0.45));
+    expect(step(cup, 'Teh siew dai')).toBe('Milk first, like the uncles! Now the teh pot till FULL');
+    pour(cup, 'teh', hold('teh', 0.95));
     expect(step(cup, 'Teh siew dai')).toBe('Drop the spoon on the cup to stir');
     for (let i = 0; i < 6; i++) stirStep(cup);
     expect(step(cup, 'Teh siew dai')).toBe('Done! Slide it up to Aunty Lim');
@@ -66,8 +66,15 @@ describe('the coach (next step)', () => {
     expect(nextStep(pour(pour(newCup(), 'kopi', hold('kopi', 0.95)), 'condensed', 500), parseOrder('Kopi C'), 'X').bin).toBe(true);
   });
 
-  it('cham: kopi first, then teh', () => {
+  it('pot first still works: the coach carries on with the milk', () => {
+    const cup = pour(newCup(), 'teh', hold('teh', 0.95));
+    expect(step(cup, 'Teh siew dai')).toBe("Condensed milk till SIEW DAI (it's the sweetness)");
+  });
+
+  it('cham: milk first, kopi, then teh', () => {
     const cup = newCup();
+    expect(step(cup, 'Cham')).toMatch(/^Condensed milk first/);
+    pour(cup, 'condensed', hold('condensed', 0.85));
     expect(step(cup, 'Cham')).toBe('Cham: kopi pot first, about half the cup');
     pour(cup, 'kopi', hold('kopi', 0.5));
     expect(step(cup, 'Cham')).toBe('Now the teh pot on top, till FULL');

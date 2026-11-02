@@ -215,7 +215,7 @@ export const UI = {
   dropOnCup: 'Move it onto a cup 👆',
   tarikHow: 'Tarik! Hold to lift the mug, let go in the green. Again till frothy',
   todayGo: "Let's go! 开档 ▸",
-  goalReward: 'Reward: +{reward} and 名气 +{fame}. Your progress shows at the end of the thought bubble.',
+  goalReward: 'Reward: +{reward} and 名气 +{fame}. Your progress: the 🎯 box just above the pots.',
   goalDone: "Today's goal done! 🎯  +{reward} · 名气 +1",
   milestone: '名气 {fame}! 有名了!\nUncle Tan has {n} new things in tonight\'s shop',
   trayFull: 'Tray full! Serve a cup, or slide one to the bin',
@@ -246,7 +246,8 @@ export function pickLine(charId, kind, vars = {}, rng = Math.random) {
   // a hot drink never gets an "extra cold ah" line (round 4: Makcik asked for a cold hot teh tarik)
   // ...and "lunch hour" only around lunch (round 5: said at 7:30am). vars.hour = the stall's clock
   const lunch = vars.hour == null || (vars.hour >= 11 && vars.hour < 15);
-  const fits = all.filter((l) => !(vars.hot && /\bcold\b/i.test(l)) && (lunch || !/lunch/i.test(l)));
+  // ...and "panas" (hot weather) not with a hot drink or on a rain day (round 6)
+  const fits = all.filter((l) => !(vars.hot && /\bcold\b/i.test(l)) && !((vars.hot || vars.rain) && /\bpanas\b/i.test(l)) && (lunch || !/lunch/i.test(l)));
   const list = fits.length ? fits : all;
   const line = list[Math.floor(rng() * list.length)];
   return line.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');

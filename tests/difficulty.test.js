@@ -18,7 +18,7 @@ describe('the month gets a little harder (round 5)', () => {
     expect(pickTwist(3).id).toBe('rain');
     expect(pickTwist(30)).toBeNull();
     expect(twistWeight(pickTwist(3), parseOrder('Kopi'))).toBe(3);
-    expect(twistWeight(pickTwist(3), parseOrder('Kopi peng'))).toBe(1);
+    expect(twistWeight(pickTwist(3), parseOrder('Kopi peng'))).toBe(0); // rain: walk-ins order hot
   });
   it('a daily goal from Day 2 that fits the twist, and its progress', () => {
     expect(dailyGoal(1)).toBeNull();

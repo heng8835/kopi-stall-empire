@@ -14,14 +14,16 @@ export function recipeHint(spec) {
   }
   if (spec.layered) return ['gula melaka NORMAL', 'evap C', 'teh FULL', 'no stirring!', bag].filter(Boolean).join(' · ');
   const name = { kopi: 'Kopi', teh: 'Teh', cham: 'Kopi + teh' }[spec.base];
-  const steps = [`${name} ${pot}`];
-  if (spec.strength === 'poh') steps.splice(0, 1, `${name} ½`, 'hot water FULL');
-  if (spec.strength === 'gao') steps.push('no water');
+  // what goes in first (milk, sugar), then the pot, then what to leave out: the order the demos use
+  const steps = [];
   if (spec.milk === 'condensed') steps.push(`condensed ${SWEET[spec.sugar]}`);
-  else {
-    steps.push(spec.milk === 'evap' ? 'evap C' : 'no milk');
-    steps.push(spec.sugar === 'none' ? 'no sugar' : `sugar ${SWEET[spec.sugar]}`);
-  }
+  if (spec.milk === 'evap') steps.push('evap C');
+  if (spec.milk !== 'condensed' && spec.sugar !== 'none') steps.push(`sugar ${SWEET[spec.sugar]}`);
+  if (spec.strength === 'poh') steps.push(`${name} ½`, 'hot water FULL');
+  else steps.push(`${name} ${pot}`);
+  if (spec.strength === 'gao') steps.push('no water');
+  if (spec.milk === 'none') steps.push('no milk');
+  if (spec.milk !== 'condensed' && spec.sugar === 'none') steps.push('no sugar');
   if (spec.halia) steps.push('halia');
   if (spec.limau) steps.push('limau');
   if (spec.butter) steps.push('butter');
@@ -75,6 +77,16 @@ export function nextStep(cup, spec, who) {
     if (cup.fill > ZONES.fill.spill) return { text: 'Spilled! Bin it and try again', bin: true };
     if (peng && !cup.ice) return { text: 'Drop the ice in (it tops up to FULL)' };
     return finish();
+  }
+
+  // milk or sugar first, the pot on top: the order the demos and cards teach (round 6: the coach said pot first)
+  if (!cup.base && !malt) {
+    const want = SWEET_IDX[spec.sugar];
+    const sweet = sugarBucket(sweetness(cup));
+    const target = { 0: 'KOSONG', 2: 'SIEW DAI', 4: 'NORMAL', 6: 'GA DAI' }[want];
+    if (spec.milk === 'condensed' && sweet < want) return { text: `Condensed milk first, till ${target} (it's the sweetness)` };
+    if (spec.milk === 'evap' && cup.evap < ZONES.milk.normal[0]) return { text: 'Evap milk first, till C · NORMAL' };
+    if (spec.milk !== 'condensed' && sweet < want) return { text: `Sugar first, till ${target}` };
   }
 
   // the base

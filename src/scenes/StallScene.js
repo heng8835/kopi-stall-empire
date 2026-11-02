@@ -15,7 +15,7 @@ import { parseOrder, plainOrder } from '../systems/order.js';
 import { newCup, pour, addIce, addPowder, addExtra, stirStep, tarikStep, gradeCup, formatCup, isEmpty } from '../systems/cup.js';
 import { DRINKS } from '../data/drinks.js';
 import { DrinkArt, ART_ORIGIN } from '../systems/drinkArt.js';
-import { PourBar, dialZonesFor, measureOf } from '../systems/pourBar.js';
+import { PourBar, dialZonesFor, measureOf, inTarget } from '../systems/pourBar.js';
 import { showRecipeCard, showRecipeBook, showComboCard, showBoughtCard } from '../systems/cards.js';
 import { ordersFor, lessonFor, unlockedFeatures, regularOrder, featuresOf } from '../systems/menu.js';
 import { perks, gift, nextGoal, goalText, itemById } from '../systems/shop.js';
@@ -57,7 +57,7 @@ const CLOSE_MIN = 19 * 60; // 7:00pm
 
 // Layout (logical px, 360x640), matched to the stall background art (901x1600 = 2.5x).
 const HUD_H = 40; // clock + day bar + fame + money
-const POUR_BAR_Y = HUD_H + 30; // the pour bar docks under the HUD tabs, over the bubbles' tops: never on faces (round 5) or under the pouring hand
+const POUR_BAR_Y = HUD_H + 2; // the pour bar covers the HUD tabs while you pour: not on faces (round 5), order lines (round 6) or under the hand
 const COUNTER_Y = 282; // top of the wooden counter in the background
 const SERVE_AREA_Y = COUNTER_Y + 10; // a cup let go above this is "up at the customers"
 const FEET_Y = 318; // counter customers stand behind the counter (legs hidden)
@@ -317,6 +317,17 @@ export default class StallScene extends Phaser.Scene {
     // The counter + our side of the stall again, as a front layer: customers stand behind it.
     const top = Math.round(COUNTER_Y * BG_SCALE);
     this.add.image(0, 0, 'stallBg').setOrigin(0).setDisplaySize(GAME_W, GAME_H).setCrop(0, top, 901, 1600 - top).setDepth(10);
+    if (this.twist?.id === 'rain') this.drawRain();
+  }
+
+  // A rain day looks like one: streaks and a grey wash over the street, seen through the window on the left.
+  drawRain() {
+    const w = { x: 0, y: 62, w: 60, h: 205 };
+    this.add.rectangle(w.x, w.y, w.w, w.h, 0x5a7a98, 0.4).setOrigin(0).setDepth(0.5);
+    for (let i = 0; i < 18; i++) {
+      const drop = this.add.rectangle(w.x + 3 + (i * 37) % (w.w - 6), w.y, 1.5, 11, 0xdcecff, 0.85).setDepth(0.6);
+      this.tweens.add({ targets: drop, y: w.y + w.h, duration: 520 + (i % 5) * 60, delay: i * 70, repeat: -1 });
+    }
   }
 
   drawHud() {
@@ -645,7 +656,7 @@ export default class StallScene extends Phaser.Scene {
 
   // The thought bubble's usual width: it leaves room for today's goal chip at the end of the row.
   coachFullW() {
-    return GAME_W - 34 - 8 - (this.goal ? 68 : 0);
+    return GAME_W - 34 - 8 - (this.goal ? 56 : 0);
   }
 
   drawCoach() {
@@ -688,7 +699,9 @@ export default class StallScene extends Phaser.Scene {
     }
   }
 
-  setCoach(text, warn = false, color = null) {
+  // shorter = a shorter way to say it, used when the line would otherwise shrink (round 6: the longest lines
+  // were the smallest on screen).
+  setCoach(text, warn = false, color = null, shorter = null) {
     if (text === this.coachShown) return;
     this.coachShown = text;
     this.coachParts.forEach((o) => o.setVisible(!!text));
@@ -696,6 +709,7 @@ export default class StallScene extends Phaser.Scene {
     this.coachText.setText(text).setColor(color ?? (warn ? '#c8402c' : '#2b2018'));
     // two lines fit; anything longer shrinks a little
     this.coachText.setScale(1);
+    if (shorter && this.coachText.height > 30) this.coachText.setText(shorter);
     if (this.coachText.height > 30) this.coachText.setScale(30 / this.coachText.height);
     this.tweens.add({ targets: this.coachText, alpha: { from: 0.3, to: 1 }, duration: 200 });
   }
@@ -727,7 +741,7 @@ export default class StallScene extends Phaser.Scene {
     if (slot) {
       const r = nextStep(slot.cup, slot.ticket.spec, slot.ticket.who);
       if (r.text.startsWith('Done')) this.serveHint(slot, slot.ticket.c);
-      return this.setCoach(`Cup ${slot.i + 1} for ${slot.ticket.who}: ${r.text}`, r.bin);
+      return this.setCoach(`Cup ${slot.i + 1} for ${slot.ticket.who}: ${r.text}`, r.bin, null, r.text);
     }
     const f = this.focusSlot;
     if (f?.cup?.base && !f.ticket) {
@@ -742,7 +756,8 @@ export default class StallScene extends Phaser.Scene {
     const oldest = unmade.sort((a, b) => (a.arrivedAt ?? 0) - (b.arrivedAt ?? 0))[0];
     if (oldest) {
       const grab = this.slots.some((sl) => sl.cup && !sl.cup.base) ? '' : this.freeSlot() ? 'Tap Cups, then: ' : 'Tray full! ';
-      return this.setCoach(`${grab}${this.whoOf(oldest)} wants ${oldest.orderText}: ${recipeHint(oldest.spec)}`);
+      const how = recipeHint(oldest.spec);
+      return this.setCoach(`${grab}${this.whoOf(oldest)} wants ${oldest.orderText}: ${how}`, false, null, `${oldest.orderText}: ${how}`);
     }
     if (this.closing) return this.setCoach("Closing time. Last customers, then we 收档!");
     if (this.waitingCustomers().length) return this.setCoach('Serve the cups on the tray: slide each one up to its customer');
@@ -1098,7 +1113,10 @@ export default class StallScene extends Phaser.Scene {
     this.focusSlot = slot;
     const fast = ['kopi', 'teh', ...MALT].includes(ingredient) ? this.perks.pourMult : 1; // Long-Spout Pot
     const before = slot.cup.fill;
+    const wasIn = inTarget(ingredient, slot.cup, slot.ticket?.spec);
     pour(slot.cup, ingredient, dtMs * fast);
+    // the moment it reaches the zone, a ★ right at the cup, where your eyes are (round 6: the meter is far away)
+    if (!wasIn && !this.demo && inTarget(ingredient, slot.cup, slot.ticket?.spec)) this.cupPop(slot, '★ OK!', '#ffd23a', '#5a2e0e', null, 20);
     // over the top: say so the moment it happens, not after the next ingredient
     if (before <= ZONES.fill.spill && slot.cup.fill > ZONES.fill.spill && !this.demo) this.spillSplash(slot);
     this.recheckCup(slot);
@@ -1716,7 +1734,7 @@ export default class StallScene extends Phaser.Scene {
 
   lineVars(extra = {}) {
     const hour = 7 + ((this.clockMs ?? 0) / TUNING.dayMs) * 12;
-    return { owner: this.owner.address, greet: '{greet}', hour, ...extra }; // filled when the bubble shows (showBubble)
+    return { owner: this.owner.address, greet: '{greet}', hour, rain: this.twist?.id === 'rain', ...extra }; // filled when the bubble shows (showBubble)
   }
 
   arrive(c) {
@@ -2550,15 +2568,15 @@ export default class StallScene extends Phaser.Scene {
     if (!this.goal) return;
     p ??= goalProgress(this.goal, this.goalStats());
     if (!this.goalChip) {
-      const x = GAME_W - 8 - 62;
-      const bg = this.add.rectangle(x, COACH_Y, 62, 32, 0xfff3d6).setOrigin(0).setStrokeStyle(2, COLORS.inkHex).setDepth(18);
-      const t = addText(this, x + 31, COACH_Y + 16, '', { size: 12, bold: true, origin: 0.5 }).setDepth(19);
+      const x = GAME_W - 8 - 50;
+      const bg = this.add.rectangle(x, COACH_Y, 50, 32, 0xfff3d6).setOrigin(0).setStrokeStyle(2, COLORS.inkHex).setDepth(18);
+      const t = addText(this, x + 25, COACH_Y + 16, '', { size: 11, bold: true, origin: 0.5 }).setDepth(19);
       bg.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.think(`Today's goal: ${this.goal.text}`, 3500));
       this.goalChip = [bg, t];
     }
     const [bg, t] = this.goalChip;
     const done = this.econ.goalDone;
-    t.setText(done ? '🎯 ✓' : p.failed ? '🎯 ✗' : this.goal.kind === 'noWalkout' ? '🎯 0 left' : `🎯 ${p.n}/${this.goal.target}`);
+    t.setText(done ? '🎯 ✓' : p.failed ? '🎯 ✗' : this.goal.kind === 'noWalkout' ? '🎯 0 out' : `🎯 ${p.n}/${this.goal.target}`);
     bg.setFillStyle(done ? 0xbfe3c0 : p.failed ? 0xe0d6c4 : 0xfff3d6);
   }
 

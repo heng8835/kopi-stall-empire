@@ -48,6 +48,8 @@ describe('lines fit the moment (rounds 4-5)', () => {
         const hot = pickLine(id, 'order', { hot: true, hour: 8 }, () => r);
         expect(hot).not.toMatch(/\bcold\b/i);
         expect(hot).not.toMatch(/lunch/i);
+        expect(hot).not.toMatch(/\bpanas\b/i);
+        expect(pickLine(id, 'order', { rain: true }, () => r)).not.toMatch(/\bpanas\b/i);
       }
     }
   });

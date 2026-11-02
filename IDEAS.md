@@ -32,3 +32,9 @@
   (Month 2); Ah Gong's order changing while he waits; a mid-day reload rerolling who's waiting; combo payouts dropping
   as the combo rises; the night "Next:" nudge switching items; emoji shop icons; small labels ("Condensed", "Evap (C)",
   "Fame 25+"); the Horlicks tin clipped at the left edge.
+- Alpha 6 (2026-11-02) leftovers, need a plan or a real reader: the economy (Fame 70 reached on Day 7, pay against effort,
+  tips over sales, optional mastery, friendship screen, fame after the customer cap); the language pass (Uncle's Mandarin
+  line, Makcik's "ais" and name, a real pakcik on screen, English on Chinese-only lines, "My words" with pronunciation,
+  Aunty Lim's Day-1 10/10); fewer morning cards and a shorter results card; teaching order (plain Milo after Dinosaur,
+  Kopi C after kosong); china cups for hot kopi; the chope tissue icon; tarik edge cases (quiet exit after a splash,
+  relabel mid-pull); combo escalation; a tap-to-confirm "first attempt" for a forgiving first pour.

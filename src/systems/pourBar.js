@@ -62,6 +62,16 @@ export function targetZone(ingredient, spec) {
   return null;
 }
 
+// Is this cup in the zone its order is aiming for, for this ingredient? (the ★ at the cup: StallScene.pourInto)
+export function inTarget(ingredient, cup, spec) {
+  const k = KIND[ingredient];
+  if (!k || !spec) return false;
+  const zones = k.pohZones && spec.strength === 'poh' && !spec.iced ? k.pohZones : k.zones;
+  const z = zones.find((x) => x[0] === targetZone(ingredient, spec));
+  const v = k.value(cup);
+  return !!z && v >= z[1] && v < z[2];
+}
+
 // The timing dial's zones for a dosed ingredient (and what it measures: sweetness, or evap for the pump).
 export const dialZonesFor = (ingredient) => dialZones(KIND[ingredient].zones);
 export const measureOf = (ingredient, cup) => KIND[ingredient].value(cup);

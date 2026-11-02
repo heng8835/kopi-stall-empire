@@ -86,3 +86,11 @@
 | 2026-10-29 | Teh tarik is a skill: drop the mugs, hold to lift, let go in the green (3 good pulls = Tarik master +10¢); the demo keeps the auto-pull | Alpha 5 P1 (Ken): every machine was one more drop. User said "do it all" (beyond v0.1 scope, approved) |
 | 2026-10-29 | Empire teaser only: FOR RENT next door (Day 3 beat), a locked "Stall 2" card in every shop aisle, "名气 70: a second stall" on the day-end card; no second stall built | Alpha 5 P1; user approved "do it all" |
 | 2026-10-29 | Day 9 gets EP5 Part 2 (the aunties' own tissue packet); the kids come every other day in groups of 2-4 | Alpha 4-5: Days 8-9 had no story; 4 Milo Dinosaurs every evening |
+| 2026-11-02 | Scene state is reset each day (goalChip, tarik, tapHinted, emptyMs); pre-push checks must cross a real day | Alpha 6 P0: a stale goal chip froze every morning after a goal day; URL-jump checks missed it |
+| 2026-11-02 | Story guests hold their order (c.held) until their episode and any recipe card are done; held guests' episodes skip the tray wait | Alpha 6 P0: Milo Dinosaur card after the drink; EP2's $9.80 note contradicted what was paid |
+| 2026-11-02 | Story lines and choices answer on the release of a press that began there; card buttons ignore their first 400 ms; episode Skip moved above the dialogue box | Alpha 6 P0: drags and tap bursts skipped lines and picked choices |
+| 2026-11-02 | Serving also works by tap: tap a cup, then a customer or the Bin. A repeating hand shows the serve until the first one ever. "Drag" becomes "slide" or "move" in coach lines | Alpha 6 P0 (Raj): the first drag was the quit point for a non-gamer |
+| 2026-11-02 | One tap on Buy (on release) with Undo, replacing "Confirm?" | Alpha 6 P0: four players lost a purchase silently |
+| 2026-11-02 | Pour meter over the HUD tabs while pouring, plus a ★ at the cup on reaching the zone | Alpha 6: at y=70 it clipped order lines and was far from the cup |
+| 2026-11-02 | Coach, recipe hints, starter menu and recipe cards all say milk or sugar first, matching the demos; pot first still works | Alpha 6: the round-5 demo change left the rest saying pot first |
+| 2026-11-02 | Rain day shows rain in the window and walk-ins order hot; no "panas" lines on hot drinks or rain days | Alpha 6: "Rain day" had a sunny street and iced orders |
