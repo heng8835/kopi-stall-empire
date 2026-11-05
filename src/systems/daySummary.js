@@ -33,7 +33,7 @@ export function summarizeDay(entry, econ, names = {}) {
   return {
     stars,
     counts,
-    money: { sales: econ.earnedToday - (econ.tipsToday ?? 0), tips: econ.tipsToday ?? 0, total: econ.earnedToday },
+    money: { sales: econ.earnedToday - (econ.tipsToday ?? 0) - (econ.bonusToday ?? 0), tips: econ.tipsToday ?? 0, bonus: econ.bonusToday ?? 0, total: econ.earnedToday },
     fame: { from: Math.floor(econ.fameStart), to: Math.floor(econ.fame) },
     perCustomer: Object.values(per),
     topSlips,

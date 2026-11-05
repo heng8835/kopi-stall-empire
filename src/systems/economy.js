@@ -8,6 +8,7 @@ export function createDayState(carry = {}) {
     money: carry.money ?? 0,
     earnedToday: 0,
     tipsToday: 0,
+    bonusToday: 0, // today's goal, a friend's thanks: neither sales nor tips
     fame: carry.fame ?? TUNING.fameStart,
     fameStart: carry.fame ?? TUNING.fameStart,
     served: 0,

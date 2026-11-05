@@ -16,7 +16,8 @@ describe('day summary', () => {
       ev('glossary', { key: 'kopi' }),
     ] }, econ, names);
     expect(s.counts).toEqual({ served: 3, perfect: 1, close: 1, oops: 1, walkedOut: 1 });
-    expect(s.money).toEqual({ sales: 810, tips: 90, total: 900 });
+    expect(s.money).toEqual({ sales: 810, tips: 90, bonus: 0, total: 900 });
+    expect(summarizeDay({ events: [] }, { ...econ, bonusToday: 200 }).money).toEqual({ sales: 610, tips: 90, bonus: 200, total: 900 });
     expect(s.fame).toEqual({ from: 10, to: 12 });
     expect(s.perCustomer.find((r) => r.who === 'officeGuy')).toMatchObject({ name: 'Marcus', oops: 1, walkedOut: 1 });
     expect(s.topSlips[0]).toEqual({ reason: 'forgot to stir', n: 2 });

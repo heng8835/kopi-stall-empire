@@ -1995,7 +1995,7 @@ export default class StallScene extends Phaser.Scene {
       this.friendGifts.push(c.def.id);
       this.econ.money += FRIEND_GIFT.cents;
       this.econ.earnedToday += FRIEND_GIFT.cents;
-      this.econ.tipsToday += FRIEND_GIFT.cents;
+      this.econ.bonusToday = (this.econ.bonusToday ?? 0) + FRIEND_GIFT.cents;
       this.econ.fame = clampFame(this.econ.fame + FRIEND_GIFT.fame);
       this.laneFloat(c, this.centerX(c), this.headTop(c) + 64, `A gift! +${formatMoney(FRIEND_GIFT.cents)} · 名气 +${FRIEND_GIFT.fame}`, { size: 15, color: '#ffd1da', stroke: '#5a1a2a', sound: 'cheer' });
     }
@@ -2576,7 +2576,7 @@ export default class StallScene extends Phaser.Scene {
       e.goalDone = true;
       e.money += GOAL_REWARD.cents;
       e.earnedToday += GOAL_REWARD.cents;
-      e.tipsToday += GOAL_REWARD.cents;
+      e.bonusToday = (e.bonusToday ?? 0) + GOAL_REWARD.cents;
       e.fame = clampFame(e.fame + GOAL_REWARD.fame);
       if (!this.ended) this.bigPop(UI.goalDone.replace('{reward}', formatMoney(GOAL_REWARD.cents)), '#9ff0a0');
     }
@@ -2876,7 +2876,7 @@ export default class StallScene extends Phaser.Scene {
     line('★'.repeat(sum.stars) + '☆'.repeat(3 - sum.stars), { size: 26, color: '#e0a21a' }, 6);
     const c = sum.counts;
     line(`${c.served} cup${c.served === 1 ? '' : 's'} · ${c.perfect} perfect · ${c.close} close · ${c.oops} oops${c.walkedOut ? ` · ${c.walkedOut} left` : ''}`, {}, 4);
-    line(`Sales ${formatMoney(sum.money.sales)}  ·  Tips ${formatMoney(sum.money.tips)}  ·  Total ${formatMoney(sum.money.total)}`, { bold: true }, 4);
+    line(`Sales ${formatMoney(sum.money.sales)}  ·  Tips ${formatMoney(sum.money.tips)}${sum.money.bonus ? `  ·  Bonus ${formatMoney(sum.money.bonus)}` : ''}  ·  Total ${formatMoney(sum.money.total)}`, { bold: true }, 4);
     const today = beforeStars - sum.fame.from;
     line(`Fame 名气 ${sum.fame.from} → ${sum.fame.to} (${today >= 0 ? '+' : ''}${today} today${starFame ? ` · ★ +${starFame}` : ''})`, { size: 13, color: '#7a4a12', bold: true }, 2);
     const [madePerfect, made] = this.madeCups();

@@ -38,3 +38,6 @@
   Aunty Lim's Day-1 10/10); fewer morning cards and a shorter results card; teaching order (plain Milo after Dinosaur,
   Kopi C after kosong); china cups for hot kopi; the chope tissue icon; tarik edge cases (quiet exit after a splash,
   relabel mid-pull); combo escalation; a tap-to-confirm "first attempt" for a forgiving first pour.
+- After the economy pass (2026-11-05): Raj's "nobody tips at a real kopitiam" (maybe "keep the change, boss" instead of Tips: for the
+  language pass); stretch goals (goals still complete themselves, alpha 6 #8); a job for fame above 200; more unlocks per regular
+  (a story line at 3 hearts); a Sifu goal on some days; check the six friend gift lines with a real reader.
