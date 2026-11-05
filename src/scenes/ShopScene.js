@@ -58,6 +58,11 @@ export default class ShopScene extends Phaser.Scene {
     this.wallet = addText(this, 12, 54, '', { size: 14, bold: true, color: '#ffd28a' });
     this.fameText = addText(this, GAME_W - 12, 54, '', { size: 13, bold: true, color: '#fff6dc', origin: [1, 0] });
 
+    // who you've got to know (scenes/RegularsScene.js)
+    const friends = makeButton(this, GAME_W / 2 - 48, 50, 96, 25, '♥ Regulars', () => this.scene.start('Regulars', { run: this.run, aisle: this.aisle }), { size: 12, bold: true, onRelease: true, fill: 0xf6d5da });
+    friends.bg.setDepth(DEPTH);
+    friends.txt.setDepth(DEPTH + 1);
+
     // aisle tabs
     this.tabs = AISLES.map((a, i) => {
       const w = (GAME_W - 16 - 3 * 6) / 4;

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { hearts, befriend, friendTip, friendPatience, waitLine, WAIT_LINES, MAX_HEARTS } from '../src/systems/friends.js';
+import { hearts, befriend, friendTip, friendPatience, waitLine, WAIT_LINES, MAX_HEARTS, giftDue, cupsToNext, favourite } from '../src/systems/friends.js';
+import { CUSTOMERS } from '../src/data/customers.js';
 import { nextDay, newRun } from '../src/systems/run.js';
 
 describe('friendship', () => {
@@ -30,5 +31,29 @@ describe('friendship', () => {
     const run = { ...newRun(), friends: { marcus: 3 } };
     expect(nextDay(run, { money: 0, fame: 10, rating: 5, friends: { marcus: 4 } }).friends).toEqual({ marcus: 4 });
     expect(nextDay(run, { money: 0, fame: 10, rating: 5 }).friends).toEqual({ marcus: 3 });
+  });
+});
+
+describe('the Regulars screen', () => {
+  it('counts the cups to the next heart', () => {
+    expect(cupsToNext(0)).toBe(2);
+    expect(cupsToNext(1.6)).toBe(1);
+    expect(cupsToNext(2)).toBe(3);
+    expect(cupsToNext(20)).toBe(null);
+  });
+  it('knows a favourite: the first usual, else the most asked for', () => {
+    expect(favourite({ usual: ['Teh'], orders: [{ text: 'Kopi', weight: 9 }] })).toBe('Teh');
+    expect(favourite({ orders: [{ text: 'Kopi', weight: 1 }, { text: 'Teh', weight: 3 }] })).toBe('Teh');
+    expect(CUSTOMERS.every((c) => favourite(c))).toBe(true);
+  });
+  it('every regular has one thank-you, once, and only at the top', () => {
+    const regulars = CUSTOMERS.filter((c) => c.regular);
+    expect(regulars.length).toBeGreaterThanOrEqual(6);
+    for (const def of regulars) {
+      expect(def.giftLine, def.id).toBeTruthy();
+      expect(giftDue(def, MAX_HEARTS - 1, [])).toBe(false);
+      expect(giftDue(def, MAX_HEARTS, [])).toBe(true);
+      expect(giftDue(def, MAX_HEARTS, [def.id])).toBe(false);
+    }
   });
 });

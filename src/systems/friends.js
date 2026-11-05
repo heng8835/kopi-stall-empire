@@ -19,6 +19,20 @@ export function befriend(friends, id, tier) {
 export const friendTip = (h, tier) => (tier === 'oops' ? 0 : 5 * h);
 export const friendPatience = (h) => 1 + 0.08 * h;
 
+// One-time thanks from a regular who has reached the top (given on their next cup; a line in customers.js giftLine).
+export const FRIEND_GIFT = { cents: 500, fame: 5 };
+export const giftDue = (def, had, given = []) => had >= MAX_HEARTS && !!def.giftLine && !given.includes(def.id);
+
+// Perfect cups to the next heart (null at the top).
+export function cupsToNext(points = 0) {
+  const next = HEART_AT.find((p) => points < p);
+  return next == null ? null : Math.ceil(next - points);
+}
+
+export const FAVOURITE_AT = 3; // hearts from which you know what they like
+// Their favourite: the first usual, else the order they ask for most.
+export const favourite = (def) => def.usual?.[0] ?? [...(def.orders ?? [])].sort((a, b) => b.weight - a.weight)[0]?.text ?? null;
+
 export const FOND_AT = 3; // hearts from which they're happy to wait
 
 // What they say when the wait gets long (patience under WAIT_LINE_AT left): fond friends are patient.

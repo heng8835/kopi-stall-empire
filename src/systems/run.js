@@ -8,7 +8,7 @@ export const MONTH_DAYS = 30;
 const KEY = 'run';
 
 export function newRun() {
-  return { day: 1, money: 0, fame: TUNING.fameStart, flags: [], ratings: [], ending: null, owned: [], newItems: [], friends: {}, off: [], best: { sifu: 0, combo: 0 } };
+  return { day: 1, money: 0, fame: TUNING.fameStart, flags: [], ratings: [], ending: null, owned: [], newItems: [], friends: {}, friendGifts: [], off: [], best: { sifu: 0, combo: 0 } };
 }
 
 // Aunty Lim's nightly teh score, out of 10 (she's kind: never below 3). It never beats the day's stars

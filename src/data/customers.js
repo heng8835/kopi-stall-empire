@@ -19,6 +19,7 @@
 export const CUSTOMERS = [
   {
     id: 'auntyLim',
+    giftLine: "这个给你. Don't tell people I like you ah.", // said once, at 5 hearts (systems/friends.js)
     name: 'Aunty Lim',
     sprite: 'auntyLim',
     enabled: true,
@@ -46,6 +47,7 @@ export const CUSTOMERS = [
   },
   {
     id: 'officeGuy',
+    giftLine: "Boss, I ran the numbers. You undercharge me. Here, the difference.", // said once, at 5 hearts (systems/friends.js)
     name: 'Marcus',
     sprite: 'marcus',
     enabled: true,
@@ -70,6 +72,7 @@ export const CUSTOMERS = [
   },
   {
     id: 'schoolKids',
+    giftLine: "We pooled our money! With interest, like we promised.", // said once, at 5 hearts (systems/friends.js)
     name: 'Sec school kids',
     short: 'Kids', // on tickets
     sprite: 'darren',
@@ -93,6 +96,7 @@ export const CUSTOMERS = [
   },
   {
     id: 'ahGong',
+    giftLine: "拿去. My back doesn't ache when I come here. …Don't make me say it twice.", // said once, at 5 hearts (systems/friends.js)
     name: 'Ah Gong',
     sprite: 'ahGong',
     seated: true,
@@ -119,6 +123,7 @@ export const CUSTOMERS = [
   // Recipe teachers who become regulars from their lesson day (fromDay).
   {
     id: 'makcik',
+    giftLine: "Here, from my nasi lemak money. We share, right?", // said once, at 5 hearts (systems/friends.js)
     name: 'Makcik',
     sprite: 'makcikStand',
     enabled: true,
@@ -133,6 +138,7 @@ export const CUSTOMERS = [
   },
   {
     id: 'taxiUncle',
+    giftLine: "Today good fare, so I share. Your kopi keep me awake, you know.", // said once, at 5 hearts (systems/friends.js)
     name: 'Taxi Uncle',
     sprite: 'taxiUncleStand',
     enabled: true,

@@ -7,6 +7,7 @@ import TitleScene from './scenes/TitleScene.js';
 import StallScene from './scenes/StallScene.js';
 import DramaScene from './scenes/DramaScene.js';
 import ShopScene from './scenes/ShopScene.js';
+import RegularsScene from './scenes/RegularsScene.js';
 import OpeningScene from './scenes/OpeningScene.js';
 
 // Logical world is GAME_W x GAME_H (360x640); the backbuffer is that times the render scale
@@ -23,7 +24,7 @@ const game = new Phaser.Game({
   roundPixels: true,
   mipmapFilter: 'LINEAR_MIPMAP_LINEAR',
   scale: { mode: Phaser.Scale.NONE },
-  scene: [BootScene, TitleScene, OpeningScene, StallScene, DramaScene, ShopScene],
+  scene: [BootScene, TitleScene, OpeningScene, StallScene, DramaScene, ShopScene, RegularsScene],
 });
 
 watchResize(game);

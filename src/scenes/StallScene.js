@@ -39,7 +39,7 @@ import { TUTORIAL_STEPS, TOOL_IDS } from '../data/tutorial.js';
 import { load, save } from '../systems/save.js';
 import { demoSteps, MEASURE, comboFor, demoCup } from '../systems/demo.js';
 import { liquidColor } from '../systems/cup.js';
-import { hearts, befriend, friendTip, friendPatience, waitLine, WAIT_LINE_AT, MAX_HEARTS } from '../systems/friends.js';
+import { hearts, befriend, friendTip, friendPatience, waitLine, WAIT_LINE_AT, MAX_HEARTS, FRIEND_GIFT, giftDue } from '../systems/friends.js';
 import { playMusic, storyMusic, endStoryMusic } from '../systems/music.js';
 import { EPISODE_MUSIC } from '../data/music.js';
 import { dayDifficulty, pickTwist, twistWeight, dailyGoal, goalProgress, milestonesCrossed, MILESTONES } from '../systems/difficulty.js';
@@ -168,6 +168,7 @@ export default class StallScene extends Phaser.Scene {
     this.cameToday = new Set(); // regulars (and guests) who have already been in today
     this.leftAt = new Map(); // walk-in kind -> when one last left (spawnCustomer)
     this.friends = { ...(this.run.friends ?? {}) }; // friendship with every kind of customer (systems/friends.js)
+    this.friendGifts = [...(this.run.friendGifts ?? [])]; // regulars who have given their one-time thanks
     this.lessonsDone = 0;
     this.streak = 0; // perfect cups in a row (streakBonus)
     this.nextLesson();
@@ -275,6 +276,7 @@ export default class StallScene extends Phaser.Scene {
       econ: { ...this.econ },
       flags: [...this.flags],
       friends: { ...this.friends },
+      friendGifts: [...this.friendGifts],
       storyDone: [...this.storyDone],
       cameToday: [...this.cameToday],
       lessonsDone: this.lessonsDone,
@@ -292,6 +294,7 @@ export default class StallScene extends Phaser.Scene {
     Object.assign(this.econ, m.econ);
     this.flags = [...m.flags];
     this.friends = { ...m.friends };
+    this.friendGifts = [...(m.friendGifts ?? this.friendGifts)];
     m.storyDone.forEach((k) => this.storyDone.add(k));
     m.cameToday.forEach((id) => this.cameToday.add(id));
     for (let i = 0; i < m.lessonsDone; i++) this.nextLesson();
@@ -1870,6 +1873,8 @@ export default class StallScene extends Phaser.Scene {
         extra: (t) => this.add.image(t.x - t.width / 2 - 12, t.y, 'heart').setDisplaySize(18, 16).setDepth(60),
         sound: 'perfect',
       });
+      this.laneFloat(c, this.centerX(c), this.headTop(c) + 64, 'waits longer, tips more', { size: 11, color: '#ffd1da', stroke: '#5a1a2a' });
+      this.econ.newHeart = { name: c.def.name, n: now }; // named on the day-end card
     }
     c.hearts = now;
   }
@@ -1984,7 +1989,16 @@ export default class StallScene extends Phaser.Scene {
       if (perkNote) this.laneFloat(c, this.centerX(c), this.headTop(c) + 64, perkNote, { size: 11, color: '#ffe7a8' });
       this.coinBurst(c);
     }
+    const gift = tier !== 'oops' && !cup.demo && giftDue(c.def, c.hearts, this.friendGifts); // they were already at the top when they came
     this.makeFriends(c, tier);
+    if (gift) {
+      this.friendGifts.push(c.def.id);
+      this.econ.money += FRIEND_GIFT.cents;
+      this.econ.earnedToday += FRIEND_GIFT.cents;
+      this.econ.tipsToday += FRIEND_GIFT.cents;
+      this.econ.fame = clampFame(this.econ.fame + FRIEND_GIFT.fame);
+      this.laneFloat(c, this.centerX(c), this.headTop(c) + 64, `A gift! +${formatMoney(FRIEND_GIFT.cents)} · 名气 +${FRIEND_GIFT.fame}`, { size: 15, color: '#ffd1da', stroke: '#5a1a2a', sound: 'cheer' });
+    }
     c.served += 1;
     c.state = 'reacting';
     logEvent(this.log, 'serve', { who: c.def.id, wanted: c.orderText, made: formatCup(cup), tier, reasons, waitMs: Math.round(c.patienceMax - c.patienceMs) }, this.clockMs);
@@ -1996,7 +2010,7 @@ export default class StallScene extends Phaser.Scene {
     play('clink');
     if (tier !== 'oops') this.time.delayedCall(140, () => play('coin'));
     this.time.delayedCall(420, () => play(tier === 'oops' ? 'oops' : tier === 'perfect' ? 'perfect' : 'tap'));
-    const reply = pickLine(c.def.lines, tier, this.lineVars());
+    const reply = gift ? c.def.giftLine : pickLine(c.def.lines, tier, this.lineVars());
     if (tier === 'perfect') this.log.events.at(-1).line = reply;
     this.showBubble(c, reply, 'reaction');
     if (tier === 'perfect') this.happyHop(c);
@@ -2843,6 +2857,7 @@ export default class StallScene extends Phaser.Scene {
     let tomorrow = nextDay(this.run, { money: e.money, fame: e.fame, flags: this.flags, rating: this.rating, ending: this.ending ?? this.run.ending, friends: this.friends });
     const bests = updateBest(this.run.best, { sifu: e.sifu ?? 0, combo: e.bestStreak ?? 0 });
     tomorrow.best = bests.best;
+    tomorrow.friendGifts = [...this.friendGifts];
     const gifted = GIFTS[this.day];
     if (gifted) tomorrow = gift(tomorrow, gifted);
     tomorrow.night = !monthOver(tomorrow); // "Save & back" now: Continue opens tonight's shop first
@@ -2876,6 +2891,7 @@ export default class StallScene extends Phaser.Scene {
     if (record) play('cheer');
     if (e.perkEarned) line(`Your upgrades earned +${formatMoney(e.perkEarned)} today`, { size: 12, color: '#2f7a3a', bold: true }, 6);
     if (this.goal) line(`🎯 ${this.goal.text}: ${e.goalDone ? `done! +${formatMoney(GOAL_REWARD.cents)} · 名气 +${GOAL_REWARD.fame}` : 'not this time'}`, { size: 12, color: e.goalDone ? '#2f7a3a' : '#6b5a50', bold: true }, 6);
+    if (e.newHeart) line(`${e.newHeart.name} ♥${e.newHeart.n}! See ♥ Regulars in the shop`, { size: 12, color: '#b0405a', bold: true }, 6, null, 5);
     const ROWS = 4;
     const bits = (r) => [r.perfect && `${r.perfect} perfect`, r.close && `${r.close} close`, r.oops && `${r.oops} oops`, r.walkedOut && `${r.walkedOut} left`].filter(Boolean).join(', ');
     sum.perCustomer.slice(0, ROWS).forEach((r, i) => line(`${r.name}: ${bits(r)}`, { size: 12, align: 'left' }, 2, left, i >= 2 ? 4 : 0));
