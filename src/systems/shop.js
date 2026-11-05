@@ -20,6 +20,9 @@ export function shopState(item, run) {
 // Round 6: machines showed no prices, so nothing could be worked out before buying.
 export const samplePay = (item) => (item.sample ? `${item.sample}: about ${formatMoney(cupPay(parseOrder(item.sample)))} a cup` : null);
 
+// Switch a tool on or off (round 6: Long-Spout changed hold times with no way back).
+export const toggleTool = (run, id) => ({ ...run, off: run.off?.includes(id) ? run.off.filter((x) => x !== id) : [...(run.off ?? []), id] });
+
 // Buy an item: a new run with the money spent and the item owned (machines get a recipe
 // card next morning). Returns null if it can't be bought.
 export function buy(run, item) {
@@ -37,7 +40,7 @@ export function buy(run, item) {
 export const gift = (run, id) => (run.owned?.includes(id) ? run : { ...run, owned: [...(run.owned ?? []), id] });
 
 // Everything owned, added up into one set of modifiers for the stall.
-export function perks(owned = []) {
+export function perks(owned = [], off = []) {
   const p = {
     pourMult: 1, stirMs: null, sugarScoop: false, milkPump: false, marked: false, autoCup: false, towel: false,
     plates: 3, tables: 1,
@@ -46,7 +49,7 @@ export function perks(owned = []) {
   };
   for (const id of owned) {
     const item = itemById(id);
-    if (!item) continue;
+    if (!item || off.includes(id)) continue; // a tool switched off in the shop
     const e = item.effect ?? {};
     if (e.pourMult) p.pourMult *= e.pourMult;
     if (e.patienceMult) p.patienceMult *= e.patienceMult;

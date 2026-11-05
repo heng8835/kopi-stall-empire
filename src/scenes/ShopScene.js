@@ -8,7 +8,7 @@ import { fitCamera } from '../systems/view.js';
 import { makeButton, layoutLine, showGlossary } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
 import { formatMoney, empireLine } from '../systems/economy.js';
-import { shopState, buy, nextGoal, goalText, openingAisle, samplePay } from '../systems/shop.js';
+import { shopState, buy, nextGoal, goalText, openingAisle, samplePay, toggleTool } from '../systems/shop.js';
 import { showBoughtCard } from '../systems/cards.js';
 import { saveRun } from '../systems/run.js';
 import { playMusic } from '../systems/music.js';
@@ -190,10 +190,12 @@ export default class ShopScene extends Phaser.Scene {
       gift: 'Gift · Day 21',
     }[state];
     const bw = 88;
-    const btn = makeButton(this, x + w - bw - 8, y + h / 2 - 18, bw, 36, label, () => this.tryBuy(item), {
-      onRelease: true, size: 11, bold: true, fill: state === 'buy' ? 0xbfe3c0 : state === 'owned' ? 0xd7ecd3 : 0xe8e0d0,
+    const toggle = state === 'owned' && item.toggle;
+    const isOff = toggle && this.run.off?.includes(item.id);
+    const btn = makeButton(this, x + w - bw - 8, y + h / 2 - 18, bw, 36, toggle ? (isOff ? 'Off · turn on' : 'On ✓ · turn off') : label, () => (toggle ? this.flipTool(item) : this.tryBuy(item)), {
+      onRelease: true, size: toggle ? 10 : 11, bold: true, fill: state === 'buy' ? 0xbfe3c0 : state === 'owned' && !isOff ? 0xd7ecd3 : 0xe8e0d0,
     });
-    btn.setEnabled(state === 'buy');
+    btn.setEnabled(state === 'buy' || toggle);
     this.buttons[item.id] = { btn, label: label };
     this.list.add([btn.bg, btn.txt]);
     if (state === 'money') this.list.add(addText(this, x + w - bw / 2 - 8, y + h / 2 + 20, 'not enough yet', { size: 9, color: '#c8402c', origin: [0.5, 0] }));
@@ -213,6 +215,16 @@ export default class ShopScene extends Phaser.Scene {
     const lock = addText(this, x + w - 52, y + h / 2, '🔒\nMonth 2', { size: 11, bold: true, color: '#d8cbb5', origin: 0.5, align: 'center' });
     this.list.add([bg, icon, name, text, progress, lock]);
     return h;
+  }
+
+  flipTool(item) {
+    const keep = this.scroll;
+    this.run = toggleTool(this.run, item.id);
+    saveRun(this.run);
+    play('tap');
+    this.note.setText(`${item.name} ${this.run.off.includes(item.id) ? 'off' : 'on'} from tomorrow.`);
+    this.renderList();
+    this.setScroll(keep);
   }
 
   // One tap buys, on release, so a scroll that starts on a button never does (round 6: "Confirm?" lost four

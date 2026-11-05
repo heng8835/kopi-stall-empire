@@ -4,6 +4,7 @@
 //   tier    fame needed before it can be bought
 //   effect  what it does (read by systems/shop.js perks())
 //   unlocks recipe features a machine adds (systems/menu.js)
+//   toggle  a tool that changes how pouring feels: the shop shows On / Off once it's owned
 //   sample  an order it opens up: the card shows what a perfect one pays (systems/shop.js samplePay)
 //   soon    shown in the catalogue but not buyable yet (none right now)
 //   fromDay the supplier only has it from this day on ("Arrives Day N"; round 5: the shop ran dry by Day 12)
@@ -31,9 +32,9 @@ export const SHOP = [
   { id: 'tapau', sample: 'Kopi tapau', aisle: 'machine', name: 'Tapau Station', zh: '打包站', price: 4000, tier: 90, fromDay: 16, icon: '🛍️', text: 'Takeaway bags with a red string. Tapau orders, and delivery riders with bulk orders.', effect: {}, unlocks: ['tapau'] },
   { id: 'fourthPlate', aisle: 'machine', name: 'Fourth Tray Plate', zh: '第四个杯位', price: 6500, tier: 90, fromDay: 12, icon: '🍽️', text: 'Make 4 cups at once.', effect: { plates: 4 } },
   // tools
-  { id: 'longSpout', aisle: 'tool', name: 'Long-Spout Pot', zh: '长嘴壶', price: 2500, tier: 0, icon: '🫗', text: 'Kopi, teh and malt drinks pour 40% faster.', effect: { pourMult: 1.4 } },
-  { id: 'sugarScoop', aisle: 'tool', name: 'Sugar Scoop', zh: '糖匙', price: 1500, tier: 0, icon: '🥄', text: 'Drop the scoop on a cup, then tap to stop the dial: siew dai, normal or ga dai in one go.', effect: { sugarScoop: true } },
-  { id: 'milkPump', aisle: 'tool', name: 'Milk Pump', zh: '炼奶泵', price: 2000, tier: 40, icon: '🥫', text: 'Drop condensed or evap milk on a cup, then tap to stop the dial on the zone you want.', effect: { milkPump: true } },
+  { id: 'longSpout', aisle: 'tool', name: 'Long-Spout Pot', zh: '长嘴壶', price: 2500, tier: 0, icon: '🫗', toggle: true, text: 'Kopi, teh and malt drinks pour 40% faster, so your hold times get shorter. Switch it off here any time.', effect: { pourMult: 1.4 } },
+  { id: 'sugarScoop', aisle: 'tool', name: 'Sugar Scoop', zh: '糖匙', price: 1500, tier: 0, icon: '🥄', text: 'Drop the scoop on a cup, then tap to stop the dial: siew dai, normal or ga dai in one go. Switch it off here any time.', toggle: true, effect: { sugarScoop: true } },
+  { id: 'milkPump', aisle: 'tool', name: 'Milk Pump', zh: '炼奶泵', price: 2000, tier: 40, icon: '🥫', text: 'Drop condensed or evap milk on a cup, then tap to stop the dial on the zone you want. Switch it off here any time.', toggle: true, effect: { milkPump: true } },
   { id: 'brassSpoon', aisle: 'tool', name: 'Brass Spoon', zh: '铜汤匙', price: 1200, tier: 0, icon: '🥄', text: 'Stirs in 0.6 seconds instead of 1.', effect: { stirMs: 600 } },
   { id: 'markedGlass', aisle: 'tool', name: 'Marked Glasses', zh: '刻度杯', price: 900, tier: 0, icon: '🥃', text: 'Every glass shows its ¾ +ICE and FULL lines, labelled, even with an order on it.', effect: { marked: true } },
   { id: 'cupRack', aisle: 'tool', name: 'Cup Rack Pro', zh: '自动杯架', price: 1800, tier: 40, icon: '🗄️', text: 'After you serve, a fresh cup drops onto that plate.', effect: { autoCup: true } },

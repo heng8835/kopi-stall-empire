@@ -4,7 +4,7 @@
 import { GAME_W, COLORS } from '../config.js';
 import { ZONES } from '../data/stallTuning.js';
 import { addText } from './text.js';
-import { sweetness } from './cup.js';
+import { sweetness, sifuZone } from './cup.js';
 import { dialZones } from './dial.js';
 
 const Z = ZONES;
@@ -120,6 +120,8 @@ export class PourBar {
       const x0 = X + (target[1] / max) * W;
       const x1 = X + (target[2] / max) * W;
       this.marker.lineStyle(3, 0xffd23f, 1).strokeRect(x0 + 1.5, TOP + 1.5, x1 - x0 - 3, BAR_H - 3);
+      const sifu = this.showSifu ? sifuZone(ingredient, ticket.spec) : null;
+      if (sifu) this.marker.fillStyle(0xc98a00, 1).fillRect(X + (sifu[0] / max) * W, TOP + BAR_H - 6, ((sifu[1] - sifu[0]) / max) * W, 6);
       this.now.setText(zone === target ? `★ ${zone[0]}` : `${zone[0]} → ★ ${target[0]}`);
     }
     // the status on the right keeps its size; the label on the left shrinks so the two never touch

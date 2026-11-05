@@ -8,7 +8,7 @@ export const MONTH_DAYS = 30;
 const KEY = 'run';
 
 export function newRun() {
-  return { day: 1, money: 0, fame: TUNING.fameStart, flags: [], ratings: [], ending: null, owned: [], newItems: [], friends: {} };
+  return { day: 1, money: 0, fame: TUNING.fameStart, flags: [], ratings: [], ending: null, owned: [], newItems: [], friends: {}, off: [], best: { sifu: 0, combo: 0 } };
 }
 
 // Aunty Lim's nightly teh score, out of 10 (she's kind: never below 3). It never beats the day's stars
@@ -17,6 +17,16 @@ const STAR_CAP = { 1: 6, 2: 8, 3: 10 };
 export function auntyRating(perfect, served, stars = 3) {
   if (!served) return 5;
   return Math.max(3, Math.min(STAR_CAP[stars] ?? 10, Math.round((perfect / served) * 10)));
+}
+
+// Personal bests after a day: { best, sifu, combo } with sifu / combo true when today beat the old record.
+export function updateBest(best = {}, today) {
+  const beat = (k) => (today[k] ?? 0) > (best[k] ?? 0);
+  return {
+    best: { sifu: Math.max(best.sifu ?? 0, today.sifu ?? 0), combo: Math.max(best.combo ?? 0, today.combo ?? 0) },
+    sifu: beat('sifu'),
+    combo: beat('combo'),
+  };
 }
 
 // The run for tomorrow, after today ends with this money / fame / flags / rating.

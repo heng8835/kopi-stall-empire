@@ -104,6 +104,36 @@ export function sugarBucket(x) {
 const SUGAR_IDX = { none: 0, less: 2, normal: 4, more: 6 };
 const SUGAR_WORD = { none: 'kosong', less: 'siew dai', normal: 'normal sweet', more: 'ga dai' };
 
+// The middle of each zone this order is judged on: { fill, sweet, evap }, each [from, to) or null.
+export function sifuBands(spec) {
+  const around = ([a, b], r) => [(a + b) / 2 - r, (a + b) / 2 + r];
+  const malt = MALT.includes(spec.base);
+  return {
+    fill: around(ZONES.fill.good, TUNING.sifu.fill),
+    sweet: !malt && spec.sugar !== 'none' ? around(ZONES.sugar[spec.sugar], TUNING.sifu.dose) : null,
+    evap: !malt && spec.milk === 'evap' ? around(ZONES.milk.normal, TUNING.sifu.dose) : null,
+  };
+}
+
+// The gold Sifu band for this ingredient, in the units the bar measures (null = none: a poh pot stops at half).
+const POTS = ['kopi', 'teh', 'milo', 'horlicks'];
+export function sifuZone(ingredient, spec) {
+  if (!spec) return null;
+  const b = sifuBands(spec);
+  if (ingredient === 'evap') return b.evap;
+  if (['condensed', 'sugar', 'gula'].includes(ingredient)) return b.sweet;
+  if (POTS.includes(ingredient) && spec.strength === 'poh') return null;
+  if (!POTS.includes(ingredient) && ingredient !== 'water') return null;
+  return spec.iced ? b.fill.map((v) => v - TUNING.iceVolume) : b.fill; // peng: the ice adds the rest
+}
+
+// A perfect cup poured dead centre (ask only about a cup gradeCup called perfect).
+export function isSifu(cup, spec) {
+  const { fill, sweet, evap } = sifuBands(spec);
+  const inBand = (v, band) => !band || (v >= band[0] && v < band[1]);
+  return inBand(cup.fill, fill) && inBand(sweetness(cup), sweet) && inBand(cup.evap, evap);
+}
+
 // Compare a cup with an order spec (from parseOrder). Returns { tier, reasons }.
 export function gradeCup(cup, spec) {
   const oops = [];

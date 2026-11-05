@@ -58,6 +58,8 @@ export const TUNING = {
   tarik: { riseMs: 900, band: [0.6, 1], good: 0.34, half: 0.17 }, // the pull: hold to lift, let go in the band (systems/tarik.js)
   tarikMasterTip: 10, // cents for a teh tarik pulled three times in the green
   iceVolume: 0.25, // ice raises the level: peng = pour to the ¾ line, then ice
+  // The Sifu pour (round 6: every pour solved in about 10 cups): optional, a perfect cup landed in the middle of its zones.
+  sifu: { fromDay: 3, tip: 20, fill: 0.05, dose: 0.1 }, // tip in cents; fill / dose = how far from the middle still counts
 };
 
 // Amount zones (shared by the meters and the grading).

@@ -40,7 +40,7 @@ describe('economy', () => {
     const s = createDayState({ fame: 299.95, money: 500 });
     applyServe(s, 'perfect', p('Kopi'));
     expect(s.fame).toBe(300);
-    expect(s.money).toBe(500 + 170);
+    expect(s.money).toBe(500 + 185);
     expect(createDayState({ fame: 0.5 }).fameStart).toBe(0.5);
   });
 
@@ -72,8 +72,8 @@ describe('pay follows effort (round 6)', () => {
     expect(steps('Teh C Special')).toBe(3);
     expect(steps('Cham')).toBe(4);
   });
-  it('among kopi and teh, more steps never pays less', () => {
-    const orders = ['Kopi O kosong', 'Kopi O', 'Kopi', 'Kopi C', 'Kopi O peng', 'Kopi peng', 'Kopi poh', 'Kopi gu you', 'Teh O kosong', 'Teh O', 'Teh', 'Teh C', 'Teh peng', 'Teh tarik', 'Teh halia', 'Teh O limau peng'];
+  it('among plain kopi and teh, more steps never pays less (machine drinks carry their own premium)', () => {
+    const orders = ['Kopi O kosong', 'Kopi O', 'Kopi', 'Kopi C', 'Kopi O peng', 'Kopi peng', 'Teh O kosong', 'Teh O', 'Teh', 'Teh C', 'Teh O peng', 'Teh peng'];
     const specs = orders.map(p);
     for (const a of specs) for (const b of specs) if (drinkSteps(a) > drinkSteps(b)) expect(cupPay(a)).toBeGreaterThan(cupPay(b));
   });

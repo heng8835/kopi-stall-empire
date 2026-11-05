@@ -12,7 +12,7 @@ import { needleAt, zoneAt, doseFor } from '../systems/dial.js';
 import { makeButton, layoutLine, showGlossary } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
 import { parseOrder, plainOrder } from '../systems/order.js';
-import { newCup, pour, addIce, addPowder, addExtra, stirStep, tarikStep, gradeCup, formatCup, isEmpty } from '../systems/cup.js';
+import { newCup, pour, addIce, addPowder, addExtra, stirStep, tarikStep, gradeCup, formatCup, isEmpty, isSifu } from '../systems/cup.js';
 import { DRINKS } from '../data/drinks.js';
 import { DrinkArt, ART_ORIGIN } from '../systems/drinkArt.js';
 import { PourBar, dialZonesFor, measureOf, inTarget } from '../systems/pourBar.js';
@@ -30,7 +30,7 @@ import { pickServeTarget } from '../systems/serve.js';
 import { createDayState, applyServe, applyTimeout, formatMoney, customersForFame, clampFame, priceOf, streakBonus, comboBonus, nextCustomerAt, empireLine } from '../systems/economy.js';
 import { weightedPick } from '../systems/random.js';
 import { placeArrival, frontCanTake, daySchedule } from '../systems/queue.js';
-import { newRun, nextDay, loadRun, saveRun, auntyRating, monthOver, MONTH_DAYS, checkpoint, midDayOf, dayClock } from '../systems/run.js';
+import { newRun, nextDay, loadRun, saveRun, auntyRating, monthOver, MONTH_DAYS, checkpoint, midDayOf, dayClock, updateBest } from '../systems/run.js';
 import { eventsFor, applyChoice } from '../systems/story.js';
 import { EVENTS } from '../data/events.js';
 import { startDay, logEvent, finishDay, summarize } from '../systems/playlog.js';
@@ -127,7 +127,7 @@ export default class StallScene extends Phaser.Scene {
     this.econ = createDayState({ money: this.run.money, fame: this.run.fame });
     this.fameSeen = this.econ.fame; // fame milestones (milestoneCheck)
     // everything bought in the night shop (src/data/shop.js), added up
-    this.perks = perks(this.run.owned);
+    this.perks = perks(this.run.owned, this.run.off);
     this.queueMax = TUNING.queueMax + this.perks.queueBonus;
     if (this.perks.famePerDay) this.econ.fame = clampFame(this.econ.fame + this.perks.famePerDay);
     this.clockMs = 0;
@@ -370,6 +370,7 @@ export default class StallScene extends Phaser.Scene {
     const plabel = addText(this, 39, HUD_H + 13, '⏸ Pause', { size: 12, bold: true, origin: 0.5 }).setDepth(47);
     for (const o of [ptab, plabel]) o.setInteractive({ useHandCursor: true }).on('pointerdown', () => this.pauseGame());
     this.pourBar = new PourBar(this, POUR_BAR_Y);
+    this.pourBar.showSifu = this.day >= TUNING.sifu.fromDay;
     this.refreshHud();
   }
 
@@ -1966,15 +1967,20 @@ export default class StallScene extends Phaser.Scene {
       else this.econ.hotPerfect = (this.econ.hotPerfect ?? 0) + 1;
       if (this.twist?.perfectFame) this.econ.fame = clampFame(this.econ.fame + this.twist.perfectFame);
     }
-    if (fTip) {
-      res.tip += fTip;
-      this.econ.money += fTip;
-      this.econ.earnedToday += fTip;
-      this.econ.tipsToday += fTip;
+    // the Sifu pour: optional, dead centre, a little extra and a count towards today's best
+    const sifu = tier === 'perfect' && !cup.demo && this.day >= TUNING.sifu.fromDay && isSifu(cup, c.spec);
+    const sifuTip = sifu ? TUNING.sifu.tip : 0;
+    if (sifu) this.econ.sifu = (this.econ.sifu ?? 0) + 1;
+    if (fTip + sifuTip) {
+      res.tip += fTip + sifuTip;
+      this.econ.money += fTip + sifuTip;
+      this.econ.earnedToday += fTip + sifuTip;
+      this.econ.tipsToday += fTip + sifuTip;
     }
     // the coins float first, then the upgrades, then a new friendship level (one lane: laneFloat)
     if (res.paid + res.tip) {
       this.laneFloat(c, this.centerX(c), this.headTop(c) + 64, `+${formatMoney(res.paid + res.tip)}`, { size: 20, color: '#7ee07a', stroke: '#1d3b1a' });
+      if (sifu) this.laneFloat(c, this.centerX(c), this.headTop(c) + 64, `Sifu pour! +${sifuTip}¢`, { size: 16, color: '#ffd23a', stroke: '#5a2e0e', sound: 'perfect' });
       if (perkNote) this.laneFloat(c, this.centerX(c), this.headTop(c) + 64, perkNote, { size: 11, color: '#ffe7a8' });
       this.coinBurst(c);
     }
@@ -2835,6 +2841,8 @@ export default class StallScene extends Phaser.Scene {
     this.refreshHud(); // the top bar shows the same fame as the card
     const sum = summarizeDay(this.log, e, names);
     let tomorrow = nextDay(this.run, { money: e.money, fame: e.fame, flags: this.flags, rating: this.rating, ending: this.ending ?? this.run.ending, friends: this.friends });
+    const bests = updateBest(this.run.best, { sifu: e.sifu ?? 0, combo: e.bestStreak ?? 0 });
+    tomorrow.best = bests.best;
     const gifted = GIFTS[this.day];
     if (gifted) tomorrow = gift(tomorrow, gifted);
     tomorrow.night = !monthOver(tomorrow); // "Save & back" now: Continue opens tonight's shop first
@@ -2860,7 +2868,12 @@ export default class StallScene extends Phaser.Scene {
     // the same cups as the line above, said plainly (round 4: "15 cups" next to "13 of 13" read as a bug)
     const byDemo = e.demoServed ? ` · +${e.demoServed} by the demo` : '';
     line(`Aunty Lim rates your day: ${this.rating}/10 (${madePerfect} of ${made} cups you made perfect${byDemo})`, { size: 12, color: '#7a4a12' }, 4);
-    if ((e.bestStreak ?? 0) >= 3) line(`Best combo ×${e.bestStreak}`, { size: 12, color: '#c27a12', bold: true }, 8);
+    // personal bests: the optional chase (a record says so, and cheers)
+    const record = (bests.sifu && e.sifu) || (bests.combo && e.bestStreak >= 3);
+    const sifuBit = this.day >= TUNING.sifu.fromDay ? `Sifu cups ${e.sifu ?? 0} · best ${bests.best.sifu}` : null;
+    const comboBit = (e.bestStreak ?? 0) >= 3 ? `Combo ×${e.bestStreak} · best ×${bests.best.combo}` : null;
+    if (sifuBit || comboBit) line([sifuBit, comboBit, record && '★ New best!'].filter(Boolean).join('  ·  '), { size: 12, color: '#c27a12', bold: true }, 8);
+    if (record) play('cheer');
     if (e.perkEarned) line(`Your upgrades earned +${formatMoney(e.perkEarned)} today`, { size: 12, color: '#2f7a3a', bold: true }, 6);
     if (this.goal) line(`🎯 ${this.goal.text}: ${e.goalDone ? `done! +${formatMoney(GOAL_REWARD.cents)} · 名气 +${GOAL_REWARD.fame}` : 'not this time'}`, { size: 12, color: e.goalDone ? '#2f7a3a' : '#6b5a50', bold: true }, 6);
     const ROWS = 4;
