@@ -14,10 +14,10 @@ describe('friendship', () => {
   });
 
   it('friends tip more and wait longer', () => {
-    expect(friendTip(0, 'perfect', 30)).toBe(0);
-    expect(friendTip(4, 'perfect', 30)).toBe(30); // double the perfect tip at 4 hearts
-    expect(friendTip(2, 'close', 30)).toBe(10);
-    expect(friendTip(5, 'oops', 30)).toBe(0);
+    expect(friendTip(0, 'perfect')).toBe(0);
+    expect(friendTip(4, 'perfect')).toBe(20);
+    expect(friendTip(2, 'close')).toBe(10);
+    expect(friendTip(5, 'oops')).toBe(0);
     expect(friendPatience(5)).toBeCloseTo(1.4);
   });
 

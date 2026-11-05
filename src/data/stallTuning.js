@@ -29,9 +29,9 @@ export const TUNING = {
   fameForStars: [0, 2, 4, 4], // the day-end bonus for 1 / 2 / 3 stars (a day's work counts, even a rough one)
   closePay: 0.6, // a close cup pays this share of the price (a wrong drink pays nothing)
   streakTipStep: 10, // cents: each perfect cup in a row adds this to the tip...
-  streakTipMax: 50, // ...up to this
+  streakTipMax: 30, // ...up to this
   comboEvery: 5, // every 5th perfect in a row...
-  comboBonus: 100, // ...pays this bonus (cents) with a big COMBO pop
+  comboBonus: 50, // ...pays this bonus (cents) with a big COMBO pop
   // Few customers at first; upgrades make you faster before the crowd grows.
   customersMin: 8,
   customersMax: 15,

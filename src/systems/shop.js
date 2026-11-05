@@ -1,6 +1,7 @@
 // Night-shop rules: what can be bought, buying, and what everything owned adds up to. Pure.
 import { SHOP } from '../data/shop.js';
-import { formatMoney } from './economy.js';
+import { formatMoney, cupPay } from './economy.js';
+import { parseOrder } from './order.js';
 
 export const itemById = (id) => SHOP.find((i) => i.id === id) ?? null;
 
@@ -14,6 +15,10 @@ export function shopState(item, run) {
   if (run.money < item.price) return 'money';
   return 'buy';
 }
+
+// What the new drink earns, for a machine's card: "Teh tarik: about $2.35 a cup" (null for the rest).
+// Round 6: machines showed no prices, so nothing could be worked out before buying.
+export const samplePay = (item) => (item.sample ? `${item.sample}: about ${formatMoney(cupPay(parseOrder(item.sample)))} a cup` : null);
 
 // Buy an item: a new run with the money spent and the item owned (machines get a recipe
 // card next morning). Returns null if it can't be bought.

@@ -54,7 +54,7 @@ export const ICED_SURCHARGE = 20; // cents, for peng (Milo Dinosaur already iced
 // Cents on top of the drink's price for what a night-shop machine adds, so a machine pays itself back
 // in days, not weeks (playtest round 3: the Butter Dish took about 60 cups).
 export const EXTRA_PRICE = { halia: 50, limau: 50, tarik: 50, butter: 60, tapau: 20, gao: 20, poh: 20 };
-export const PERFECT_TIP = 30; // cents
+export const STEP_TIP = 15; // cents a step for a perfect cup: more work, more pay (round 6: one-step Kopi O kosong out-earned five-step Kopi peng)
 
 // Teh O / other combos a player can physically make but which aren't on the v0.1 menu.
 export const OFF_MENU_LIQUID = { teh: '#8a4e22', kopi: '#4a2c1a', milo: '#6b4a32' };

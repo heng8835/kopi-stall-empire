@@ -1,4 +1,4 @@
-import { ICED_SURCHARGE, PERFECT_TIP, EXTRA_PRICE } from '../data/drinks.js';
+import { ICED_SURCHARGE, STEP_TIP, EXTRA_PRICE } from '../data/drinks.js';
 import { TUNING } from '../data/stallTuning.js';
 import { findDrink } from './order.js';
 
@@ -24,6 +24,26 @@ export function priceOf(spec) {
   return base + (spec.iced && spec.base !== 'milo' ? ICED_SURCHARGE : 0) + extras + (EXTRA_PRICE[spec.strength] ?? 0);
 }
 
+// How many things the player does to make this drink: pot(s), milk, sugar, stir, water, ice, extras, topping, bag.
+export function drinkSteps(spec) {
+  const malt = spec.base === 'milo' || spec.base === 'horlicks';
+  let n = spec.layered ? 3 : spec.base === 'cham' ? 2 : 1; // Teh C Special: gula melaka, evap, teh
+  if (!malt && !spec.layered) {
+    const sugar = spec.milk !== 'condensed' && spec.sugar !== 'none';
+    if (spec.milk !== 'none') n += 1;
+    if (sugar) n += 1;
+    if (!spec.tarik && (spec.milk !== 'none' || sugar)) n += 1; // the spoon (tarik does the mixing itself)
+    if (spec.strength === 'poh') n += 1; // the kettle
+  }
+  for (const k of ['iced', 'topping', 'scoop', 'halia', 'limau', 'butter', 'tarik', 'tapau']) if (spec[k]) n += 1;
+  return n;
+}
+
+export const stepTip = (spec) => STEP_TIP * drinkSteps(spec);
+
+// What a perfect cup of this pays before streaks and perks (the shop's "about $2.35 a cup").
+export const cupPay = (spec) => priceOf(spec) + stepTip(spec);
+
 export const clampFame = (f) => Math.max(0, Math.min(TUNING.fameMax, Math.round(f * 100) / 100));
 
 // The month's big goal as one line: "Empire 名气 134/200 ▰▰▰▰▰▰▱▱▱▱" (the day-end card, the shop's Stall 2 card).
@@ -47,18 +67,18 @@ export function nextCustomerAt(fame) {
   return TUNING.fameStart + steps * TUNING.famePerExtraCustomer;
 }
 
-// Extra tip for a run of perfect cups in a row: 2 in a row +10c, 3 +20c ... up to +50c.
+// Extra tip for a run of perfect cups in a row: 2 in a row +10c, 3 +20c, 4 and on +30c.
 // Every comboEvery-th perfect in a row pays a combo bonus on top (0 otherwise).
 export const comboBonus = (streak) => (streak > 0 && streak % TUNING.comboEvery === 0 ? TUNING.comboBonus : 0);
 
 export const streakBonus = (streak) => Math.min(TUNING.streakTipMax, Math.max(0, streak - 1) * TUNING.streakTipStep);
 
 // Apply one served cup. Returns { paid, tip, fame } for floating feedback text.
-// Perfect pays the full price + a tip (+ bonus, e.g. a streak); close pays part of it; a wrong
+// Perfect pays the full price + a tip for the work (+ bonus, e.g. a streak); close pays part of it; a wrong
 // drink pays nothing (they politely don't pay for it). price overrides the menu price (story guests).
 export function applyServe(state, tier, wantedSpec, { price = priceOf(wantedSpec), bonus = 0 } = {}) {
   const paid = tier === 'perfect' ? price : tier === 'close' ? Math.round((price * TUNING.closePay) / 10) * 10 : 0;
-  const tip = tier === 'perfect' ? PERFECT_TIP + bonus : 0;
+  const tip = tier === 'perfect' ? stepTip(wantedSpec) + bonus : 0;
   const fame = TUNING.fameDelta[tier];
   state.money += paid + tip;
   state.earnedToday += paid + tip;

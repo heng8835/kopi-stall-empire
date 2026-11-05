@@ -4,6 +4,7 @@
 //   tier    fame needed before it can be bought
 //   effect  what it does (read by systems/shop.js perks())
 //   unlocks recipe features a machine adds (systems/menu.js)
+//   sample  an order it opens up: the card shows what a perfect one pays (systems/shop.js samplePay)
 //   soon    shown in the catalogue but not buyable yet (none right now)
 //   fromDay the supplier only has it from this day on ("Arrives Day N"; round 5: the shop ran dry by Day 12)
 //   icon    placeholder until the catalogue art arrives (docs/art/ASSET_LIST.md 5.4-5.7)
@@ -17,17 +18,17 @@ export const AISLES = [
 
 export const SHOP = [
   // machines
-  { id: 'twinSock', aisle: 'machine', name: 'Twin Sock Stand', zh: '双咖啡袋架', price: 5500, tier: 40, icon: '☕', text: 'Brew kopi and teh side by side. Pour both into one cup: Cham!', effect: {}, unlocks: ['cham'] },
-  { id: 'horlicksShelf', aisle: 'machine', name: 'Horlicks Shelf', zh: '好立克架', price: 3500, tier: 0, icon: '🥛', text: 'A tin of Horlicks on the rail. Horlicks, Horlicks peng, Horlicks Dinosaur.', effect: {}, unlocks: ['horlicks', 'horlicksDino'] },
+  { id: 'twinSock', sample: 'Cham', aisle: 'machine', name: 'Twin Sock Stand', zh: '双咖啡袋架', price: 5500, tier: 40, icon: '☕', text: 'Brew kopi and teh side by side. Pour both into one cup: Cham!', effect: {}, unlocks: ['cham'] },
+  { id: 'horlicksShelf', sample: 'Horlicks Dinosaur', aisle: 'machine', name: 'Horlicks Shelf', zh: '好立克架', price: 3500, tier: 0, icon: '🥛', text: 'A tin of Horlicks on the rail. Horlicks, Horlicks peng, Horlicks Dinosaur.', effect: {}, unlocks: ['horlicks', 'horlicksDino'] },
   { id: 'iceMachine', aisle: 'machine', name: 'Ice Machine', zh: '制冰机', price: 3500, tier: 40, icon: '🧊', text: 'Your bucket is ice chipped by hand. The machine makes crystal-clear cubes all day: iced drinks earn +40¢.', effect: { icedTip: 40 } },
-  { id: 'kettle', aisle: 'machine', name: 'Big Brass Kettle', zh: '大铜壶', price: 4500, tier: 0, icon: '🫖', text: 'Hot water on the rail. Kopi / teh poh (weak) and gao (strong): new orders the regulars love.', effect: {}, unlocks: ['gao', 'poh'] },
-  { id: 'tarikMugs', aisle: 'machine', name: 'Tarik Mugs', zh: '拉茶杯', price: 4000, tier: 40, icon: '🍵', text: 'Pull teh between two mugs from up high until frothy: Teh tarik. The pakciks will love you.', effect: {}, unlocks: ['tarik'] },
-  { id: 'haliaPot', aisle: 'machine', name: 'Halia Pot', zh: '姜茶壶', price: 3500, tier: 40, icon: '🫚', text: 'A pot of ginger brew on the counter. Teh halia, and Teh halia tarik for the pakciks.', effect: {}, unlocks: ['halia'] },
-  { id: 'limau', aisle: 'machine', name: 'Limau Squeezer', zh: '酸柑榨汁器', price: 3000, tier: 0, icon: '🍋', text: 'Calamansi and a squeezer on the counter: Teh O limau, hot or peng.', effect: {}, unlocks: ['limau'] },
-  { id: 'freezer', aisle: 'machine', name: 'Mini Freezer', zh: '小冰柜', price: 7000, tier: 90, fromDay: 10, icon: '🍨', text: 'Vanilla ice cream. A scoop on a Milo Dinosaur makes a Milo Godzilla!', effect: {}, unlocks: ['miloGodzilla'] },
-  { id: 'gulaMelaka', aisle: 'machine', name: 'Gula Melaka Station', zh: '椰糖站', price: 5000, tier: 90, fromDay: 15, icon: '🍯', text: 'Palm sugar syrup for the three-layer Teh C Special. Pour it first, never stir!', effect: {}, unlocks: ['tehCSpecial'] },
-  { id: 'butter', aisle: 'machine', name: 'Butter Dish', zh: '牛油碟', price: 2000, tier: 40, icon: '🧈', text: 'A cube of butter in the kopi: Kopi gu you, Hainanese style.', effect: {}, unlocks: ['guYou'] },
-  { id: 'tapau', aisle: 'machine', name: 'Tapau Station', zh: '打包站', price: 4000, tier: 90, fromDay: 16, icon: '🛍️', text: 'Takeaway bags with a red string. Tapau orders, and delivery riders with bulk orders.', effect: {}, unlocks: ['tapau'] },
+  { id: 'kettle', sample: 'Kopi poh', aisle: 'machine', name: 'Big Brass Kettle', zh: '大铜壶', price: 4500, tier: 0, icon: '🫖', text: 'Hot water on the rail. Kopi / teh poh (weak) and gao (strong): new orders the regulars love.', effect: {}, unlocks: ['gao', 'poh'] },
+  { id: 'tarikMugs', sample: 'Teh tarik', aisle: 'machine', name: 'Tarik Mugs', zh: '拉茶杯', price: 4000, tier: 40, icon: '🍵', text: 'Pull teh between two mugs from up high until frothy: Teh tarik. The pakciks will love you.', effect: {}, unlocks: ['tarik'] },
+  { id: 'haliaPot', sample: 'Teh halia', aisle: 'machine', name: 'Halia Pot', zh: '姜茶壶', price: 3500, tier: 40, icon: '🫚', text: 'A pot of ginger brew on the counter. Teh halia, and Teh halia tarik for the pakciks.', effect: {}, unlocks: ['halia'] },
+  { id: 'limau', sample: 'Teh O limau', aisle: 'machine', name: 'Limau Squeezer', zh: '酸柑榨汁器', price: 3000, tier: 0, icon: '🍋', text: 'Calamansi and a squeezer on the counter: Teh O limau, hot or peng.', effect: {}, unlocks: ['limau'] },
+  { id: 'freezer', sample: 'Milo Godzilla', aisle: 'machine', name: 'Mini Freezer', zh: '小冰柜', price: 7000, tier: 90, fromDay: 10, icon: '🍨', text: 'Vanilla ice cream. A scoop on a Milo Dinosaur makes a Milo Godzilla!', effect: {}, unlocks: ['miloGodzilla'] },
+  { id: 'gulaMelaka', sample: 'Teh C Special', aisle: 'machine', name: 'Gula Melaka Station', zh: '椰糖站', price: 5000, tier: 90, fromDay: 15, icon: '🍯', text: 'Palm sugar syrup for the three-layer Teh C Special. Pour it first, never stir!', effect: {}, unlocks: ['tehCSpecial'] },
+  { id: 'butter', sample: 'Kopi gu you', aisle: 'machine', name: 'Butter Dish', zh: '牛油碟', price: 2000, tier: 40, icon: '🧈', text: 'A cube of butter in the kopi: Kopi gu you, Hainanese style.', effect: {}, unlocks: ['guYou'] },
+  { id: 'tapau', sample: 'Kopi tapau', aisle: 'machine', name: 'Tapau Station', zh: '打包站', price: 4000, tier: 90, fromDay: 16, icon: '🛍️', text: 'Takeaway bags with a red string. Tapau orders, and delivery riders with bulk orders.', effect: {}, unlocks: ['tapau'] },
   { id: 'fourthPlate', aisle: 'machine', name: 'Fourth Tray Plate', zh: '第四个杯位', price: 6500, tier: 90, fromDay: 12, icon: '🍽️', text: 'Make 4 cups at once.', effect: { plates: 4 } },
   // tools
   { id: 'longSpout', aisle: 'tool', name: 'Long-Spout Pot', zh: '长嘴壶', price: 2500, tier: 0, icon: '🫗', text: 'Kopi, teh and malt drinks pour 40% faster.', effect: { pourMult: 1.4 } },
@@ -41,7 +42,7 @@ export const SHOP = [
   { id: 'fan', aisle: 'comfort', name: 'Standing Fan', zh: '风扇', price: 3000, tier: 0, icon: '🌀', text: 'Customers wait 15% longer.', effect: { patienceMult: 1.15 } },
   { id: 'radio', aisle: 'comfort', name: 'Radio', zh: '收音机', price: 2500, tier: 0, icon: '📻', text: 'Old songs all day. +0.25 fame a day.', effect: { famePerDay: 0.25 } },
   { id: 'cupWarmer', aisle: 'comfort', name: 'Cup Warmer', zh: '暖杯器', price: 2500, tier: 40, icon: '♨️', text: 'Hot drinks earn +20¢.', effect: { hotTip: 20 } },
-  { id: 'tipJar', aisle: 'comfort', name: 'Bigger Tip Jar', zh: '小费罐', price: 1200, tier: 0, icon: '🫙', text: 'Tips +50%.', effect: { tipMult: 1.5 } },
+  { id: 'tipJar', aisle: 'comfort', name: 'Bigger Tip Jar', zh: '小费罐', price: 2000, tier: 0, icon: '🫙', text: 'Tips +50%.', effect: { tipMult: 1.5 } },
   { id: 'bell', aisle: 'comfort', name: 'Queue Bell', zh: '铃铛', price: 1000, tier: 0, icon: '🔔', text: 'One more spot in the queue.', effect: { queueBonus: 1 } },
   { id: 'catBed', aisle: 'comfort', name: "Oyen's Cat Bed", zh: '猫床', price: 1500, tier: 0, icon: '🐈', text: 'A happy Oyen is good for business. +0.5 fame a day.', effect: { famePerDay: 0.5 } },
   { id: 'tissues', aisle: 'comfort', name: 'Tissue Packets', zh: '纸巾包', price: 800, tier: 0, icon: '🧻', text: 'Free chope packets for regulars. +0.15 fame a day.', effect: { famePerDay: 0.15 } },

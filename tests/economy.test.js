@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseOrder } from '../src/systems/order.js';
-import { createDayState, applyServe, applyTimeout, priceOf, formatMoney, customersForFame, nextCustomerAt, streakBonus } from '../src/systems/economy.js';
+import { createDayState, applyServe, applyTimeout, priceOf, formatMoney, customersForFame, nextCustomerAt, streakBonus, drinkSteps, cupPay } from '../src/systems/economy.js';
 
 const p = parseOrder;
 
@@ -22,7 +22,7 @@ describe('economy', () => {
     applyServe(s, 'perfect', p('Kopi'));
     applyServe(s, 'close', p('Kopi'));
     applyServe(s, 'oops', p('Kopi'));
-    expect(s.money).toBe(140 + 30 + 80);
+    expect(s.money).toBe(140 + 45 + 80); // a perfect Kopi: 3 steps at 15c, a close one 60% of 140
     expect(s.fame).toBe(10.05);
     applyTimeout(s);
     expect(s.fame).toBe(9.55);
@@ -31,9 +31,9 @@ describe('economy', () => {
 
   it('a story guest can pay less, and streaks add to the tip', () => {
     const s = createDayState();
-    expect(applyServe(s, 'perfect', p('Kopi'), { price: 0, bonus: streakBonus(3) })).toMatchObject({ paid: 0, tip: 50 });
+    expect(applyServe(s, 'perfect', p('Kopi'), { price: 0, bonus: streakBonus(3) })).toMatchObject({ paid: 0, tip: 65 });
     expect(streakBonus(1)).toBe(0);
-    expect(streakBonus(20)).toBe(50);
+    expect(streakBonus(20)).toBe(30);
   });
 
   it('carries fame and clamps it to 0-fameMax', () => {
@@ -58,9 +58,37 @@ describe('economy', () => {
   it('formats money', () => expect(formatMoney(310)).toBe('$3.10'));
 });
 
+describe('pay follows effort (round 6)', () => {
+  it('counts the steps of a drink', () => {
+    const steps = (o) => drinkSteps(p(o));
+    expect(steps('Kopi O kosong')).toBe(1);
+    expect(steps('Kopi O')).toBe(3);
+    expect(steps('Kopi')).toBe(3);
+    expect(steps('Kopi peng')).toBe(4);
+    expect(steps('Teh tarik')).toBe(3);
+    expect(steps('Milo')).toBe(1);
+    expect(steps('Milo Dinosaur')).toBe(3);
+    expect(steps('Milo Godzilla')).toBe(4);
+    expect(steps('Teh C Special')).toBe(3);
+    expect(steps('Cham')).toBe(4);
+  });
+  it('among kopi and teh, more steps never pays less', () => {
+    const orders = ['Kopi O kosong', 'Kopi O', 'Kopi', 'Kopi C', 'Kopi O peng', 'Kopi peng', 'Kopi poh', 'Kopi gu you', 'Teh O kosong', 'Teh O', 'Teh', 'Teh C', 'Teh peng', 'Teh tarik', 'Teh halia', 'Teh O limau peng'];
+    const specs = orders.map(p);
+    for (const a of specs) for (const b of specs) if (drinkSteps(a) > drinkSteps(b)) expect(cupPay(a)).toBeGreaterThan(cupPay(b));
+  });
+  it('the price, not the tip, is most of a perfect cup', () => {
+    for (const o of ['Kopi O kosong', 'Kopi', 'Kopi peng', 'Teh tarik', 'Milo Godzilla', 'Teh C Special']) expect(cupPay(p(o)) - priceOf(p(o))).toBeLessThan(priceOf(p(o)) / 2);
+  });
+  it('the two ends the players compared', () => {
+    expect(cupPay(p('Kopi O kosong'))).toBe(135);
+    expect(cupPay(p('Kopi peng'))).toBe(220);
+  });
+});
+
 describe('comboBonus', () => {
   it('pays on every 5th perfect in a row only', async () => {
     const { comboBonus } = await import('../src/systems/economy.js');
-    expect([1, 4, 5, 6, 10].map(comboBonus)).toEqual([0, 0, 100, 0, 100]);
+    expect([1, 4, 5, 6, 10].map(comboBonus)).toEqual([0, 0, 50, 0, 50]);
   });
 });

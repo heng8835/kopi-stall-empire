@@ -1945,7 +1945,7 @@ export default class StallScene extends Phaser.Scene {
     if (tier !== 'oops') {
       const hot = !c.spec.iced && !MALT.includes(c.spec.base);
       const parts = [
-        ['Tip Jar', Math.round((res.tip * (this.perks.tipMult - 1)) / 5) * 5], ['Cup Warmer', hot ? this.perks.hotTip : 0], ['Ice Machine', c.spec.iced ? this.perks.icedTip : 0],
+        ['Tip Jar', Math.round(((res.tip - combo) * (this.perks.tipMult - 1)) / 5) * 5], ['Cup Warmer', hot ? this.perks.hotTip : 0], ['Ice Machine', c.spec.iced ? this.perks.icedTip : 0],
         [this.twist?.name, c.spec.iced ? this.twist?.icedTip ?? 0 : 0], ['Tarik master', tier === 'perfect' && cup.tarikMaster ? TUNING.tarikMasterTip : 0],
       ].filter(([, v]) => v > 0);
       const extra = parts.reduce((sum, [, v]) => sum + v, 0);
@@ -1959,7 +1959,7 @@ export default class StallScene extends Phaser.Scene {
         this.econ.perkEarned = (this.econ.perkEarned ?? 0) + extra; // "your upgrades earned" on the day-end card
       }
     }
-    const fTip = Math.round(friendTip(c.hearts, tier, res.tip) / 5) * 5; // whole 5¢ (round 5: $3.53)
+    const fTip = friendTip(c.hearts, tier);
     if (tier === 'perfect' && !cup.demo) {
       // today's goal counts these (goalCheck); the inspector likes a perfect cup
       if (c.spec.iced) this.econ.icedPerfect = (this.econ.icedPerfect ?? 0) + 1;
@@ -2106,7 +2106,7 @@ export default class StallScene extends Phaser.Scene {
     this.laneFloat(c, this.centerX(c), this.headTop(c) + 64, `×${n} in a row!`, { size, color, stroke: '#5a2e0e' });
   }
 
-  // "COMBO ×5!  +$1.00" across the middle of the stall, with a cheer; a longer run pops bigger.
+  // "COMBO ×5!  +$0.50" across the middle of the stall, with a cheer; a longer run pops bigger.
   comboPop(n, cents) {
     play('cheer');
     if (n >= 10) this.cameras.main.shake(160, 0.003);

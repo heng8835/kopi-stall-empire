@@ -8,7 +8,7 @@ import { fitCamera } from '../systems/view.js';
 import { makeButton, layoutLine, showGlossary } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
 import { formatMoney, empireLine } from '../systems/economy.js';
-import { shopState, buy, nextGoal, goalText, openingAisle } from '../systems/shop.js';
+import { shopState, buy, nextGoal, goalText, openingAisle, samplePay } from '../systems/shop.js';
 import { showBoughtCard } from '../systems/cards.js';
 import { saveRun } from '../systems/run.js';
 import { playMusic } from '../systems/music.js';
@@ -166,7 +166,8 @@ export default class ShopScene extends Phaser.Scene {
     const dim = state === 'soon' || state === 'fame';
     // local words (pakciks, chope…) are tappable here too (round 4: Alex)
     const text = layoutLine(this, item.text, x + 52, y + 27, w - 52 - 96, (k) => showGlossary(this, k, () => {}), { size: 11, color: '#3a2e2a' });
-    const h = Math.max(CARD_H, 27 + text.height + 18);
+    const pays = samplePay(item);
+    const h = Math.max(CARD_H, 27 + text.height + 18 + (pays ? 13 : 0));
     const bg = this.add.rectangle(x, y, w, h, state === 'owned' ? 0xe6f2e1 : COLORS.paper, dim ? 0.82 : 1).setOrigin(0).setStrokeStyle(2, state === 'owned' ? 0x2f7a3a : COLORS.inkHex, 0.9);
     // the item's own art when it has some (stall props, machine tools), else its emoji
     const art = STALL_PROPS[item.id]?.[0]?.key ?? MACHINE_TOOLS[item.id]?.sprite ?? SHOP_ART[item.id] ?? null;
@@ -178,6 +179,7 @@ export default class ShopScene extends Phaser.Scene {
     const zh = addText(this, x + 52 + name.width + 6, y + 10, item.zh, { size: 11, color: '#8a7a70' });
     const tier = addText(this, x + 52, y + h - 16, item.tier ? `Fame ${item.tier}+` : 'Any fame', { size: 9, bold: true, color: '#8a5a1e' });
     this.list.add([bg, icon, name, zh, ...text.objects, tier]); // bg first so it sits behind
+    if (pays) this.list.add(addText(this, x + 52, y + h - 29, pays, { size: 10, bold: true, color: '#2f7a3a' }));
 
     const label = {
       buy: `Buy ${formatMoney(item.price)}`,

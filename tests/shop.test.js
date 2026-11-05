@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { SHOP, AISLES } from '../src/data/shop.js';
-import { shopState, buy, gift, perks, itemById, nextGoal } from '../src/systems/shop.js';
+import { shopState, buy, gift, perks, itemById, nextGoal, samplePay } from '../src/systems/shop.js';
+import { parseOrder } from '../src/systems/order.js';
+import { cupPay, priceOf } from '../src/systems/economy.js';
 
 const run = (o = {}) => ({ day: 5, money: 5000, fame: 30, owned: [], newItems: [], ...o });
 
@@ -34,6 +36,16 @@ describe('night shop', () => {
     expect(buy(run(), itemById('fan')).newItems).toEqual([]);
     expect(buy(run(), itemById('fan')).bought).toEqual(['fan']); // shown off at the stall next morning
     expect(gift(run(), 'towel').owned).toEqual(['towel']);
+  });
+
+  it('machines show what their new drink earns', () => {
+    expect(samplePay(itemById('tarikMugs'))).toBe('Teh tarik: about $2.35 a cup');
+    expect(samplePay(itemById('fan'))).toBe(null);
+    for (const i of SHOP.filter((x) => x.sample)) {
+      const spec = parseOrder(i.sample);
+      expect(spec, i.id).toBeTruthy();
+      expect(cupPay(spec), i.id).toBeGreaterThan(priceOf(spec));
+    }
   });
 
   it('adds up power-ups', () => {

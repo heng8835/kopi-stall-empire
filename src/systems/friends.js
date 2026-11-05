@@ -14,9 +14,9 @@ export function befriend(friends, id, tier) {
   return { ...friends, [id]: Math.max(0, Math.round(((friends[id] ?? 0) + (GAIN[tier] ?? 0)) * 10) / 10) };
 }
 
-// What their hearts are worth: the perfect tip grows 25% a heart, a "close" cup gets a little tip
-// from friends (5¢ a heart), and they wait 8% longer a heart.
-export const friendTip = (h, tier, baseTip) => (tier === 'perfect' ? Math.round(baseTip * 0.25 * h) : tier === 'close' ? 5 * h : 0);
+// What their hearts are worth: 5¢ a heart on any cup they're happy with, and they wait 8% longer a heart.
+// (Round 6: a share of the whole tip made the cheapest drink the best earner.)
+export const friendTip = (h, tier) => (tier === 'oops' ? 0 : 5 * h);
 export const friendPatience = (h) => 1 + 0.08 * h;
 
 export const FOND_AT = 3; // hearts from which they're happy to wait
