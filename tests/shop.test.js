@@ -19,7 +19,7 @@ describe('night shop', () => {
     expect(shopState(itemById('fan'), run())).toBe('buy');
     expect(shopState(itemById('fan'), run({ money: 100 }))).toBe('money');
     expect(shopState(itemById('neon'), run({ day: 20 }))).toBe('fame');
-    expect(shopState(itemById('neon'), run({ day: 5, fame: 80 }))).toBe('soon'); // not in stock till Day 18
+    expect(shopState(itemById('neon'), run({ day: 5, fame: 160 }))).toBe('soon'); // not in stock till Day 18
     expect(shopState({ ...itemById('haliaPot'), soon: true }, run({ fame: 30 }))).toBe('soon');
     expect(SHOP.filter((i) => i.soon)).toEqual([]); // phase D: everything is buyable
     expect(shopState(itemById('towel'), run())).toBe('gift');
@@ -38,7 +38,7 @@ describe('night shop', () => {
 
   it('adds up power-ups', () => {
     const p = perks(['radio', 'catBed', 'plants', 'tipJar', 'fan', 'longSpout', 'sugarScoop', 'brassSpoon', 'horlicksShelf', 'bell']);
-    expect(p).toMatchObject({ famePerDay: 1.8, tipMult: 1.5, patienceMult: 1.15, pourMult: 1.4, sugarScoop: true, stirMs: 600, queueBonus: 1 });
+    expect(p).toMatchObject({ famePerDay: 0.9, tipMult: 1.5, patienceMult: 1.15, pourMult: 1.4, sugarScoop: true, stirMs: 600, queueBonus: 1 });
     expect(p.features).toEqual(['horlicks', 'horlicksDino']);
     expect(perks([])).toMatchObject({ famePerDay: 0, pourMult: 1, features: [], plates: 3, tables: 1 });
     expect(perks(['fourthPlate', 'secondTable'])).toMatchObject({ plates: 4, tables: 2 });
@@ -67,7 +67,7 @@ describe('nextGoal', () => {
   it('when everything in reach is owned: the next fame tier and how much it unlocks', () => {
     const owned = SHOP.filter((i) => i.tier === 0).map((i) => i.id);
     const g = nextGoal(run({ fame: 10, owned }));
-    expect(g.tier).toBe(25);
-    expect(g.unlocks).toBe(SHOP.filter((i) => i.tier === 25 && !i.gift && !i.soon).length);
+    expect(g.tier).toBe(40);
+    expect(g.unlocks).toBe(SHOP.filter((i) => i.tier === 40 && !i.gift && !i.soon).length);
   });
 });

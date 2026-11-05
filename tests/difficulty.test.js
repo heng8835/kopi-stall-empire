@@ -31,9 +31,9 @@ describe('the month gets a little harder (round 5)', () => {
     expect(goalProgress({ kind: 'noWalkout', target: 1 }, { walkedOut: 1, closed: true }).failed).toBe(true);
   });
   it('fame milestones: each one once', () => {
-    expect(milestonesCrossed(24.6, 25.0)).toEqual([25]);
-    expect(milestonesCrossed(24.6, 25.0, [25])).toEqual([]);
-    expect(milestonesCrossed(40, 80)).toEqual([50, 75]);
+    expect(milestonesCrossed(39.6, 40.0)).toEqual([40]);
+    expect(milestonesCrossed(39.6, 40.0, [40])).toEqual([]);
+    expect(milestonesCrossed(60, 160)).toEqual([90, 150]);
   });
 });
 

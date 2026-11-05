@@ -1,3 +1,4 @@
+import { TUNING } from './stallTuning.js';
 // Month 1 story: "The Tin" 《师傅的铁罐》. 15 short-drama episodes on a calendar.
 // Script + secrets: docs/story/month-1.md. Rules: src/systems/story.js. Overlay: scenes/DramaScene.js.
 //
@@ -366,14 +367,14 @@ export const EVENTS = [
     ],
     endings: [
       {
-        id: 'empire', min: 70, title: 'Empire Begins 帝国起步',
+        id: 'empire', min: TUNING.empireFame, title: 'Empire Begins 帝国起步',
         beats: [
           { who: 'auntyLim', text: '10 out of 10.' },
           { who: 'kenneth', text: 'Then… could BrewDynasty use a partner? Your stall. A second branch.' },
         ],
       },
       {
-        id: 'ourStall', min: 40, title: 'Our Stall 我们的档口',
+        id: 'ourStall', min: TUNING.ourStallFame, title: 'Our Stall 我们的档口',
         beats: [
           { who: 'auntyLim', text: '8 out of 10. Lease is yours.' },
           { who: 'kenneth', text: 'I\'ll be back. As a customer.' },

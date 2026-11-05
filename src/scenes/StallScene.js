@@ -27,7 +27,7 @@ import { summarizeDay } from '../systems/daySummary.js';
 import { recipeHint, nextStep } from '../systems/hints.js';
 import { pickFor, fitScore } from '../systems/assign.js';
 import { pickServeTarget } from '../systems/serve.js';
-import { createDayState, applyServe, applyTimeout, formatMoney, customersForFame, clampFame, priceOf, streakBonus, comboBonus, nextCustomerAt } from '../systems/economy.js';
+import { createDayState, applyServe, applyTimeout, formatMoney, customersForFame, clampFame, priceOf, streakBonus, comboBonus, nextCustomerAt, empireLine } from '../systems/economy.js';
 import { weightedPick } from '../systems/random.js';
 import { placeArrival, frontCanTake, daySchedule } from '../systems/queue.js';
 import { newRun, nextDay, loadRun, saveRun, auntyRating, monthOver, MONTH_DAYS, checkpoint, midDayOf, dayClock } from '../systems/run.js';
@@ -129,7 +129,7 @@ export default class StallScene extends Phaser.Scene {
     // everything bought in the night shop (src/data/shop.js), added up
     this.perks = perks(this.run.owned);
     this.queueMax = TUNING.queueMax + this.perks.queueBonus;
-    if (this.perks.famePerDay) this.econ.fame = Math.min(100, this.econ.fame + this.perks.famePerDay);
+    if (this.perks.famePerDay) this.econ.fame = clampFame(this.econ.fame + this.perks.famePerDay);
     this.clockMs = 0;
     this.spots = [null, null, null]; // counter customers by spot
     this.queue = []; // customers waiting behind the counter, front first
@@ -2027,7 +2027,7 @@ export default class StallScene extends Phaser.Scene {
     this.checkpoint();
     play('walkout');
     this.showBubble(c, pickLine(c.def.lines, 'timeout', this.lineVars()), 'reaction');
-    this.setFeedback('They wandered off... 名气 -1');
+    this.setFeedback(`They wandered off... 名气 ${TUNING.fameDelta.timeout}`);
     this.goalCheck();
     this.refreshHud();
     this.time.delayedCall(1600, () => this.leave(c));
@@ -2887,7 +2887,7 @@ export default class StallScene extends Phaser.Scene {
       const filled = Math.max(1, Math.round((this.day / MONTH_DAYS) * 15)); // 15 blocks: it moves every other day
       line(`${'▰'.repeat(filled)}${'▱'.repeat(15 - filled)}  Day ${this.day}/${MONTH_DAYS}`, { size: 12, color: '#7a4a12' }, 2);
       // what the month is for (round 5: nothing pointed at the empire)
-      line(`Day 30: Uncle Tan's tin · 名气 70: a second stall`, { size: 11, color: '#7a4a12' }, 8, null, 6);
+      line(empireLine(e.fame), { size: 12, color: '#7a4a12', bold: true }, 8);
     }
     const dev = import.meta.env.DEV;
     const chrome = 16 + 8 + 54 + 6 + 30 + 6 + (dev ? 28 + 6 : 0) + 8; // padding and buttons

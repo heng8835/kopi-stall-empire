@@ -56,7 +56,7 @@ describe('month 1 story data', () => {
   it('the finale always has an ending', () => {
     const fin = EVENTS.find((e) => e.endings);
     expect(fin.day).toBe(30);
-    for (const fame of [0, 39, 40, 69, 70, 100]) expect(scriptFor(fin, { fame }).length).toBeGreaterThan(fin.beats.length);
+    for (const fame of [0, 79, 80, 199, 200, 300]) expect(scriptFor(fin, { fame }).length).toBeGreaterThan(fin.beats.length);
   });
 
   it('local terms in the story are tappable', () => {

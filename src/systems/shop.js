@@ -53,7 +53,7 @@ export function perks(owned = []) {
     for (const k of ['sugarScoop', 'milkPump', 'marked', 'autoCup', 'towel', 'menuBoard']) p[k] ||= !!e[k];
     p.features.push(...(item.unlocks ?? []));
   }
-  p.famePerDay = Math.round(p.famePerDay * 10) / 10;
+  p.famePerDay = Math.round(p.famePerDay * 100) / 100;
   return p;
 }
 

@@ -301,7 +301,7 @@ stays at the counter, and the episode plays:
 - **Kenneth:** *(tears up the contract)* BrewDynasty doesn't need this corner.
 - **Aunty Lim:** *(opens the notebook)* Final score.
 - *fame ≥ 70:* **Aunty Lim:** 10 out of 10. **Kenneth:** Then… could BrewDynasty use a partner? Your stall. A second branch. → **ending "Empire Begins"** (sets up month 2 / the second stall)
-- *fame 40–69:* **Aunty Lim:** 8 out of 10. Lease is yours. **Kenneth:** I'll be back. As a customer. → **ending "Our Stall"**
+- *fame 80–199:* **Aunty Lim:** 8 out of 10. Lease is yours. **Kenneth:** I'll be back. As a customer. → **ending "Our Stall"**
 - *fame < 40:* **Aunty Lim:** 7 out of 10. Lease is yours, can improve. Next month I want 10. → **ending "Still Brewing"**
 - *Epilogue (one line each, shown if the flag is set):*
   - [marcusJob] **Marcus:** New job! Kopi C — WITH sugar today. Celebration. Doctor don't know.

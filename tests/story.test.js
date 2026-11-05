@@ -21,8 +21,8 @@ describe('story', () => {
   });
 
   it('a choice sets flags and changes fame and money', () => {
-    const s = applyChoice({ flags: ['humble'], fame: 98, money: 1000 }, { flags: ['kidsFree', 'humble'], fame: 3, money: -980 });
-    expect(s).toEqual({ flags: ['humble', 'kidsFree'], fame: 100, money: 20 });
+    const s = applyChoice({ flags: ['humble'], fame: 298, money: 1000 }, { flags: ['kidsFree', 'humble'], fame: 3, money: -980 });
+    expect(s).toEqual({ flags: ['humble', 'kidsFree'], fame: 300, money: 20 });
   });
 
   it('picks the ending by fame band', () => {

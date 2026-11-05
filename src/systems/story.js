@@ -1,3 +1,4 @@
+import { TUNING } from '../data/stallTuning.js';
 // The month's story calendar: which episode plays when, which lines show, and what a choice
 // changes. Pure rules; the episodes themselves are data in src/data/events.js and the
 // overlay that plays them is scenes/DramaScene.js.
@@ -13,11 +14,11 @@ export function shows(beat, flags) {
 
 export const visibleBeats = (beats = [], flags = []) => beats.filter((b) => shows(b, flags));
 
-// Apply a choice to { flags, fame, money } and return the new state (fame clamped 0-100).
+// Apply a choice to { flags, fame, money } and return the new state (fame clamped to 0-fameMax).
 export function applyChoice(state, option) {
   return {
     flags: [...new Set([...state.flags, ...(option.flags ?? [])])],
-    fame: Math.max(0, Math.min(100, state.fame + (option.fame ?? 0))),
+    fame: Math.max(0, Math.min(TUNING.fameMax, state.fame + (option.fame ?? 0))),
     money: state.money + (option.money ?? 0),
   };
 }

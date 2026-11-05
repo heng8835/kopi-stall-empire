@@ -10,7 +10,7 @@ export const TWISTS = {
   rain: { id: 'rain', name: 'Rain day', zh: '下雨天', icon: '🌧️', text: 'Everyone wants something hot. Nobody rushes out into the rain: customers wait a little longer.', hot: 3, iced: 0, patience: 1.1 },
   heatwave: { id: 'heatwave', name: 'Heatwave', zh: '好热啊', icon: '☀️', text: 'Peng, peng, peng! Iced drinks earn +20¢ today.', iced: 3, icedTip: 20 },
   officeRush: { id: 'officeRush', name: 'Office lunch rush', zh: '午餐高峰', icon: '💼', text: 'The whole office upstairs comes down at 12. Four extra customers at lunch!', rush: { from: 300, to: 345, n: 4 } },
-  inspector: { id: 'inspector', name: 'Hygiene inspector', zh: '卫生检查', icon: '📋', text: 'An inspector is walking the kopitiam. Every perfect cup earns a little extra fame.', perfectFame: 0.3 },
+  inspector: { id: 'inspector', name: 'Hygiene inspector', zh: '卫生检查', icon: '📋', text: 'An inspector is walking the kopitiam. Every perfect cup earns a little extra fame.', perfectFame: 0.1 },
   pasarMalam: { id: 'pasarMalam', name: 'Pasar malam', zh: '夜市', icon: '🏮', text: 'The night market sets up outside. Three extra customers after 5pm.', rush: { from: 600, to: 680, n: 3 } },
 };
 

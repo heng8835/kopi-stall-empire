@@ -2,7 +2,7 @@ import { ICED_SURCHARGE, PERFECT_TIP, EXTRA_PRICE } from '../data/drinks.js';
 import { TUNING } from '../data/stallTuning.js';
 import { findDrink } from './order.js';
 
-// All money is integer cents. Fame (名气) is 0-100 and carries over the whole month.
+// All money is integer cents. Fame (名气) is 0-TUNING.fameMax and carries over the whole month.
 export function createDayState(carry = {}) {
   return {
     money: carry.money ?? 0,
@@ -24,7 +24,15 @@ export function priceOf(spec) {
   return base + (spec.iced && spec.base !== 'milo' ? ICED_SURCHARGE : 0) + extras + (EXTRA_PRICE[spec.strength] ?? 0);
 }
 
-export const clampFame = (f) => Math.max(0, Math.min(100, Math.round(f * 100) / 100));
+export const clampFame = (f) => Math.max(0, Math.min(TUNING.fameMax, Math.round(f * 100) / 100));
+
+// The month's big goal as one line: "Empire 名气 134/200 ▰▰▰▰▰▰▱▱▱▱" (the day-end card, the shop's Stall 2 card).
+export function empireLine(fame) {
+  const goal = TUNING.empireFame;
+  if (fame >= goal) return `Empire ready! 名气 ${Math.floor(fame)}/${goal}: keep it till Day 30`;
+  const filled = Math.min(9, Math.floor((fame / goal) * 10));
+  return `Empire 名气 ${Math.floor(fame)}/${goal} ${'▰'.repeat(filled)}${'▱'.repeat(10 - filled)}`;
+}
 
 // How many arrivals a day brings at this fame (a group counts as one).
 export function customersForFame(fame) {

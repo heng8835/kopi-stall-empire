@@ -7,12 +7,13 @@ import { MACHINE_TOOLS } from '../data/tools.js';
 import { fitCamera } from '../systems/view.js';
 import { makeButton, layoutLine, showGlossary } from '../systems/ui.js';
 import { play } from '../systems/sfx.js';
-import { formatMoney } from '../systems/economy.js';
+import { formatMoney, empireLine } from '../systems/economy.js';
 import { shopState, buy, nextGoal, goalText, openingAisle } from '../systems/shop.js';
 import { showBoughtCard } from '../systems/cards.js';
 import { saveRun } from '../systems/run.js';
 import { playMusic } from '../systems/music.js';
 import { UI } from '../i18n/lines.js';
+import { TUNING } from '../data/stallTuning.js';
 
 // Catalogue pictures borrowed from stall art until their own (docs/art/PROMPTS_2026-10.md part 5); the rest show their emoji.
 const SHOP_ART = {
@@ -201,13 +202,14 @@ export default class ShopScene extends Phaser.Scene {
   teaserCard(y) {
     const x = 8;
     const w = GAME_W - 16;
-    const h = 84;
+    const h = 104;
     const bg = this.add.rectangle(x, y, w, h, 0x2b2420, 0.88).setOrigin(0).setStrokeStyle(2, 0xf2c14e, 0.9);
     const icon = addText(this, x + 26, y + h / 2, '🏪', { size: 26, origin: 0.5 });
     const name = addText(this, x + 52, y + 8, 'Stall 2 · 第二间档口', { size: 14, bold: true, color: '#f2c14e' });
-    const text = addText(this, x + 52, y + 28, 'FOR RENT next door. Finish Month 1 with 名气 70+ for the Empire ending… and a second stall.', { size: 11, color: '#fff6dc', wrap: w - 52 - 96 });
+    const text = addText(this, x + 52, y + 28, `FOR RENT next door. Finish Month 1 with 名气 ${TUNING.empireFame}+ for the Empire ending… and a second stall.`, { size: 11, color: '#fff6dc', wrap: w - 52 - 96 });
+    const progress = addText(this, x + 52, y + h - 18, empireLine(this.run.fame), { size: 10, bold: true, color: '#f2c14e' });
     const lock = addText(this, x + w - 52, y + h / 2, '🔒\nMonth 2', { size: 11, bold: true, color: '#d8cbb5', origin: 0.5, align: 'center' });
-    this.list.add([bg, icon, name, text, lock]);
+    this.list.add([bg, icon, name, text, progress, lock]);
     return h;
   }
 

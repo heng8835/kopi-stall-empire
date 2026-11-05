@@ -19,10 +19,14 @@ export const TUNING = {
   comeBackMs: 20_000, // a walk-in who just left isn't the next one in again for this long
   regularVariety: 0.25, // chance a regular orders something other than their usual
 
-  // Fame (名气, 0-100) decides how many arrivals a day brings (a group counts as one).
+  // Fame (名气, 0-300) decides how many arrivals a day brings (a group counts as one), and the month's ending.
+  // Tuned so the Empire takes the month (round 6: Fame 70 came on Day 7): tests/monthCurve.test.js.
   fameStart: 10,
-  fameDelta: { perfect: 0.4, close: 0.1, oops: -0.2, timeout: -1 },
-  fameForStars: [0, 0, 1, 2], // the day-end bonus for 1 / 2 / 3 stars
+  fameMax: 300,
+  empireFame: 200, // finish the month here: the Empire ending and a second stall
+  ourStallFame: 80,
+  fameDelta: { perfect: 0.1, close: 0.05, oops: -0.1, timeout: -0.5 },
+  fameForStars: [0, 2, 4, 4], // the day-end bonus for 1 / 2 / 3 stars (a day's work counts, even a rough one)
   closePay: 0.6, // a close cup pays this share of the price (a wrong drink pays nothing)
   streakTipStep: 10, // cents: each perfect cup in a row adds this to the tip...
   streakTipMax: 50, // ...up to this
@@ -31,7 +35,7 @@ export const TUNING = {
   // Few customers at first; upgrades make you faster before the crowd grows.
   customersMin: 8,
   customersMax: 15,
-  famePerExtraCustomer: 5, // 8 + floor((fame - 10)/5): fame 10 -> 8, 20 -> 10, 30 -> 12, 45+ -> 15
+  famePerExtraCustomer: 20, // 8 + floor((fame - 10)/20): fame 10 -> 8, 50 -> 10, 90 -> 12, 150+ -> 15
 
   // Walking in from the street opening on the left, and the queue by the rope posts.
   queueMax: 3,

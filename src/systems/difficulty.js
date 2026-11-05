@@ -49,5 +49,5 @@ export function goalProgress(goal, s) {
 }
 
 // The fame milestones that open new shelves in the night shop.
-export const MILESTONES = [25, 50, 75];
+export const MILESTONES = [40, 90, 150];
 export const milestonesCrossed = (from, to, seen = []) => MILESTONES.filter((m) => from < m && to >= m && !seen.includes(m));

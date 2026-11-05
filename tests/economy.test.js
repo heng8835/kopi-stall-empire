@@ -23,9 +23,9 @@ describe('economy', () => {
     applyServe(s, 'close', p('Kopi'));
     applyServe(s, 'oops', p('Kopi'));
     expect(s.money).toBe(140 + 30 + 80);
-    expect(s.fame).toBe(10.3);
+    expect(s.fame).toBe(10.05);
     applyTimeout(s);
-    expect(s.fame).toBe(9.3);
+    expect(s.fame).toBe(9.55);
     expect(s.walkedOut).toBe(1);
   });
 
@@ -36,10 +36,10 @@ describe('economy', () => {
     expect(streakBonus(20)).toBe(50);
   });
 
-  it('carries fame and clamps it to 0-100', () => {
-    const s = createDayState({ fame: 99.9, money: 500 });
+  it('carries fame and clamps it to 0-fameMax', () => {
+    const s = createDayState({ fame: 299.95, money: 500 });
     applyServe(s, 'perfect', p('Kopi'));
-    expect(s.fame).toBe(100);
+    expect(s.fame).toBe(300);
     expect(s.money).toBe(500 + 170);
     expect(createDayState({ fame: 0.5 }).fameStart).toBe(0.5);
   });
@@ -47,11 +47,12 @@ describe('economy', () => {
   it('more fame brings more customers, slowly (chill start)', () => {
     expect(customersForFame(0)).toBe(8);
     expect(customersForFame(10)).toBe(8); // Day 1
-    expect(customersForFame(21)).toBe(10);
-    expect(customersForFame(30)).toBe(12);
-    expect(customersForFame(100)).toBe(15);
-    expect(nextCustomerAt(21)).toBe(25);
-    expect(nextCustomerAt(100)).toBe(null);
+    expect(customersForFame(50)).toBe(10);
+    expect(customersForFame(90)).toBe(12);
+    expect(customersForFame(150)).toBe(15);
+    expect(customersForFame(300)).toBe(15);
+    expect(nextCustomerAt(21)).toBe(30);
+    expect(nextCustomerAt(150)).toBe(null);
   });
 
   it('formats money', () => expect(formatMoney(310)).toBe('$3.10'));

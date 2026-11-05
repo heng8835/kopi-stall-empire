@@ -60,7 +60,7 @@ export function runFromQuery(search) {
   return {
     ...newRun(),
     day,
-    fame: Math.max(0, Math.min(100, num('fame', TUNING.fameStart))),
+    fame: Math.max(0, Math.min(TUNING.fameMax, num('fame', TUNING.fameStart))),
     money: num('money', 0),
     flags: (q.get('flags') ?? '').split(',').map((f) => f.trim()).filter(Boolean),
     owned: (q.get('owned') ?? '').split(',').map((f) => f.trim()).filter(Boolean),
