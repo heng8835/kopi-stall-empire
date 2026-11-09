@@ -71,7 +71,9 @@ export default class DramaScene extends Phaser.Scene {
     this.glossaryOpen = false;
     this.lastWho = null;
     this.bornAt = this.time.now;
-    this.cast = this.castOf(data.ep);
+    this.cast = this.castOf(data.ep);
+    // EP1 finds Oyen asleep on Uncle Tan's tin: he's only ever drawn there, never awake beside it
+    this.oyenOnTin = [...(this.d.ep.beats ?? []), ...(this.d.ep.after ?? [])].some((b) => b.show === 'tinOyen');
 
     // just above the dialogue box on the right: clear of the name tag and in reach of a thumb, not over the
     // stall's Recipes tab (round 6: a tap on Recipes as a scene opened skipped it)
@@ -115,17 +117,19 @@ export default class DramaScene extends Phaser.Scene {
 
   // The cast, small and behind (dim = someone else is speaking in front), or all of them across the
   // counter (no one speaking: a narrator line or the choice). except = the speaker, drawn big separately.
-  castRow({ except = null, dim = false, hideOyen = false } = {}) {
-    const people = this.cast.filter((m) => m.who !== except && !(hideOyen && m.who === 'oyen'));
+  // aside = something stands on the counter in the middle (the tin): everyone steps to the sides.
+  castRow({ except = null, dim = false, hideOyen = false, aside = false } = {}) {
+    // an episode that finds Oyen asleep on the tin never shows him awake at the counter too (the owner, 2026-11-09)
+    const people = this.cast.filter((m) => m.who !== except && !((hideOyen || this.oyenOnTin) && m.who === 'oyen'));
     if (!people.length) return [];
     const front = !except;
     const n = people.length;
-    const slots = front ? people.map((m, i) => (GAME_W * (i + 0.5)) / n) : [62, 298, 22, 338];
+    const slots = front && !aside ? people.map((m, i) => (GAME_W * (i + 0.5)) / n) : [62, 298, 22, 338];
     return people.map((m, i) => {
       const s = addSprite(this, m.sprite, slots[i], m.perch ? LEDGE.bottom : FEET_Y);
       const h = m.perch ? PERCH_H * 0.8 : front ? 160 : 130;
       s.setScale(s.scaleX * (h / s.displayHeight));
-      const room = front ? GAME_W / n + 24 : 150;
+      const room = front && !aside ? GAME_W / n + 24 : 150;
       if (s.displayWidth > room) s.setScale(s.scaleX * (room / s.displayWidth));
       if (m.silhouette) s.setTintFill(0x14110f);
       else if (dim) s.setTint(0x8a8a96);
@@ -226,11 +230,17 @@ export default class DramaScene extends Phaser.Scene {
     const text = fill(beat.text, this.d.vars);
     this.lineAt = this.time.now; // an orange word only opens once the line has settled (openGlossary)
     const start = this.layer.length;
-    if (beat.show) this.layer.push(...this.prop(beat.show));
+    this.propCount = 0;
+    if (beat.show) {
+      const prop = this.prop(beat.show);
+      this.propCount = prop.length;
+      this.layer.push(...prop);
+    }
     const inProp = beat.show === 'tinOyen' && beat.who === 'oyen'; // he's already there, asleep on the tin
     const speaking = who?.sprite && this.textures.exists(who.sprite) && !inProp;
-    const row = this.castRow({ except: speaking ? beat.who : null, dim: !!speaking, hideOyen: beat.show === 'tinOyen' });
+    const row = this.castRow({ except: speaking ? beat.who : null, dim: !!speaking, hideOyen: beat.show === 'tinOyen', aside: !!beat.show });
     this.layer.push(...row);
+    if (beat.show) this.layer.slice(start, start + this.propCount).forEach((o) => o.setDepth(1)); // the tin in front of anyone near it
     if (row.length && !speaking) this.layer.push(...this.ledge());
     if (speaking) {
       const s = addSprite(this, who.sprite, GAME_W / 2, who.perch ? LEDGE.bottom : FEET_Y);

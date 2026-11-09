@@ -157,7 +157,10 @@ export default class OpeningScene extends Phaser.Scene {
     bubble.setPosition(bx, by);
     words.objects.forEach((o) => o.setPosition(o.x + bx + 10, o.y + by + 7).setDepth(7));
     const objs = [bubble, ...words.objects];
-    objs.forEach((o) => o.setMask(this.chatMask));
+    objs.forEach((o) => {
+      o.setMask(this.chatMask);
+      o.chatDy = o.y - by; // where it sits in its bubble, so a scroll always lands on whole bubbles
+    });
     const msg = { objs, y: by, h: bh };
     this.chat.push(msg);
     this.layer.push(...objs);
@@ -168,9 +171,12 @@ export default class OpeningScene extends Phaser.Scene {
     });
     const overflow = by + bh - (PHONE.y + PHONE.h - 26);
     if (overflow > 0) {
+      // to where each bubble belongs, not "up by this much": a quick tap starts a new scroll while the
+      // last one is still moving, and relative moves then left bubbles on top of each other (the owner, 2026-11-09)
       for (const m of this.chat) {
         m.y -= overflow;
-        this.tweens.add({ targets: m.objs, y: `-=${overflow}`, duration: 260, ease: 'Cubic.out' });
+        m.scroll?.stop();
+        m.scroll = this.tweens.add({ targets: m.objs, y: (o) => m.y + o.chatDy, duration: 260, ease: 'Cubic.out' });
       }
     }
     play(mine ? 'pickup' : 'tap');

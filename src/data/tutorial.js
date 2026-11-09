@@ -22,10 +22,10 @@ export const TUTORIAL_STEPS = [
 // The starter menu card: each drink as its tools (HD sprite keys) and the drink it makes.
 //   tint: the colour of the drink in the glass
 export const STARTER_MENU = [
-  { name: 'Kopi', tools: ['toolCondensed', 'toolKopiPot', 'toolStir'], tint: 0x9c6a48 },
-  { name: 'Teh', tools: ['toolCondensed', 'toolTehPot', 'toolStir'], tint: 0xd09a62 },
-  { name: 'Kopi O', tools: ['toolSugar', 'toolKopiPot', 'toolStir'], tint: 0x5a3622 },
-  { name: 'Teh O', tools: ['toolSugar', 'toolTehPot', 'toolStir'], tint: 0xa8622e },
+  { name: 'Kopi', tools: ['toolKopiPot', 'toolCondensed', 'toolStir'], tint: 0x9c6a48 },
+  { name: 'Teh', tools: ['toolTehPot', 'toolCondensed', 'toolStir'], tint: 0xd09a62 },
+  { name: 'Kopi O', tools: ['toolKopiPot', 'toolSugar', 'toolStir'], tint: 0x5a3622 },
+  { name: 'Teh O', tools: ['toolTehPot', 'toolSugar', 'toolStir'], tint: 0xa8622e },
 ];
 
 export const TUTORIAL_TEXT = {

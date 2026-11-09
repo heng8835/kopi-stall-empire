@@ -14,14 +14,14 @@ export function recipeHint(spec) {
   }
   if (spec.layered) return ['gula melaka NORMAL', 'evap C', 'teh FULL', 'no stirring!', bag].filter(Boolean).join(' · ');
   const name = { kopi: 'Kopi', teh: 'Teh', cham: 'Kopi + teh' }[spec.base];
-  // what goes in first (milk, sugar), then the pot, then what to leave out: the order the demos use
+  // the pot first, then milk and sugar, then what to leave out: the order the demos use
   const steps = [];
-  if (spec.milk === 'condensed') steps.push(`condensed ${SWEET[spec.sugar]}`);
-  if (spec.milk === 'evap') steps.push('evap C');
-  if (spec.milk !== 'condensed' && spec.sugar !== 'none') steps.push(`sugar ${SWEET[spec.sugar]}`);
   if (spec.strength === 'poh') steps.push(`${name} ½`, 'hot water FULL');
   else steps.push(`${name} ${pot}`);
   if (spec.strength === 'gao') steps.push('no water');
+  if (spec.milk === 'condensed') steps.push(`condensed ${SWEET[spec.sugar]}`);
+  if (spec.milk === 'evap') steps.push('evap C');
+  if (spec.milk !== 'condensed' && spec.sugar !== 'none') steps.push(`sugar ${SWEET[spec.sugar]}`);
   if (spec.milk === 'none') steps.push('no milk');
   if (spec.milk !== 'condensed' && spec.sugar === 'none') steps.push('no sugar');
   if (spec.halia) steps.push('halia');
@@ -79,16 +79,6 @@ export function nextStep(cup, spec, who) {
     return finish();
   }
 
-  // milk or sugar first, the pot on top: the order the demos and cards teach (round 6: the coach said pot first)
-  if (!cup.base && !malt) {
-    const want = SWEET_IDX[spec.sugar];
-    const sweet = sugarBucket(sweetness(cup));
-    const target = { 0: 'KOSONG', 2: 'SIEW DAI', 4: 'NORMAL', 6: 'GA DAI' }[want];
-    if (spec.milk === 'condensed' && sweet < want) return { text: `Condensed milk first, till ${target} (it's the sweetness)` };
-    if (spec.milk === 'evap' && cup.evap < ZONES.milk.normal[0]) return { text: 'Evap milk first, till C · NORMAL' };
-    if (spec.milk !== 'condensed' && sweet < want) return { text: `Sugar first, till ${target}` };
-  }
-
   // the base
   if (spec.base === 'cham') {
     if (!cup.base) return { text: 'Cham: kopi pot first, about half the cup' };
@@ -109,10 +99,11 @@ export function nextStep(cup, spec, who) {
       return { text: 'Too watery! Bin it and try again', bin: true };
     }
   }
-  // sugar or milk in first is how a real uncle does it too: fine, the pot goes on top
+  // the pot goes first, then the milk and sugar (the demos and cards teach it that way); milk or sugar
+  // already in is fine too, the pot goes on top
   const first = !cup.base && !malt && (cup.sugar > ZONES.trace || cup.condensed > ZONES.trace || cup.evap > ZONES.trace);
   const potName = spec.base === 'cham' ? 'pot' : POT[spec.base];
-  if (first) return { text: `${cup.sugar > ZONES.trace ? 'Sugar' : 'Milk'} first, like the uncles! Now the ${potName} till ${zone}` };
+  if (first) return { text: `${cup.sugar > ZONES.trace ? 'Sugar' : 'Milk'} in first also can! Now the ${potName} till ${zone}` };
   if (!cup.base || fill < lo) return { text: `Hold the ${potName} over the cup till ${zone}` };
   if (cup.fill > ZONES.fill.spill || (peng && !cup.ice && fill >= hi + 0.03)) return { text: peng ? 'Too full for peng! Bin it and pour to ¾' : 'Spilled! Bin it and try again', bin: true };
 

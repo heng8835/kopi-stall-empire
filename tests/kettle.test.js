@@ -35,7 +35,7 @@ describe('Big Brass Kettle: gao / poh', () => {
   it('the coach walks through a poh drink', () => {
     const spec = parseOrder('Kopi O poh');
     const cup = newCup();
-    expect(nextStep(cup, spec, 'Ah Gong').text).toMatch(/Sugar first/);
+    expect(nextStep(cup, spec, 'Ah Gong').text).toMatch(/HALF/);
     to(cup, 'kopi', 0.5);
     expect(nextStep(cup, spec, 'Ah Gong').text).toMatch(/Hot water/);
     to(cup, 'water', 0.45);
